@@ -27,10 +27,6 @@ export function TransactionList({ transactions }: TransactionListProps) {
     return (
         <div className="space-y-3">
             {transactions.map((transaction) => {
-                const category = defaultCategories.find(
-                    cat => cat.name === transaction.category
-                );
-
                 return (
                     <div
                         key={transaction.id}
@@ -38,10 +34,9 @@ export function TransactionList({ transactions }: TransactionListProps) {
                     >
                         {/* Category Icon */}
                         <div
-                            className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0"
-                            style={{ backgroundColor: category?.color + '20' }}
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0 bg-primary/10"
                         >
-                            {category?.icon || '📦'}
+                            📦
                         </div>
 
                         {/* Transaction Info */}
@@ -67,8 +62,8 @@ export function TransactionList({ transactions }: TransactionListProps) {
                             )}
                             <span
                                 className={`font-bold text-lg ${transaction.type === 'income'
-                                        ? 'text-primary'
-                                        : 'text-destructive'
+                                    ? 'text-primary'
+                                    : 'text-destructive'
                                     }`}
                             >
                                 {transaction.type === 'income' ? '+' : '-'}

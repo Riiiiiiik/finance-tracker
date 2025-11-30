@@ -27,7 +27,9 @@ export function AddTransactionModal({ isOpen, onClose, onAdd }: AddTransactionMo
     const [category, setCategory] = useState('');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
-    const categories = defaultCategories.filter(cat => cat.type === type);
+
+    const categories = defaultCategories;
+
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -158,8 +160,8 @@ export function AddTransactionModal({ isOpen, onClose, onAdd }: AddTransactionMo
                         >
                             <option value="">Selecione uma categoria</option>
                             {categories.map((cat) => (
-                                <option key={cat.name} value={cat.name}>
-                                    {cat.icon} {cat.name}
+                                <option key={cat} value={cat}>
+                                    {cat}
                                 </option>
                             ))}
                         </Select>

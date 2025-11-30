@@ -25,6 +25,20 @@ export interface Database {
     };
 }
 
+// Default categories for transactions
+export const defaultCategories = [
+    'Alimentação',
+    'Transporte',
+    'Saúde',
+    'Educação',
+    'Lazer',
+    'Salário',
+    'Investimentos',
+    'Contas',
+    'Outros'
+];
+
+
 // Client for client components
 export const createSupabaseClient = () => {
     return createClientComponentClient<Database>();
