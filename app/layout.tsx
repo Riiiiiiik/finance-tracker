@@ -1,13 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/lib/auth-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "Finance Tracker - Controle de Gastos Pessoal",
-    description: "Controle completo de gastos pessoais com categorização inteligente",
+    title: "Finance Tracker - Controle Financeiro",
+    description: "Controle suas finanças pessoais de forma simples e eficiente",
     manifest: "/manifest.json",
     appleWebApp: {
         capable: true,
@@ -16,12 +15,11 @@ export const metadata: Metadata = {
     },
     icons: {
         icon: [
-            { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
-            { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
+            { url: "/icon-192x192.svg", sizes: "192x192", type: "image/svg+xml" },
+            { url: "/icon-512x512.svg", sizes: "512x512", type: "image/svg+xml" },
         ],
         apple: [
-            { url: "/icon-152x152.png", sizes: "152x152", type: "image/png" },
-            { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+            { url: "/icon-192x192.svg", sizes: "192x192", type: "image/svg+xml" },
         ],
     },
 };
@@ -33,6 +31,7 @@ export const viewport: Viewport = {
     userScalable: false,
     viewportFit: "cover",
     themeColor: "#10b981",
+    interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({
@@ -41,17 +40,13 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="pt-BR" className="dark">
+        <html lang="pt-BR">
             <head>
-                <link rel="apple-touch-icon" href="/icon-192x192.png" />
+                <link rel="apple-touch-icon" href="/icon-192x192.svg" />
                 <meta name="apple-mobile-web-app-capable" content="yes" />
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
             </head>
-            <body className={inter.className}>
-                <AuthProvider>
-                    {children}
-                </AuthProvider>
-            </body>
+            <body className={inter.className}>{children}</body>
         </html>
     );
 }

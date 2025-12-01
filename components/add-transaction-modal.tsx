@@ -1,178 +1,203 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
-import { defaultCategories } from '@/lib/supabase';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/lib/supabase";
+import { ArrowDownCircle, ArrowUpCircle, Loader2 } from "lucide-react";
 
 interface AddTransactionModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onAdd: (transaction: {
-        amount: number;
-        description: string;
-        category: string;
-        type: 'income' | 'expense';
-        date: string;
-    }) => void;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onTransactionAdded: () => void;
 }
 
-export function AddTransactionModal({ isOpen, onClose, onAdd }: AddTransactionModalProps) {
-    const [type, setType] = useState<'income' | 'expense'>('expense');
-    const [amount, setAmount] = useState('');
-    const [description, setDescription] = useState('');
-    const [category, setCategory] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+const expenseCategories = [
+    "Alimentação",
+    "Transporte",
+    "Moradia",
+    "Saúde",
+    "Educação",
+    "Lazer",
+    "Assinaturas",
+    "Compras",
+    "Outros",
+];
 
+const incomeCategories = [
+    "Salário",
+    "Freelance",
+    "Investimentos",
+    "Renda Extra",
+    "Outros",
+];
 
-    const categories = defaultCategories;
+export function AddTransactionModal({
+    open,
+    onOpenChange,
+    onTransactionAdded,
+}: AddTransactionModalProps) {
+    const [type, setType] = useState<"income" | "expense">("expense");
+    const [description, setDescription] = useState("");
+    const [amount, setAmount] = useState("");
+    const [category, setCategory] = useState("");
+    const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+    const [loading, setLoading] = useState(false);
 
+    const categories = type === "income" ? incomeCategories : expenseCategories;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
 
-        if (!amount || !description || !category) {
-            alert('Por favor, preencha todos os campos');
-            return;
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user) {
+                alert("Você precisa estar logado para adicionar transações");
+                return;
+            }
+
+            const { error } = await supabase.from("transactions").insert({
+                user_id: user.id,
+                description,
+                amount: type === "expense" ? -Math.abs(parseFloat(amount)) : Math.abs(parseFloat(amount)),
+                type,
+                category,
+                date,
+            });
+
+            if (error) throw error;
+
+            // Reset form
+            setDescription("");
+            setAmount("");
+            setCategory("");
+            setDate(new Date().toISOString().split("T")[0]);
+
+            onTransactionAdded();
+            onOpenChange(false);
+        } catch (error) {
+            console.error("Erro ao adicionar transação:", error);
+            alert("Erro ao adicionar transação. Tente novamente.");
+        } finally {
+            setLoading(false);
         }
-
-        onAdd({
-            amount: parseFloat(amount),
-            description,
-            category,
-            type,
-            date,
-        });
-
-        // Reset form
-        setAmount('');
-        setDescription('');
-        setCategory('');
-        setDate(new Date().toISOString().split('T')[0]);
-        onClose();
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
-                onClick={onClose}
-            />
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle className="text-2xl">Nova Transação</DialogTitle>
+                    <DialogDescription>
+                        Adicione uma nova receita ou despesa ao seu controle financeiro
+                    </DialogDescription>
+                </DialogHeader>
 
-            {/* Modal */}
-            <div className="relative w-full max-w-lg bg-card border border-border rounded-t-3xl sm:rounded-3xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold">Nova Transação</h2>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-accent rounded-full transition-colors"
-                    >
-                        <X className="w-6 h-6" />
-                    </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Type Toggle */}
+                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                    {/* Tipo de Transação */}
                     <div className="grid grid-cols-2 gap-3">
                         <button
                             type="button"
-                            onClick={() => {
-                                setType('expense');
-                                setCategory('');
-                            }}
-                            className={cn(
-                                "h-14 rounded-lg font-semibold transition-all",
-                                type === 'expense'
-                                    ? "bg-destructive text-destructive-foreground shadow-lg shadow-destructive/20"
-                                    : "bg-secondary text-secondary-foreground"
-                            )}
+                            onClick={() => setType("expense")}
+                            className={`p-4 rounded-lg border-2 transition-all duration-200 ${type === "expense"
+                                    ? "border-red-500 bg-red-500/10"
+                                    : "border-white/10 hover:border-red-500/50"
+                                }`}
                         >
-                            Despesa
+                            <ArrowDownCircle
+                                className={`h-6 w-6 mx-auto mb-2 ${type === "expense" ? "text-red-500" : "text-muted-foreground"
+                                    }`}
+                            />
+                            <p className={`text-sm font-medium ${type === "expense" ? "text-red-500" : "text-muted-foreground"
+                                }`}>
+                                Despesa
+                            </p>
                         </button>
+
                         <button
                             type="button"
-                            onClick={() => {
-                                setType('income');
-                                setCategory('');
-                            }}
-                            className={cn(
-                                "h-14 rounded-lg font-semibold transition-all",
-                                type === 'income'
-                                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                                    : "bg-secondary text-secondary-foreground"
-                            )}
+                            onClick={() => setType("income")}
+                            className={`p-4 rounded-lg border-2 transition-all duration-200 ${type === "income"
+                                    ? "border-green-500 bg-green-500/10"
+                                    : "border-white/10 hover:border-green-500/50"
+                                }`}
                         >
-                            Receita
+                            <ArrowUpCircle
+                                className={`h-6 w-6 mx-auto mb-2 ${type === "income" ? "text-green-500" : "text-muted-foreground"
+                                    }`}
+                            />
+                            <p className={`text-sm font-medium ${type === "income" ? "text-green-500" : "text-muted-foreground"
+                                }`}>
+                                Receita
+                            </p>
                         </button>
                     </div>
 
-                    {/* Amount */}
+                    {/* Descrição */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">
-                            Valor
-                        </label>
-                        <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                                R$
-                            </span>
-                            <Input
-                                type="number"
-                                step="0.01"
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                className="pl-12 text-lg"
-                                placeholder="0,00"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    {/* Description */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">
-                            Descrição
-                        </label>
+                        <Label htmlFor="description">Descrição</Label>
                         <Input
-                            type="text"
+                            id="description"
+                            placeholder="Ex: Café, Salário, Uber..."
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Ex: Almoço no restaurante"
                             required
                         />
                     </div>
 
-                    {/* Category */}
+                    {/* Valor */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">
-                            Categoria
-                        </label>
-                        <Select
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
+                        <Label htmlFor="amount">Valor (R$)</Label>
+                        <Input
+                            id="amount"
+                            type="number"
+                            step="0.01"
+                            placeholder="0,00"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
                             required
-                        >
-                            <option value="">Selecione uma categoria</option>
-                            {categories.map((cat) => (
-                                <option key={cat} value={cat}>
-                                    {cat}
-                                </option>
-                            ))}
+                        />
+                    </div>
+
+                    {/* Categoria */}
+                    <div className="space-y-2">
+                        <Label htmlFor="category">Categoria</Label>
+                        <Select value={category} onValueChange={setCategory}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione uma categoria" value={category} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {categories.map((cat) => (
+                                    <SelectItem key={cat} value={cat}>
+                                        {cat}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
                         </Select>
                     </div>
 
-                    {/* Date */}
+                    {/* Data */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">
-                            Data
-                        </label>
+                        <Label htmlFor="date">Data</Label>
                         <Input
+                            id="date"
                             type="date"
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
@@ -180,13 +205,34 @@ export function AddTransactionModal({ isOpen, onClose, onAdd }: AddTransactionMo
                         />
                     </div>
 
-                    {/* Submit Button */}
-                    <Button type="submit" className="w-full" size="lg">
-                        <Plus className="w-5 h-5 mr-2" />
-                        Adicionar Transação
-                    </Button>
+                    {/* Botões */}
+                    <div className="flex gap-3 pt-4">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                            className="flex-1"
+                            disabled={loading}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            type="submit"
+                            className="flex-1 gradient-primary"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Salvando...
+                                </>
+                            ) : (
+                                "Adicionar"
+                            )}
+                        </Button>
+                    </div>
                 </form>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     );
 }
