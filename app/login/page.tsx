@@ -22,11 +22,32 @@ export default function LoginPage() {
         setError('');
 
         try {
-            await signIn(email, password);
+            console.log('Tentando fazer login com:', email);
+            const { data, error: signInError } = await signIn(email, password);
+
+            if (signInError) {
+                console.error('Erro do Supabase:', signInError);
+
+                // Mensagens de erro específicas
+                if (signInError.message.includes('Invalid login credentials')) {
+                    setError('❌ Email ou senha incorretos. Verifique suas credenciais.');
+                } else if (signInError.message.includes('Email not confirmed')) {
+                    setError('📧 Você precisa confirmar seu email antes de fazer login. Verifique sua caixa de entrada.');
+                } else if (signInError.message.includes('User not found')) {
+                    setError('👤 Usuário não encontrado. Você já criou uma conta?');
+                } else {
+                    setError(`⚠️ ${signInError.message}`);
+                }
+
+                setIsLoading(false);
+                return;
+            }
+
+            console.log('Login bem-sucedido!', data);
             // Router.push will be handled by AuthProvider
         } catch (err: any) {
-            setError(err.message || 'Erro ao fazer login. Verifique suas credenciais.');
-        } finally {
+            console.error('Erro inesperado:', err);
+            setError('🔴 Erro ao fazer login. Tente novamente.');
             setIsLoading(false);
         }
     };
@@ -117,10 +138,7 @@ export default function LoginPage() {
                                 {isLoading ? 'Entrando...' : 'Entrar'}
                             </Button>
 
-                            {/* Demo Note */}
-                            <p className="text-xs text-center text-muted-foreground">
-                                Conecte com sua conta Supabase
-                            </p>
+
                         </form>
                     </CardContent>
                 </Card>

@@ -36,11 +36,21 @@ export default function RegisterPage() {
         }
 
         try {
-            await signUp(email, password);
+            console.log('Tentando criar conta com:', email);
+            const { data, error: signUpError } = await signUp(email, password);
+
+            if (signUpError) {
+                console.error('Erro do Supabase:', signUpError);
+                setError(signUpError.message || 'Erro ao criar conta. Tente novamente.');
+                setIsLoading(false);
+                return;
+            }
+
+            console.log('Conta criada com sucesso!', data);
             setSuccess(true);
         } catch (err: any) {
+            console.error('Erro inesperado:', err);
             setError(err.message || 'Erro ao criar conta. Tente novamente.');
-        } finally {
             setIsLoading(false);
         }
     };
