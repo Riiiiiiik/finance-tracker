@@ -3,6 +3,4 @@
   "/analytics/page": "app/analytics/page.js",
   "/wishlist/page": "app/wishlist/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/profile/page": "app/profile/page.js",
-  "/login/page": "app/login/page.js"
-}
+  "/profile/page": "app/profile/

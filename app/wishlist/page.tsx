@@ -237,14 +237,20 @@ export default function WishlistPage() {
     }, []);
 
     const checkUser = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-            router.push('/login');
-            return;
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                setLoading(false);
+                router.push('/login');
+                return;
+            }
+            loadWishlist(session.user.id);
+            loadPurchasedItems(session.user.id);
+            loadBalance(session.user.id);
+        } catch (error) {
+            console.error('Erro ao verificar sessão:', error);
+            setLoading(false);
         }
-        loadWishlist(session.user.id);
-        loadPurchasedItems(session.user.id);
-        loadBalance(session.user.id);
     };
 
     const loadWishlist = async (userId: string) => {

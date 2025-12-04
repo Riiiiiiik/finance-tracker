@@ -25,6 +25,7 @@ export default function AnalyticsPage() {
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
+                setLoading(false);
                 router.push('/login');
                 return;
             }
