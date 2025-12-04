@@ -1,155 +1,96 @@
 'use client';
 
 import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wallet, Mail, Lock, AlertCircle } from 'lucide-react';
-import { signIn } from '@/lib/supabase';
 
 export default function LoginPage() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
+        setLoading(true);
         setError('');
 
         try {
-            console.log('Tentando fazer login com:', email);
-            const { data, error: signInError } = await signIn(email, password);
+            const { error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
 
-            if (signInError) {
-                console.error('Erro do Supabase:', signInError);
-
-                // Mensagens de erro específicas
-                if (signInError.message.includes('Invalid login credentials')) {
-                    setError('❌ Email ou senha incorretos. Verifique suas credenciais.');
-                } else if (signInError.message.includes('Email not confirmed')) {
-                    setError('📧 Você precisa confirmar seu email antes de fazer login. Verifique sua caixa de entrada.');
-                } else if (signInError.message.includes('User not found')) {
-                    setError('👤 Usuário não encontrado. Você já criou uma conta?');
-                } else {
-                    setError(`⚠️ ${signInError.message}`);
+            if (error) {
+                if (error.message.includes('Invalid login credentials')) {
+                    throw new Error('Email ou senha incorretos');
                 }
-
-                setIsLoading(false);
-                return;
+                throw error;
             }
 
-            console.log('Login bem-sucedido!', data);
-            // Router.push will be handled by AuthProvider
+            router.push('/dashboard');
+            router.refresh();
         } catch (err: any) {
-            console.error('Erro inesperado:', err);
-            setError('🔴 Erro ao fazer login. Tente novamente.');
-            setIsLoading(false);
+            setError(err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
-            <div className="w-full max-w-md space-y-8">
-                {/* Logo & Title */}
-                <div className="text-center space-y-4">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-primary to-primary/80 shadow-2xl shadow-primary/20">
-                        <Wallet className="w-10 h-10 text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                            Finance Tracker
-                        </h1>
-                        <p className="text-muted-foreground mt-2">
-                            Controle seus gastos de forma inteligente
-                        </p>
-                    </div>
+        <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="w-full max-w-md space-y-8 bg-card p-8 rounded-xl border">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold">Entrar</h1>
+                    <p className="text-muted-foreground mt-2">Acesse suas finanças</p>
                 </div>
 
-                {/* Login Card */}
-                <Card className="border-border/50 shadow-xl">
-                    <CardHeader>
-                        <CardTitle>Bem-vindo de volta</CardTitle>
-                        <CardDescription>
-                            Entre com suas credenciais para continuar
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleLogin} className="space-y-4">
-                            {/* Error Message */}
-                            {error && (
-                                <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                                    <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
-                                    <p className="text-sm text-destructive">{error}</p>
-                                </div>
-                            )}
+                <form onSubmit={handleLogin} className="space-y-4">
+                    {error && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded text-red-500 text-sm">
+                            {error}
+                        </div>
+                    )}
 
-                            {/* Email */}
-                            <div className="space-y-2">
-                                <label htmlFor="email" className="text-sm font-medium text-muted-foreground">
-                                    Email
-                                </label>
-                                <div className="relative">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="seu@email.com"
-                                        className="pl-12"
-                                        required
-                                        aria-label="Email"
-                                    />
-                                </div>
-                            </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full p-2 rounded-md bg-secondary border border-input focus:outline-none focus:ring-2 focus:ring-primary"
+                            required
+                        />
+                    </div>
 
-                            {/* Password */}
-                            <div className="space-y-2">
-                                <label htmlFor="password" className="text-sm font-medium text-muted-foreground">
-                                    Senha
-                                </label>
-                                <div className="relative">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                                    <Input
-                                        id="password"
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="••••••••"
-                                        className="pl-12"
-                                        required
-                                        aria-label="Senha"
-                                    />
-                                </div>
-                            </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Senha</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full p-2 rounded-md bg-secondary border border-input focus:outline-none focus:ring-2 focus:ring-primary"
+                            required
+                        />
+                    </div>
 
-                            {/* Submit Button */}
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                size="lg"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? 'Entrando...' : 'Entrar'}
-                            </Button>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-primary text-primary-foreground p-2 rounded-md font-medium hover:opacity-90 disabled:opacity-50"
+                    >
+                        {loading ? 'Entrando...' : 'Entrar'}
+                    </button>
+                </form>
 
-
-                        </form>
-                    </CardContent>
-                </Card>
-
-                {/* Footer */}
-                <p className="text-center text-sm text-muted-foreground">
-                    Não tem uma conta?{' '}
-                    <Link href="/register" className="text-primary font-medium hover:underline">
+                <div className="text-center text-sm">
+                    Não tem conta?{' '}
+                    <Link href="/register" className="text-primary hover:underline">
                         Criar conta
                     </Link>
-                </p>
+                </div>
             </div>
         </div>
     );

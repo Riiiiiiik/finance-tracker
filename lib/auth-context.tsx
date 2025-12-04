@@ -1,81 +1,48 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
-import { createSupabaseClient } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { useRouter, usePathname } from 'next/navigation';
 
-interface AuthContextType {
-    user: User | null;
-    loading: boolean;
-    signOut: () => Promise<void>;
-}
+const AuthContext = createContext({});
 
-const AuthContext = createContext<AuthContextType>({
-    user: null,
-    loading: true,
-    signOut: async () => { },
-});
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used within AuthProvider');
-    }
-    return context;
-};
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
-    const supabase = createSupabaseClient();
+    const pathname = usePathname();
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check active session
-        const checkSession = async () => {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                setUser(session?.user ?? null);
-            } catch (error) {
-                console.error('Error checking session:', error);
-            } finally {
-                setLoading(false);
+        const checkUser = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+
+            // Rotas públicas que não precisam de auth
+            const publicRoutes = ['/login', '/register', '/'];
+
+            if (!session && !publicRoutes.includes(pathname)) {
+                // router.push('/login'); // Deixar as páginas lidarem com redirect por enquanto para evitar loops
             }
+
+            setLoading(false);
         };
 
-        checkSession();
+        checkUser();
 
-        // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                setUser(session?.user ?? null);
-                setLoading(false);
-
-                if (event === 'SIGNED_IN') {
-                    router.push('/dashboard');
-                } else if (event === 'SIGNED_OUT') {
-                    router.push('/login');
-                }
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') {
+                router.push('/login');
             }
-        );
+        });
 
         return () => {
             subscription.unsubscribe();
         };
-    }, [supabase, router]);
-
-    const handleSignOut = async () => {
-        try {
-            await supabase.auth.signOut();
-        } catch (error) {
-            console.error('Error signing out:', error);
-        }
-    };
+    }, [pathname, router]);
 
     return (
-        <AuthContext.Provider value={{ user, loading, signOut: handleSignOut }}>
+        <AuthContext.Provider value={{}}>
             {children}
         </AuthContext.Provider>
     );
-}
+};
+
+export const useAuth = () => useContext(AuthContext);

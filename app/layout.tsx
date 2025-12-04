@@ -1,52 +1,60 @@
-import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
+import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { AuthProvider } from '@/lib/auth-context';
+import { PrivacyProvider } from '@/lib/privacy-context';
+import BottomNav from '@/components/BottomNav';
+import { ThemeProvider } from '@/components/theme-provider';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: "Finance Tracker - Controle Financeiro",
-    description: "Controle suas finanças pessoais de forma simples e eficiente",
-    manifest: "/manifest.json",
+    title: 'Finance Tracker',
+    description: 'Controle suas finanças de forma simples',
+    manifest: '/manifest.json',
     appleWebApp: {
         capable: true,
-        statusBarStyle: "black-translucent",
-        title: "Finance Tracker",
-    },
-    icons: {
-        icon: [
-            { url: "/icon-192x192.svg", sizes: "192x192", type: "image/svg+xml" },
-            { url: "/icon-512x512.svg", sizes: "512x512", type: "image/svg+xml" },
-        ],
-        apple: [
-            { url: "/icon-192x192.svg", sizes: "192x192", type: "image/svg+xml" },
-        ],
+        statusBarStyle: 'black-translucent',
+        title: 'Finance Tracker',
     },
 };
 
 export const viewport: Viewport = {
-    width: "device-width",
+    width: 'device-width',
     initialScale: 1,
     maximumScale: 1,
     userScalable: false,
-    viewportFit: "cover",
-    themeColor: "#10b981",
-    interactiveWidget: "resizes-content",
+    viewportFit: 'cover',
 };
 
 export default function RootLayout({
     children,
-}: {
+}: Readonly<{
     children: React.ReactNode;
-}) {
+}>) {
     return (
-        <html lang="pt-BR">
+        <html lang="pt-BR" suppressHydrationWarning>
             <head>
-                <link rel="apple-touch-icon" href="/icon-192x192.svg" />
+                <link rel="apple-touch-icon" href="/icon-192.png" />
                 <meta name="apple-mobile-web-app-capable" content="yes" />
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+                <meta name="theme-color" content="#16a34a" />
             </head>
-            <body className={inter.className}>{children}</body>
+            <body className={inter.className}>
+                <ThemeProvider
+                    attribute="class"
+                    defaultTheme="dark"
+                    enableSystem
+                    disableTransitionOnChange
+                >
+                    <AuthProvider>
+                        <PrivacyProvider>
+                            {children}
+                            <BottomNav />
+                        </PrivacyProvider>
+                    </AuthProvider>
+                </ThemeProvider>
+            </body>
         </html>
     );
 }
