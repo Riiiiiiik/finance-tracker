@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronRight, ArrowRight } from 'lucide-react';
+import { Check, ChevronRight, ArrowRight, Fingerprint, ScanEye, BrainCircuit, Link, ShieldAlert, Cpu } from 'lucide-react';
 
 export default function OnboardingPage() {
     const router = useRouter();
@@ -125,15 +125,15 @@ export default function OnboardingPage() {
 
     // Validação para habilitar botão
     const isStepValid = () => {
-        if (step === 1) return formData.current_method && formData.financial_situation;
-        if (step === 2) return formData.join_reason;
-        if (step === 3) return formData.primary_goal;
+        if (step === 1) return formData.current_method;
+        if (step === 2) return formData.primary_goal;
+        if (step === 3) return formData.join_reason;
         if (step === 4) return selectedBanks.length > 0;
         return false;
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 max-w-lg mx-auto">
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 max-w-md mx-auto">
 
             {/* Barra de Progresso */}
             <div className="w-full h-2 bg-secondary rounded-full mb-8 overflow-hidden">
@@ -147,7 +147,7 @@ export default function OnboardingPage() {
 
             <AnimatePresence mode="wait">
 
-                {/* ETAPA 1 */}
+                {/* ETAPA 1 - AUDITOR */}
                 {step === 1 && (
                     <motion.div
                         key="step1"
@@ -157,47 +157,38 @@ export default function OnboardingPage() {
                         className="w-full space-y-6"
                     >
                         <div className="text-center mb-6">
-                            <h1 className="text-2xl font-bold mb-2">Vamos conhecer você</h1>
-                            <p className="text-muted-foreground">Para personalizar sua experiência, conte um pouco sobre suas finanças hoje.</p>
+                            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#3F68FF]/10 text-[#3F68FF] text-xs font-bold uppercase tracking-wider mb-3">
+                                <ScanEye size={14} />
+                                Monk.Auditor
+                            </span>
+                            <h1 className="text-2xl font-bold mb-2 text-[#3F68FF]">Análise de Precedentes</h1>
+                            <p className="text-muted-foreground text-sm">Sou o Monk.Auditor. Para rastrear a verdade, preciso saber como você documentava sua história até hoje.</p>
                         </div>
 
                         <div className="space-y-4">
-                            <p className="font-medium">Como você controla suas finanças atualmente?</p>
-                            <div className="grid gap-3">
-                                {['Planilha (Excel/Sheets)', 'Caderninho / Agenda', 'De cabeça / Extrato do banco', 'Outro aplicativo', 'Não controlo nada'].map((opt) => (
-                                    <button
-                                        key={opt}
-                                        onClick={() => handleSelect('current_method', opt)}
-                                        className={`p-4 rounded-xl border text-left transition-all ${formData.current_method === opt
-                                            ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                                            : 'border-border hover:border-primary/50'
-                                            }`}
-                                    >
-                                        {opt}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <p className="font-medium">Como você descreveria sua situação atual?</p>
+                            <p className="font-medium flex items-center gap-2 text-sm text-gray-400">
+                                <Fingerprint size={16} className="text-[#3F68FF]" />
+                                Qual a integridade dos seus registros atuais?
+                            </p>
                             <div className="grid gap-3">
                                 {[
-                                    { label: '😅 Caótica', desc: 'Sem controle, muitas dívidas' },
-                                    { label: '😐 Equilibrada', desc: 'Pago as contas, mas não sobra' },
-                                    { label: '🙂 Confortável', desc: 'Sobra um pouco, começando a poupar' },
-                                    { label: '🚀 Investidora', desc: 'Foco em multiplicar patrimônio' }
+                                    { label: 'Planilhas Manuais', desc: 'Dados estruturados, mas estáticos.', value: 'Planilhas (Excel/Sheets)' },
+                                    { label: 'Registros Analógicos', desc: 'Risco de perda física e erro humano.', value: 'Caderninho' },
+                                    { label: 'Memória (Não Confiável)', desc: 'Alta volatilidade. Sem rastro auditável.', value: 'De cabeça' },
+                                    { label: 'Caos Não-Documentado', desc: 'Nenhum histórico. Começaremos do zero.', value: 'Não controlo nada' }
                                 ].map((item) => (
                                     <button
                                         key={item.label}
-                                        onClick={() => handleSelect('financial_situation', item.label)}
-                                        className={`p-4 rounded-xl border text-left transition-all ${formData.financial_situation === item.label
-                                            ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                                            : 'border-border hover:border-primary/50'
+                                        onClick={() => handleSelect('current_method', item.value)}
+                                        className={`p-4 rounded-xl border text-left transition-all relative overflow-hidden group ${formData.current_method === item.value
+                                            ? 'border-[#3F68FF] bg-[#3F68FF]/10 ring-1 ring-[#3F68FF]'
+                                            : 'border-white/10 hover:border-[#3F68FF]/50 hover:bg-[#3F68FF]/5'
                                             }`}
                                     >
-                                        <span className="font-bold block">{item.label}</span>
-                                        <span className="text-sm text-muted-foreground">{item.desc}</span>
+                                        <div className="relative z-10">
+                                            <span className="font-bold block text-white">{item.label}</span>
+                                            <span className="text-xs text-gray-400">{item.desc}</span>
+                                        </div>
                                     </button>
                                 ))}
                             </div>
@@ -205,7 +196,7 @@ export default function OnboardingPage() {
                     </motion.div>
                 )}
 
-                {/* ETAPA 2 */}
+                {/* ETAPA 2 - MONK.AI */}
                 {step === 2 && (
                     <motion.div
                         key="step2"
@@ -215,28 +206,38 @@ export default function OnboardingPage() {
                         className="w-full space-y-6"
                     >
                         <div className="text-center mb-6">
-                            <h1 className="text-2xl font-bold mb-2">O que te trouxe aqui?</h1>
-                            <p className="text-muted-foreground">Queremos focar no que é importante para você agora.</p>
+                            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-[#10B981]/20 to-[#8b5cf6]/20 border border-[#10B981]/30 text-[#10B981] text-xs font-bold uppercase tracking-wider mb-3">
+                                <Cpu size={14} className="text-[#10B981]" />
+                                Monk.AI
+                            </span>
+                            <h1 className="text-2xl font-bold mb-2 bg-gradient-to-r from-[#10B981] to-[#8b5cf6] bg-clip-text text-transparent">Sincronização Neural</h1>
+                            <p className="text-muted-foreground text-sm">Aqui é a Monk.AI. Estou configurando seus algoritmos. Qual é a missão principal deste ciclo?</p>
                         </div>
 
                         <div className="space-y-4">
+                            <p className="font-medium flex items-center gap-2 text-sm text-gray-400">
+                                <BrainCircuit size={16} className="text-[#8b5cf6]" />
+                                Qual vetor estratégico devo priorizar?
+                            </p>
                             <div className="grid gap-3">
                                 {[
-                                    'Levei um susto com a fatura do cartão',
-                                    'Quero começar a juntar dinheiro para uma meta',
-                                    'Indicação de amigo/influenciador',
-                                    'Sinto que estou perdendo dinheiro com taxas',
-                                    'Só curiosidade para testar a IA'
-                                ].map((opt) => (
+                                    { label: 'Neutralizar Dívidas', desc: 'Foco: Estancar sangramentos críticos.', value: 'Sair do vermelho / Quitar dívidas' },
+                                    { label: 'Construir Escudo', desc: 'Foco: Segurança e Liquidez.', value: 'Montar minha reserva de emergência' },
+                                    { label: 'Expansão de Patrimônio', desc: 'Foco: Multiplicação de ativos (Vault).', value: 'Começar a investir' },
+                                    { label: 'Materialização de Visão', desc: 'Foco: Acelerar conquistas do Monk.Wish.', value: 'Planejar uma grande compra' }
+                                ].map((item) => (
                                     <button
-                                        key={opt}
-                                        onClick={() => handleSelect('join_reason', opt)}
-                                        className={`p-4 rounded-xl border text-left transition-all ${formData.join_reason === opt
-                                            ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                                            : 'border-border hover:border-primary/50'
+                                        key={item.label}
+                                        onClick={() => handleSelect('primary_goal', item.value)}
+                                        className={`p-4 rounded-xl border text-left transition-all relative overflow-hidden group ${formData.primary_goal === item.value
+                                            ? 'border-[#10B981] bg-[#10B981]/10 ring-1 ring-[#10B981]'
+                                            : 'border-white/10 hover:border-[#10B981]/50 hover:bg-[#10B981]/5'
                                             }`}
                                     >
-                                        {opt}
+                                        <div className="relative z-10">
+                                            <span className="font-bold block text-white">{item.label}</span>
+                                            <span className="text-xs text-gray-400">{item.desc}</span>
+                                        </div>
                                     </button>
                                 ))}
                             </div>
@@ -244,7 +245,7 @@ export default function OnboardingPage() {
                     </motion.div>
                 )}
 
-                {/* ETAPA 3 */}
+                {/* ETAPA 3 - MONK.SENTRY */}
                 {step === 3 && (
                     <motion.div
                         key="step3"
@@ -254,28 +255,39 @@ export default function OnboardingPage() {
                         className="w-full space-y-6"
                     >
                         <div className="text-center mb-6">
-                            <h1 className="text-2xl font-bold mb-2">Qual seu objetivo nº 1?</h1>
-                            <p className="text-muted-foreground">Vamos te ajudar a chegar lá nos próximos 3 meses.</p>
+                            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF4B4B]/10 text-[#FF4B4B] text-xs font-bold uppercase tracking-wider mb-3">
+                                <ShieldAlert size={14} />
+                                Monk.Sentry
+                            </span>
+                            <h1 className="text-2xl font-bold mb-2 text-[#FF4B4B]">Escaneamento de Ameaças</h1>
+                            <p className="text-muted-foreground text-sm">Monk.Sentry na escuta. Detectei sua chegada. Qual foi o evento gerador da busca por proteção?</p>
                         </div>
 
                         <div className="space-y-4">
+                            <p className="font-medium flex items-center gap-2 text-sm text-gray-400">
+                                <ScanEye size={16} className="text-[#FF4B4B]" />
+                                Que tipo de alerta foi disparado?
+                            </p>
                             <div className="grid gap-3">
                                 {[
-                                    'Sair do vermelho / Quitar dívidas',
-                                    'Montar minha reserva de emergência',
-                                    'Apenas ter clareza de para onde meu dinheiro vai',
-                                    'Começar a investir',
-                                    'Planejar uma grande compra'
-                                ].map((opt) => (
+                                    { label: 'Choque de Liquidez', desc: 'Gastos excederam a capacidade de defesa.', value: 'Levei um susto com a fatura do cartão' },
+                                    { label: 'Drenagem Invisível', desc: 'Recursos vazando sem identificação.', value: 'Sinto que estou perdendo dinheiro com taxas' },
+                                    { label: 'Maturação de Meta', desc: 'Necessidade de disciplina tática.', value: 'Quero começar a juntar dinheiro para uma meta' },
+                                    { label: 'Recrutamento Externo', desc: 'Convocado por outro membro da Ordem.', value: 'Indicação de amigo/influenciador' },
+                                    { label: 'Curiosidade Tática', desc: 'Exploração de novos sistemas.', value: 'Só curiosidade para testar a IA' }
+                                ].map((item) => (
                                     <button
-                                        key={opt}
-                                        onClick={() => handleSelect('primary_goal', opt)}
-                                        className={`p-4 rounded-xl border text-left transition-all ${formData.primary_goal === opt
-                                            ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                                            : 'border-border hover:border-primary/50'
+                                        key={item.label}
+                                        onClick={() => handleSelect('join_reason', item.value)}
+                                        className={`p-4 rounded-xl border text-left transition-all relative overflow-hidden group ${formData.join_reason === item.value
+                                            ? 'border-[#FF4B4B] bg-[#FF4B4B]/10 ring-1 ring-[#FF4B4B]'
+                                            : 'border-white/10 hover:border-[#FF4B4B]/50 hover:bg-[#FF4B4B]/5'
                                             }`}
                                     >
-                                        {opt}
+                                        <div className="relative z-10">
+                                            <span className="font-bold block text-white">{item.label}</span>
+                                            <span className="text-xs text-gray-400">{item.desc}</span>
+                                        </div>
                                     </button>
                                 ))}
                             </div>
@@ -283,7 +295,7 @@ export default function OnboardingPage() {
                     </motion.div>
                 )}
 
-                {/* ETAPA 4 - Seleção de Bancos */}
+                {/* ETAPA 4 - CONEXÃO AO THE ORDER */}
                 {step === 4 && (
                     <motion.div
                         key="step4"
@@ -293,8 +305,12 @@ export default function OnboardingPage() {
                         className="w-full space-y-6"
                     >
                         <div className="text-center mb-6">
-                            <h1 className="text-2xl font-bold mb-2">Onde está seu dinheiro?</h1>
-                            <p className="text-muted-foreground">Selecione os bancos que você usa. Vamos criar suas contas automaticamente.</p>
+                            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFD659]/10 text-[#FFD659] text-xs font-bold uppercase tracking-wider mb-3">
+                                <Link size={14} />
+                                Conexão Externa
+                            </span>
+                            <h1 className="text-2xl font-bold mb-2 text-white">Conexão ao The Order</h1>
+                            <p className="text-muted-foreground text-sm">Centralizando o Monk.Vault. Selecione quais terminais bancários serão conectados à rede.</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
@@ -303,19 +319,18 @@ export default function OnboardingPage() {
                                     key={bank.name}
                                     onClick={() => toggleBank(bank.name)}
                                     className={`p-4 rounded-xl border text-left transition-all relative overflow-hidden group ${selectedBanks.includes(bank.name)
-                                        ? 'border-primary ring-1 ring-primary'
-                                        : 'border-border hover:border-primary/50'
+                                        ? 'border-[#FFD659] ring-1 ring-[#FFD659]'
+                                        : 'border-white/10 hover:border-[#FFD659]/50'
                                         }`}
                                 >
                                     <div
-                                        className={`absolute inset-0 opacity-10 transition-colors ${selectedBanks.includes(bank.name) ? 'bg-primary' : 'group-hover:bg-secondary'}`}
-                                        style={{ backgroundColor: selectedBanks.includes(bank.name) ? bank.color : undefined }}
+                                        className={`absolute inset-0 opacity-10 transition-colors ${selectedBanks.includes(bank.name) ? 'bg-[#FFD659]' : 'group-hover:bg-[#FFD659]/5'}`}
                                     />
                                     <div className="relative z-10 flex items-center justify-between">
-                                        <span className="font-bold">{bank.name}</span>
+                                        <span className="font-bold text-sm text-white">{bank.name}</span>
                                         {selectedBanks.includes(bank.name) && (
-                                            <div className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                                                <Check className="w-3 h-3" />
+                                            <div className="flex items-center gap-1 text-[10px] text-[#FFD659] font-bold uppercase tracking-wide bg-[#FFD659]/10 px-2 py-0.5 rounded-full border border-[#FFD659]/20">
+                                                Link Ativo <Link size={10} />
                                             </div>
                                         )}
                                     </div>

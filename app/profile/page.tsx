@@ -3,86 +3,76 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { User, LogOut, Moon, Sun, Trash2, Save, Target, Wallet, Edit2, X, Check } from 'lucide-react';
+import { User, CreditCard, Cpu, Settings, LogOut, Trash2, Shield, Zap, BrainCircuit } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
-const AVATARS = [
-    'https://api.dicebear.com/9.x/avataaars/svg?seed=Felix&backgroundColor=ffdfbf',
-    'https://api.dicebear.com/9.x/avataaars/svg?seed=Aneka&backgroundColor=b6e3f4',
-    'https://api.dicebear.com/9.x/avataaars/svg?seed=Zoe&backgroundColor=c0aede',
-    'https://api.dicebear.com/9.x/avataaars/svg?seed=Jack&backgroundColor=ffd5dc',
-    'https://api.dicebear.com/9.x/avataaars/svg?seed=Bubba&backgroundColor=d1f4dd',
-    'https://api.dicebear.com/9.x/avataaars/svg?seed=Baby&backgroundColor=ffeaa7',
-];
-
-export default function ProfilePage() {
+export default function MemberProfile() {
     const router = useRouter();
-    const { theme, setTheme } = useTheme();
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    const [calibrating, setCalibrating] = useState(false);
 
     // Dados do Usuário
     const [profile, setProfile] = useState<any>(null);
-    const [onboarding, setOnboarding] = useState<any>(null);
+    const [userId, setUserId] = useState<string | null>(null);
 
-    // Edição de Perfil
-    const [isEditingProfile, setIsEditingProfile] = useState(false);
-    const [newName, setNewName] = useState('');
-    const [newAvatar, setNewAvatar] = useState('');
-
-    // Formulário Financeiro
+    // Estados do Formulário Financeiro
     const [income, setIncome] = useState('');
     const [payday, setPayday] = useState('');
-    const [currency, setCurrency] = useState('BRL');
+    const [riskProfile, setRiskProfile] = useState<'conservative' | 'moderate' | 'bold'>('moderate');
+
+    // Estado de Edição de Identidade
+    const [isEditingIdentity, setIsEditingIdentity] = useState(false);
+    const [tempName, setTempName] = useState('');
+    const [tempAvatar, setTempAvatar] = useState('');
 
     useEffect(() => {
-        loadProfile();
+        if (profile) {
+            setTempName(profile.full_name || '');
+            setTempAvatar(profile.avatar_url || '');
+        }
+    }, [profile]);
+
+    useEffect(() => {
+        checkUser();
     }, []);
 
-    const loadProfile = async () => {
+    const checkUser = async () => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                setLoading(false);
                 router.push('/login');
                 return;
             }
+            setUserId(session.user.id);
+            loadProfile(session.user.id);
+        } catch (error) {
+            console.error('Erro de sessão:', error);
+            router.push('/login');
+        }
+    };
 
-            // 1. Carregar Perfil
-            const { data: profileData } = await supabase
+    const loadProfile = async (uid: string) => {
+        try {
+            const { data } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('id', session.user.id)
+                .eq('id', uid)
                 .single();
 
-            if (profileData) {
-                setProfile(profileData);
-                setNewName(profileData.full_name || '');
-                setNewAvatar(profileData.avatar_url || '');
+            if (data) {
+                setProfile(data);
 
-                // Formatar renda inicial
-                if (profileData.monthly_income) {
+                // Formatar Renda
+                if (data.monthly_income) {
                     const formatted = new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                    }).format(profileData.monthly_income);
+                        minimumFractionDigits: 2
+                    }).format(data.monthly_income);
                     setIncome(formatted);
                 }
 
-                setPayday(profileData.payday?.toString() || '');
+                if (data.payday) setPayday(data.payday.toString().padStart(2, '0'));
+                if (data.investor_profile) setRiskProfile(data.investor_profile);
             }
-
-            // 2. Carregar Onboarding
-            const { data: onboardingData } = await supabase
-                .from('onboarding_responses')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .single();
-
-            if (onboardingData) {
-                setOnboarding(onboardingData);
-            }
-
         } catch (error) {
             console.error('Erro ao carregar perfil:', error);
         } finally {
@@ -90,61 +80,86 @@ export default function ProfilePage() {
         }
     };
 
-    const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/\D/g, '');
-        const numberValue = Number(value) / 100;
-        const formatted = new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: currency,
-        }).format(numberValue);
-        setIncome(formatted);
-    };
-
-    const handleSaveProfile = async () => {
-        setSaving(true);
+    const handleSaveIdentity = async () => {
+        if (!userId) return;
         try {
             const { error } = await supabase
                 .from('profiles')
                 .update({
-                    full_name: newName,
-                    avatar_url: newAvatar
+                    full_name: tempName,
+                    avatar_url: tempAvatar
                 })
-                .eq('id', profile.id);
+                .eq('id', userId);
 
             if (error) throw error;
 
-            setProfile({ ...profile, full_name: newName, avatar_url: newAvatar });
-            setIsEditingProfile(false);
-            alert('Perfil atualizado!');
+            setProfile({ ...profile, full_name: tempName, avatar_url: tempAvatar });
+            setIsEditingIdentity(false);
+            // alert('Identidade atualizada.'); // Removed for cleaner UX or replace with toast
         } catch (error) {
-            console.error('Erro ao salvar perfil:', error);
-            alert('Erro ao salvar perfil.');
-        } finally {
-            setSaving(false);
+            console.error('Erro ao salvar:', error);
+            alert('Erro ao atualizar identidade.');
         }
     };
 
-    const handleSaveFinancial = async () => {
-        setSaving(true);
+    const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Permitir apenas números e vírgula/ponto
+        const value = e.target.value.replace(/[^\d,]/g, '');
+        setIncome(value);
+    };
+
+    const handleRecalibrate = async () => {
+        setCalibrating(true);
+
+        // Simular "Processamento AI"
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
         try {
-            // Converter string formatada (R$ 1.000,00) para número (1000.00)
-            const numericIncome = parseFloat(income.replace(/[^\d,]/g, '').replace(',', '.'));
+            // Converter renda: "5.600,00" -> 5600.00
+            // Remover pontos de milhar, substituir virgula decimal por ponto
+            const rawValue = income.replace(/\./g, '').replace(',', '.');
+            const numericIncome = parseFloat(rawValue);
+            const numericPayday = parseInt(payday);
+
+            if (isNaN(numericIncome)) {
+                alert('Valor de renda inválido para processamento.');
+                setCalibrating(false);
+                return;
+            }
 
             const { error } = await supabase
                 .from('profiles')
                 .update({
                     monthly_income: numericIncome,
-                    payday: parseInt(payday)
+                    payday: numericPayday || null
                 })
-                .eq('id', profile.id);
+                .eq('id', userId);
 
             if (error) throw error;
-            alert('Dados financeiros atualizados!');
+
+            // Visual feedback handled by state or toast eventually
         } catch (error) {
-            console.error('Erro ao salvar:', error);
-            alert('Erro ao salvar dados.');
+            console.error('Falha na recalibragem:', error);
+            alert('Erro na sincronização com o núcleo.');
         } finally {
-            setSaving(false);
+            setCalibrating(false);
+        }
+    };
+
+    const handleUpdateRiskProfile = async (profileType: 'conservative' | 'moderate' | 'bold') => {
+        setRiskProfile(profileType);
+        try {
+            // Tentar salvar no DB. Se a coluna não existir, vai falhar silenciosamente no catch
+            const { error } = await supabase
+                .from('profiles')
+                .update({ investor_profile: profileType })
+                .eq('id', userId);
+
+            if (error) {
+                console.warn('Campo investor_profile pode não existir:', error.message);
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar perfil de risco:', error);
         }
     };
 
@@ -154,215 +169,222 @@ export default function ProfilePage() {
     };
 
     const handleDeleteAccount = async () => {
-        const confirm = window.confirm('TEM CERTEZA? Isso apagará TODOS os seus dados permanentemente. Essa ação não pode ser desfeita.');
-        if (!confirm) return;
+        if (!confirm('ATENÇÃO: Protocolo de Autodestruição. Confirmar exclusão permanente?')) return;
 
         try {
-            await supabase.from('transactions').delete().eq('user_id', profile.id);
-            await supabase.from('categories').delete().eq('user_id', profile.id);
-            await supabase.from('onboarding_responses').delete().eq('user_id', profile.id);
-            await supabase.from('profiles').delete().eq('id', profile.id);
-
-            await supabase.auth.signOut();
-            router.push('/login');
+            // Limpeza em cascata (supondo policies ou manual)
+            if (userId) {
+                await supabase.from('transactions').delete().eq('user_id', userId);
+                await supabase.from('categories').delete().eq('user_id', userId);
+                await supabase.from('wishlist_items').delete().eq('user_id', userId); // Ensure correct table
+                await supabase.from('profiles').delete().eq('id', userId);
+                await supabase.auth.signOut();
+                router.push('/login');
+            }
         } catch (error) {
-            console.error('Erro ao deletar conta:', error);
-            alert('Erro ao deletar dados. Entre em contato com o suporte.');
+            console.error('Erro ao deletar:', error);
+            alert('Falha no protocolo de exclusão.');
         }
     };
 
-    if (loading) return <div className="p-8 text-center">Carregando perfil...</div>;
+    if (loading) return (
+        <div className="min-h-screen bg-[#09090B] flex items-center justify-center">
+            <div className="text-[#10B981] animate-pulse font-mono tracking-widest">CARREGANDO DOSSIÊ...</div>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen p-4 pb-24 max-w-md mx-auto space-y-6">
-            <h1 className="text-2xl font-bold mb-6">Meu Perfil</h1>
+        <div className="bg-[#09090B] min-h-screen text-white p-6 font-sans pb-24 max-w-md mx-auto">
 
-            {/* A. Cabeçalho / Edição */}
-            <div className="bg-card border p-4 rounded-xl relative">
-                {!isEditingProfile ? (
-                    <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full overflow-hidden bg-secondary flex items-center justify-center border-2 border-primary">
-                            {profile?.avatar_url ? (
-                                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                            ) : (
-                                <User className="w-8 h-8 text-muted-foreground" />
-                            )}
+            {/* 1. CREDENCIAL DO MEMBRO (ID CARD) */}
+            <div className="relative mb-8 group">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#10B981] to-blue-600 opacity-20 blur-xl rounded-2xl group-hover:opacity-30 transition-opacity"></div>
+                <div className="bg-[#161616]/90 backdrop-blur-xl border border-[#333] p-6 rounded-2xl relative z-10 flex items-center gap-5 shadow-2xl">
+
+                    {isEditingIdentity ? (
+                        <div className="flex-1 space-y-4 animate-in fade-in">
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
+                                <p className="text-[#10B981] text-xs uppercase font-bold tracking-[0.15em]">Modo de Edição de Credencial</p>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs text-gray-500 font-bold uppercase">Codinome (Nome)</label>
+                                <input
+                                    value={tempName}
+                                    onChange={(e) => setTempName(e.target.value)}
+                                    className="w-full bg-[#09090B] border border-[#333] rounded-lg p-2 text-white outline-none focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981]/50 text-sm font-bold"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs text-gray-500 font-bold uppercase">Holo-Avatar (URL)</label>
+                                <input
+                                    value={tempAvatar}
+                                    onChange={(e) => setTempAvatar(e.target.value)}
+                                    className="w-full bg-[#09090B] border border-[#333] rounded-lg p-2 text-xs text-gray-400 outline-none focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981]/50 font-mono"
+                                    placeholder="https://"
+                                />
+                            </div>
+                            <div className="flex gap-2 pt-2">
+                                <button onClick={() => setIsEditingIdentity(false)} className="flex-1 py-2 rounded-lg border border-[#333] hover:bg-[#222] text-xs font-bold text-gray-400 transition-colors">Cancelar</button>
+                                <button onClick={handleSaveIdentity} className="flex-1 py-2 rounded-lg bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/50 hover:bg-[#10B981]/20 font-bold text-xs transition-colors shadow-[0_0_10px_rgba(16,185,129,0.2)]">Confirmar Alterações</button>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="font-bold text-lg">{profile?.full_name || 'Usuário'}</h2>
-                            <p className="text-sm text-muted-foreground">Membro desde {new Date(profile?.created_at || Date.now()).getFullYear()}</p>
-                        </div>
-                        <button
-                            onClick={() => setIsEditingProfile(true)}
-                            className="absolute top-4 right-4 p-2 hover:bg-secondary rounded-full text-muted-foreground"
-                        >
-                            <Edit2 className="w-4 h-4" />
-                        </button>
-                    </div>
-                ) : (
-                    <div className="space-y-4">
-                        <div className="flex justify-between items-center mb-2">
-                            <h3 className="font-bold">Editar Perfil</h3>
-                            <button onClick={() => setIsEditingProfile(false)} className="p-1 hover:bg-secondary rounded">
-                                <X className="w-5 h-5" />
+                    ) : (
+                        <>
+                            <div className="relative">
+                                <div className="w-20 h-20 rounded-full bg-gray-700 overflow-hidden border-2 border-[#10B981] p-0.5 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                                    <img
+                                        src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name || 'User'}`}
+                                        alt="Avatar"
+                                        className="w-full h-full rounded-full bg-[#222] object-cover"
+                                    />
+                                </div>
+                                <div className="absolute bottom-0 right-0 bg-[#09090B] p-1 rounded-full border border-[#10B981]/30">
+                                    <Shield size={16} className="text-[#10B981] fill-[#10B981]" />
+                                </div>
+                            </div>
+
+                            <div className="flex-1">
+                                <h2 className="text-2xl font-bold text-white tracking-tight">{profile?.full_name || 'Operador'}</h2>
+                                <p className="text-[#10B981] text-xs uppercase font-bold tracking-[0.15em] mb-1">Membro Fundador</p>
+                                <p className="text-gray-500 text-xs flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
+                                    Acesso Nível 5 Concedido
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={() => setIsEditingIdentity(true)}
+                                className="bg-[#222] hover:bg-[#333] p-2 rounded-lg transition-colors border border-[#333] group"
+                                title="Editar Identidade"
+                            >
+                                <Settings size={18} className="text-gray-400 group-hover:text-white group-hover:rotate-90 transition-all duration-300" />
                             </button>
-                        </div>
-
-                        {/* Seleção de Avatar */}
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                            {AVATARS.map((url, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => setNewAvatar(url)}
-                                    className={`relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 transition-all ${newAvatar === url ? 'border-primary ring-2 ring-primary ring-offset-2' : 'border-transparent opacity-70 hover:opacity-100'
-                                        }`}
-                                >
-                                    <img src={url} alt={`Monkey ${index + 1}`} className="w-full h-full object-cover" />
-                                </button>
-                            ))}
-                        </div>
-
-                        <input
-                            type="text"
-                            value={newName}
-                            onChange={(e) => setNewName(e.target.value)}
-                            placeholder="Seu Nome"
-                            className="w-full p-2 rounded-md bg-secondary border border-input"
-                        />
-
-                        <button
-                            onClick={handleSaveProfile}
-                            disabled={saving}
-                            className="w-full bg-primary text-primary-foreground p-2 rounded-md font-medium text-sm flex items-center justify-center gap-2"
-                        >
-                            <Check className="w-4 h-4" />
-                            Salvar Alterações
-                        </button>
-                    </div>
-                )}
+                        </>
+                    )}
+                </div>
             </div>
 
-            {/* B. Motor Financeiro */}
-            <div className="bg-card border p-4 rounded-xl space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                    <Wallet className="w-5 h-5 text-primary" />
-                    <h3 className="font-bold">Motor Financeiro</h3>
-                </div>
+            {/* 2. MOTOR FINANCEIRO (Onde a IA atua) */}
+            <div className="mb-6">
+                <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Zap size={14} className="text-yellow-500" />
+                    Núcleo de Energia
+                </h3>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Renda Mensal</label>
-                        <input
-                            type="text"
-                            value={income}
-                            onChange={handleIncomeChange}
-                            className="w-full p-2 rounded-md bg-secondary border border-input"
-                            placeholder="R$ 0,00"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Dia do Pagamento</label>
-                        <input
-                            type="number"
-                            value={payday}
-                            onChange={(e) => setPayday(e.target.value)}
-                            min="1"
-                            max="31"
-                            className="w-full p-2 rounded-md bg-secondary border border-input [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                    </div>
-                </div>
-
-                <button
-                    onClick={handleSaveFinancial}
-                    disabled={saving}
-                    className="w-full bg-primary text-primary-foreground p-2 rounded-md font-medium text-sm flex items-center justify-center gap-2"
-                >
-                    <Save className="w-4 h-4" />
-                    {saving ? 'Salvando...' : 'Atualizar Premissas'}
-                </button>
-            </div>
-
-            {/* C. Espelho do Onboarding */}
-            {onboarding && (
-                <div className="bg-card border p-4 rounded-xl space-y-3">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Target className="w-5 h-5 text-blue-500" />
-                        <h3 className="font-bold">Seu Foco</h3>
+                <div className="bg-[#161616] border border-[#333] rounded-xl p-6 relative overflow-hidden">
+                    {/* Detalhe visual de circuito */}
+                    <div className="absolute right-0 top-0 opacity-5 pointer-events-none">
+                        <Cpu size={120} />
                     </div>
 
-                    <div className="bg-secondary/50 p-3 rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-1">Objetivo Principal</p>
-                        <p className="font-medium text-sm">{onboarding.primary_goal}</p>
+                    <div className="grid grid-cols-2 gap-6 relative z-10">
+                        <div className="space-y-2">
+                            <label className="text-xs text-gray-500 font-bold uppercase">Fluxo Mensal (Renda)</label>
+                            <div className="flex items-center gap-2 text-white bg-[#09090B] border border-[#333] rounded-lg p-3 focus-within:border-[#10B981] transition-colors">
+                                <span className="text-gray-500 text-sm">R$</span>
+                                <input
+                                    type="text"
+                                    value={income}
+                                    onChange={handleIncomeChange}
+                                    className="bg-transparent outline-none w-full font-mono font-bold"
+                                    placeholder="0,00"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs text-gray-500 font-bold uppercase">Ciclo de Recarga (Dia)</label>
+                            <div className="flex items-center gap-2 text-white bg-[#09090B] border border-[#333] rounded-lg p-3 focus-within:border-[#10B981] transition-colors">
+                                <span className="text-gray-500 text-sm">Dia</span>
+                                <input
+                                    type="number"
+                                    value={payday}
+                                    onChange={(e) => setPayday(e.target.value)}
+                                    className="bg-transparent outline-none w-full font-mono font-bold"
+                                    placeholder="DD"
+                                    min="1" max="31"
+                                />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="bg-secondary/50 p-3 rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-1">Situação Atual</p>
-                        <p className="font-medium text-sm">{onboarding.financial_situation}</p>
-                    </div>
-                </div>
-            )}
-
-            {/* D. Preferências */}
-            <div className="bg-card border p-4 rounded-xl space-y-4">
-                <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wider">Preferências</h3>
-
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                        <span className="text-sm">Tema do App</span>
-                    </div>
-                    <div className="flex bg-secondary rounded-lg p-1">
-                        <button
-                            onClick={() => setTheme('light')}
-                            className={`p-1.5 rounded-md transition-all ${theme === 'light' ? 'bg-background shadow' : 'text-muted-foreground'}`}
-                        >
-                            <Sun className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => setTheme('dark')}
-                            className={`p-1.5 rounded-md transition-all ${theme === 'dark' ? 'bg-background shadow' : 'text-muted-foreground'}`}
-                        >
-                            <Moon className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                    <span className="text-sm">Moeda Principal</span>
-                    <select
-                        value={currency}
-                        onChange={(e) => setCurrency(e.target.value)}
-                        className="text-sm font-bold bg-secondary px-2 py-1 rounded border-none focus:ring-1 focus:ring-primary outline-none cursor-pointer"
+                    {/* AÇÃO DA MONK.AI */}
+                    <button
+                        onClick={handleRecalibrate}
+                        disabled={calibrating}
+                        className="w-full mt-6 bg-[#10B981]/10 hover:bg-[#10B981]/20 border border-[#10B981]/50 text-[#10B981] font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all group disabled:opacity-50"
                     >
-                        <option value="BRL">BRL (R$)</option>
-                        <option value="USD">USD ($)</option>
-                        <option value="EUR">EUR (€)</option>
-                    </select>
+                        <Cpu size={18} className={calibrating ? "animate-spin" : "group-hover:animate-spin-slow"} />
+                        {calibrating ? 'Sincronizando...' : 'Recalibrar Premissas com IA'}
+                    </button>
+                    <p className="text-center text-[10px] text-gray-600 mt-2">
+                        * A Monk.AI usará estes dados para projetar seus limites do Vault.
+                    </p>
                 </div>
             </div>
 
-            {/* E. Zona de Perigo */}
-            <div className="space-y-3 pt-4">
+            {/* 3. SINCRONIZAÇÃO NEURAL (Novo!) */}
+            <div className="mb-8">
+                <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <BrainCircuit size={14} className="text-[#6CA8FF]" />
+                    Sincronização Neural
+                </h3>
+
+                <div className="bg-[#161616] border border-[#333] rounded-xl p-1 flex items-center justify-between">
+                    {['conservative', 'moderate', 'bold'].map((type) => {
+                        const isSelected = riskProfile === type;
+                        const label = type === 'conservative' ? 'Conservador' : type === 'moderate' ? 'Moderado' : 'Arrojado';
+                        const colorClass = type === 'bold' ? 'text-red-500' : type === 'moderate' ? 'text-[#6CA8FF]' : 'text-[#10B981]';
+                        const bgClass = type === 'bold' ? 'bg-red-500/10 border-red-500/30' : type === 'moderate' ? 'bg-[#6CA8FF]/10 border-[#6CA8FF]/30' : 'bg-[#10B981]/10 border-[#10B981]/30';
+
+                        return (
+                            <button
+                                key={type}
+                                onClick={() => handleUpdateRiskProfile(type as any)}
+                                className={`flex-1 py-3 text-xs font-bold transition-all rounded-lg 
+                                    ${isSelected
+                                        ? `${colorClass} ${bgClass} border shadow-[0_0_10px_rgba(0,0,0,0.5)]`
+                                        : 'text-gray-400 hover:text-white'
+                                    }`}
+                            >
+                                {label}
+                            </button>
+                        );
+                    })}
+                </div>
+                <div className="flex justify-between mt-2 ml-1 mr-1">
+                    <p className="text-[10px] text-gray-500">
+                        {riskProfile === 'conservative' && 'Prioriza segurança máxima. Alertas precoces.'}
+                        {riskProfile === 'moderate' && 'Equilíbrio entre crescimento e proteção.'}
+                        {riskProfile === 'bold' && 'Tolerância a alta volatilidade e gastos.'}
+                    </p>
+                </div>
+            </div>
+
+            {/* 4. ZONA DE PERIGO (Footer) */}
+            <div className="space-y-3">
+                <button className="w-full flex items-center justify-between p-4 rounded-xl bg-[#161616] border border-[#333] text-gray-300 hover:bg-[#222] transition-colors cursor-not-allowed opacity-70">
+                    <span className="flex items-center gap-3 font-medium">
+                        <Settings size={18} /> Protocolos do Sistema
+                    </span>
+                    <span className="text-xs text-gray-500">v1.0.4</span>
+                </button>
+
                 <button
                     onClick={handleSignOut}
-                    className="w-full p-3 rounded-xl border border-border hover:bg-secondary flex items-center justify-center gap-2 text-muted-foreground transition-colors"
+                    className="w-full flex items-center gap-3 p-4 rounded-xl border border-[#333] text-gray-400 hover:text-white hover:bg-[#222] transition-colors"
                 >
-                    <LogOut className="w-4 h-4" />
-                    Sair da Conta
+                    <LogOut size={18} /> Encerrar Sessão
                 </button>
 
                 <button
                     onClick={handleDeleteAccount}
-                    className="w-full p-3 rounded-xl border border-red-500/20 hover:bg-red-500/10 flex items-center justify-center gap-2 text-red-500 transition-colors"
+                    className="w-full flex items-center gap-3 p-4 rounded-xl border border-red-900/20 text-red-500/70 hover:text-red-500 hover:bg-red-900/10 transition-colors text-sm"
                 >
-                    <Trash2 className="w-4 h-4" />
-                    Excluir Conta e Dados
+                    <Trash2 size={16} /> Deletar Credenciais
                 </button>
-                <p className="text-[10px] text-center text-muted-foreground">
-                    Versão 1.0.0 • Build 2024
-                </p>
             </div>
+
         </div>
     );
 }

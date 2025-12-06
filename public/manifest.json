@@ -4,8 +4,8 @@
     "description": "Controle suas finanças de forma simples e inteligente",
     "start_url": "/dashboard",
     "display": "standalone",
-    "background_color": "#0a0a0a",
-    "theme_color": "#16a34a",
+    "background_color": "#09090B",
+    "theme_color": "#09090B",
     "orientation": "portrait",
     "icons": [
         {

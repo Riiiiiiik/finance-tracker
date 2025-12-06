@@ -9,7 +9,13 @@ import { motion, useAnimation, PanInfo } from 'framer-motion';
 import EmotionalAnalytics from '@/components/EmotionalAnalytics';
 import AccountCarousel from '@/components/AccountCarousel';
 import MagicTransactionForm from '@/components/MagicTransactionForm';
+import PayInvoiceModal from '@/components/PayInvoiceModal';
+import FutureInvoices from '@/components/FutureInvoices';
 import { usePrivacy } from '@/lib/privacy-context';
+import MonkIcon, { monkColors } from '@/components/MonkIcon';
+import MonkGrid from '@/components/MonkGrid';
+
+import MonkLetter from '@/components/MonkLetter';
 
 // Componente de Transação com Swipe-to-Delete
 function TransactionItem({
@@ -83,6 +89,12 @@ export default function DashboardPage() {
 
     const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
     const [accounts, setAccounts] = useState<any[]>([]);
+    const [showPayInvoiceModal, setShowPayInvoiceModal] = useState(false);
+
+    // Monk Grid Data States
+    const [wishlistMain, setWishlistMain] = useState({ name: 'Nova Meta', percent: 0 });
+    const [nextInvoiceDate, setNextInvoiceDate] = useState('10/12');
+    const [dailyAllowance, setDailyAllowance] = useState(0);
 
     useEffect(() => {
         checkUser();
@@ -116,11 +128,60 @@ export default function DashboardPage() {
             setAvatarUrl(profile.avatar_url || '');
         }
 
-        // Carregar contas e transações iniciais
+        // Carregar dados iniciais
         await loadAccounts(session.user.id);
         loadTransactions(session.user.id, 'all');
+        loadWishlist(session.user.id);
 
         setLoading(false);
+    };
+
+    const loadWishlist = async (uid: string) => {
+        // 1. Fetch Total Balance (Integridade)
+        const { data: accountsData } = await supabase
+            .from('accounts')
+            .select('balance, type')
+            .eq('user_id', uid);
+
+        const totalBalance = accountsData
+            ? accountsData.reduce((acc, curr) => {
+                if (['checking', 'savings', 'investment', 'cash'].includes(curr.type)) {
+                    return acc + curr.balance;
+                }
+                return acc;
+            }, 0)
+            : 0;
+
+        // 2. Fetch Wishlist Items to find the Top Priority one
+        // We fetch all active items to sort correctly in JS (since 'high' < 'low' alphabetically)
+        const { data: wishlistItems } = await supabase
+            .from('wishlist_items')
+            .select('*')
+            .eq('user_id', uid);
+        // .eq('status', 'active'); // Filter relaxed to debug "Nova Meta"
+
+        console.log('Dashboard Debug - Wishlist Fetch:', { uid, wishlistItems }); // DEBUG LOG
+        console.log('Dashboard Debug - Balance:', { accountsData, totalBalance }); // DEBUG LOG
+
+        if (wishlistItems && wishlistItems.length > 0) {
+            // Priority Map
+            const priorityMap: Record<string, number> = { 'high': 3, 'medium': 2, 'low': 1 };
+
+            // Sort: Priority DESC, then Price ASC (Easier first?) or CreatedAt DESC
+            const sortedItems = wishlistItems.sort((a, b) => {
+                const pA = priorityMap[a.priority] || 0;
+                const pB = priorityMap[b.priority] || 0;
+                if (pA !== pB) return pB - pA; // Higher priority first
+                return a.price - b.price; // Cheaper items first (Quick wins)
+            });
+
+            const topItem = sortedItems[0];
+            const percent = Math.min(100, Math.round((totalBalance / topItem.price) * 100));
+
+            setWishlistMain({ name: topItem.name, percent });
+        } else {
+            setWishlistMain({ name: 'Nova Meta', percent: 0 });
+        }
     };
 
     const loadAccounts = async (userId: string) => {
@@ -133,6 +194,17 @@ export default function DashboardPage() {
 
             if (error) throw error;
             setAccounts(data || []);
+
+            // Calculate Daily Allowance (Simple Logic: Balance / 30 for now, or just static)
+            if (data) {
+                const total = data.reduce((acc, curr) => {
+                    if (['checking', 'savings', 'investment', 'cash'].includes(curr.type)) {
+                        return acc + curr.balance;
+                    }
+                    return acc;
+                }, 0);
+                setDailyAllowance(Math.max(0, total / 30));
+            }
 
             // Se não tiver conta selecionada e houver contas, seleciona 'all'
             if (!selectedAccountId && data) {
@@ -167,15 +239,44 @@ export default function DashboardPage() {
     };
 
     const handleDeleteTransaction = async (id: string) => {
+        // 1. Buscar detalhes da transação antes de deletar
+        const { data: transaction } = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (!transaction) return;
+
+        // 2. Deletar transação
         const { error } = await supabase
             .from('transactions')
             .delete()
             .eq('id', id);
 
         if (!error) {
+            // 3. Atualizar saldo da conta (Reverter a operação)
+            const { data: account } = await supabase
+                .from('accounts')
+                .select('balance')
+                .eq('id', transaction.account_id)
+                .single();
+
+            if (account) {
+                const amount = transaction.amount;
+                const isExpense = transaction.type === 'expense';
+                const newBalance = isExpense
+                    ? account.balance + amount
+                    : account.balance - amount;
+
+                await supabase
+                    .from('accounts')
+                    .update({ balance: newBalance })
+                    .eq('id', transaction.account_id);
+            }
+
             setTransactions(transactions.filter(t => t.id !== id));
             setUpdateTrigger(prev => prev + 1);
-            // Atualizar saldo da conta também seria ideal aqui
             if (userId) loadAccounts(userId);
         } else {
             console.error('Erro ao deletar transação:', error);
@@ -183,96 +284,134 @@ export default function DashboardPage() {
         }
     };
 
-    if (loading) return <div className="p-8 text-center">Carregando...</div>;
+    if (loading) return <div className="p-8 text-center animate-pulse text-muted-foreground">Iniciando protocolo...</div>;
 
     return (
-        <div className="min-h-screen p-4 pb-20 max-w-md mx-auto">
-            <header className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold">Olá, {userName || 'Visitante'}</h1>
-                    <p className="text-sm text-muted-foreground">Controle suas finanças</p>
+        <div className="min-h-screen pb-24 max-w-md mx-auto bg-background selection:bg-emerald-500/30">
+            {/* THE HEADER: IDENTITY */}
+            <header className="flex justify-between items-center p-6 bg-transparent">
+                <div className="flex items-center gap-3">
+                    <div>
+                        <h1 className="font-bold text-lg tracking-tight">The Order</h1>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
+                            Olá, {userName ? userName.split(' ')[0] : 'Initiate'}. O Santuário está seguro.
+                        </p>
+                    </div>
                 </div>
-                <div className="flex gap-2 items-center">
-                    <button
-                        onClick={togglePrivacyMode}
-                        className="p-2 hover:bg-secondary rounded-full transition-colors"
-                        title={isPrivacyMode ? 'Mostrar valores' : 'Ocultar valores'}
-                    >
-                        {isPrivacyMode ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                    <Link href="/profile" className="relative w-10 h-10 rounded-full overflow-hidden border border-border hover:opacity-80 transition-opacity" title="Meu Perfil">
-                        {avatarUrl ? (
-                            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                        ) : (
-                            <div className="w-full h-full bg-secondary flex items-center justify-center">
-                                <User className="w-5 h-5 text-muted-foreground" />
-                            </div>
-                        )}
-                    </Link>
-                </div>
+
+                <Link href="/profile" className="relative w-9 h-9 rounded-full overflow-hidden border border-border/50 hover:border-emerald-500/50 transition-colors">
+                    {avatarUrl ? (
+                        <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full bg-secondary flex items-center justify-center">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                    )}
+                </Link>
             </header>
 
-            {/* Carrossel de Contas */}
-            {userId && (
-                <AccountCarousel
-                    userId={userId}
-                    accounts={accounts}
-                    selectedAccountId={selectedAccountId}
-                    onAccountSelect={(id) => {
-                        setSelectedAccountId(id);
-                        loadTransactions(userId, id);
-                    }}
-                    onUpdate={() => loadAccounts(userId)}
-                />
-            )}
+            <main className="px-4 space-y-6">
 
-            {/* Analytics Minimizado */}
-            {userId && <EmotionalAnalytics userId={userId} refreshTrigger={updateTrigger} />}
 
-            {/* Magic Transaction Form */}
-            {userId && (
-                <MagicTransactionForm
-                    userId={userId}
-                    selectedAccountId={selectedAccountId}
-                    accounts={accounts}
-                    onTransactionAdded={() => {
-                        if (userId && selectedAccountId) {
-                            loadTransactions(userId, selectedAccountId);
-                            loadAccounts(userId); // Atualizar saldos
-                        }
-                        setUpdateTrigger(prev => prev + 1);
-                    }}
-                />
-            )}
 
-            {/* Transações Recentes */}
-            <div className="space-y-3">
-                <h3 className="font-bold text-sm flex items-center gap-2">
-                    <span className="text-lg">📊</span> Histórico Recente
-                </h3>
-                {transactions.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">Nenhuma transação ainda.</p>
-                ) : (
-                    <div className="space-y-2">
-                        {transactions.map((t) => (
-                            <TransactionItem
-                                key={t.id}
-                                transaction={t}
-                                isPrivacyMode={isPrivacyMode}
-                                onDelete={handleDeleteTransaction}
-                            />
-                        ))}
+                {/* SECTION 1: MONK.VAULT (The Highlight) */}
+                {userId && (
+                    <section className="animate-in slide-in-from-bottom-5 duration-700">
+                        <AccountCarousel
+                            userId={userId}
+                            accounts={accounts}
+                            selectedAccountId={selectedAccountId}
+                            onAccountSelect={(id) => {
+                                setSelectedAccountId(id);
+                                loadTransactions(userId, id);
+                            }}
+                            onUpdate={() => loadAccounts(userId)}
+                            onPayInvoice={() => setShowPayInvoiceModal(true)}
+                        />
+                    </section>
+                )}
+
+                {/* SECTION 2: MONK.AI (The Core) */}
+                {userId && (
+                    <section className="animate-in slide-in-from-bottom-5 duration-700 delay-100">
+                        <MagicTransactionForm
+                            userId={userId}
+                            selectedAccountId={selectedAccountId}
+                            accounts={accounts}
+                            onTransactionAdded={() => {
+                                loadAccounts(userId);
+                                if (userId && selectedAccountId) {
+                                    loadTransactions(userId, selectedAccountId);
+                                    loadWishlist(userId);
+                                }
+                                setUpdateTrigger(prev => prev + 1);
+                            }}
+                        />
+                    </section>
+                )}
+
+
+
+                {/* SECTION 3: THE OPERATIONS GRID (Modules) */}
+                {userId && (
+                    <section className="animate-in slide-in-from-bottom-5 duration-700 delay-200">
+                        <MonkGrid
+                            dailyAllowance={dailyAllowance}
+                            riskCount={0}
+                            wishlistMainItem={wishlistMain}
+                            nextInvoiceDate={nextInvoiceDate}
+                        />
+                    </section>
+                )}
+
+                {/* Hidden Logic Components (Logic Only) */}
+                <div className="hidden">
+                    {userId && <FutureInvoices userId={userId} />}
+                    {userId && <EmotionalAnalytics userId={userId} refreshTrigger={updateTrigger} />}
+                </div>
+
+                {/* SHARED: Transactions */}
+                <section className="animate-in slide-in-from-bottom-5 duration-700 delay-300 mt-8 pt-4 border-t border-border/20">
+                    <div className="flex items-center justify-between mb-4 px-1">
+                        <h3 className="font-medium text-xs flex items-center gap-2 text-muted-foreground uppercase tracking-widest">
+                            Últimas Operações
+                        </h3>
+                        {transactions.length > 0 && (
+                            <Link href="/transactions" className="text-xs text-primary hover:text-emerald-400 transition-colors">
+                                Ver tudo
+                            </Link>
+                        )}
                     </div>
-                )}
-                {transactions.length > 0 && (
-                    <Link
-                        href="/transactions"
-                        className="block text-center text-sm text-primary hover:underline mt-3"
-                    >
-                        Ver todas as transações →
-                    </Link>
-                )}
-            </div>
+
+                    {transactions.length === 0 ? (
+                        <div className="text-center py-8 border border-dashed border-border/30 rounded-xl bg-secondary/5">
+                            <p className="text-muted-foreground text-xs">Nenhuma movimentação no registro.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            {transactions.map((t) => (
+                                <TransactionItem
+                                    key={t.id}
+                                    transaction={t}
+                                    isPrivacyMode={isPrivacyMode}
+                                    onDelete={handleDeleteTransaction}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </section>
+            </main>
+
+            {/* Pay Invoice Modal */}
+            {userId && (
+                <PayInvoiceModal
+                    isOpen={showPayInvoiceModal}
+                    onClose={() => setShowPayInvoiceModal(false)}
+                    userId={userId}
+                    accounts={accounts}
+                    onPaymentComplete={() => loadAccounts(userId)}
+                />
+            )}
         </div>
     );
 }

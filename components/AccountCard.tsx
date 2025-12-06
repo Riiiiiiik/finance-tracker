@@ -8,9 +8,15 @@ import { supabase } from '@/lib/supabase';
 interface AccountCardProps {
     account: Account;
     onUpdate: () => void;
+    availableBalance?: number;
+    invoiceBalance?: number;
+    onPayInvoice?: () => void;
 }
 
-export default function AccountCard({ account, onUpdate }: AccountCardProps) {
+import { usePrivacy } from '@/lib/privacy-context';
+
+export default function AccountCard({ account, onUpdate, availableBalance, invoiceBalance, onPayInvoice }: AccountCardProps) {
+    const { isPrivacyMode } = usePrivacy();
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(account.name);
     const [color, setColor] = useState(account.color);
@@ -76,7 +82,7 @@ export default function AccountCard({ account, onUpdate }: AccountCardProps) {
 
     return (
         <div
-            className="account-card-stacked relative w-full h-32 rounded-2xl p-4 flex flex-col justify-between shadow-lg transition-all duration-500 hover:scale-[1.02]"
+            className="account-card-stacked relative w-full min-h-32 h-auto rounded-2xl p-4 flex flex-col justify-between shadow-lg transition-all duration-500 hover:scale-[1.02]"
             style={{
                 background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
                 boxShadow: `0 8px 20px -6px ${color}80`,
@@ -141,11 +147,58 @@ export default function AccountCard({ account, onUpdate }: AccountCardProps) {
                             </button>
                         )}
                     </div>
+
                     <div className="relative z-10">
-                        <p className="text-white/80 text-xs mb-0.5">Saldo Atual</p>
-                        <p className="text-white font-bold text-2xl">
-                            R$ {account.balance.toFixed(2)}
-                        </p>
+                        {account.id === 'all' && typeof availableBalance !== 'undefined' ? (
+                            <div className="flex gap-4">
+                                <div>
+                                    <p className="text-white/80 text-[10px] mb-0.5">Saldo Disponível</p>
+                                    <p className={`text-emerald-300 font-bold text-xl ${isPrivacyMode ? 'blur-md' : ''}`}>
+                                        R$ {availableBalance.toFixed(2)}
+                                    </p>
+                                </div>
+                                {invoiceBalance !== 0 && (
+                                    <div className="border-l border-white/20 pl-4 flex flex-col justify-between">
+                                        <div>
+                                            <p className="text-white/80 text-[10px] mb-0.5">Fatura Atual</p>
+                                            <p className={`text-red-300 font-bold text-xl ${isPrivacyMode ? 'blur-md' : ''}`}>
+                                                R$ {Math.abs(invoiceBalance || 0).toFixed(2)}
+                                            </p>
+                                        </div>
+                                        {onPayInvoice && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onPayInvoice();
+                                                }}
+                                                className="mt-1 text-[10px] bg-red-500/20 hover:bg-red-500/40 text-red-200 px-2 py-1 rounded transition-colors"
+                                            >
+                                                Pagar Fatura
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-white/80 text-xs mb-0.5">
+                                    {account.type === 'credit' ? 'Fatura Atual' : 'Saldo Atual'}
+                                </p>
+                                <p className={`text-white font-bold text-2xl ${account.type === 'credit' && account.balance < 0 ? 'text-red-200' : ''} ${isPrivacyMode ? 'blur-md' : ''}`}>
+                                    R$ {Math.abs(account.balance).toFixed(2)}
+                                </p>
+                            </>
+                        )}
+
+                        {/* Previsto (Saldo - Fatura) para o Total */}
+                        {account.id === 'all' && typeof availableBalance !== 'undefined' && (
+                            <div className="mt-2 pt-2 border-t border-white/10 flex justify-between items-center">
+                                <span className="text-[10px] text-white/60">Previsto (Livre)</span>
+                                <span className={`text-sm font-bold text-white ${isPrivacyMode ? 'blur-sm' : ''}`}>
+                                    R$ {(availableBalance + (invoiceBalance || 0)).toFixed(2)}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </>
             )}

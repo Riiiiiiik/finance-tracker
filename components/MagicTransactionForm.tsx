@@ -6,6 +6,8 @@ import { parseSmartInput } from '@/lib/smartParser';
 import { motion, AnimatePresence } from 'framer-motion';
 import TransactionPreviewCard from './TransactionPreviewCard';
 import { supabase, Account } from '@/lib/supabase';
+import MonkIcon, { monkColors } from './MonkIcon';
+import Link from 'next/link';
 
 interface MagicTransactionFormProps {
     userId: string;
@@ -21,6 +23,7 @@ interface ParsedData {
     category: string;
     tags: string[];
     date?: string;
+    installments?: number;
 }
 
 export default function MagicTransactionForm({
@@ -36,31 +39,68 @@ export default function MagicTransactionForm({
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
     const [isFocused, setIsFocused] = useState(false);
 
-    // Parse input em tempo real
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+
+    // Parse input MANUALMENTE ao pressionar Enter ou botão
+    const handleParse = () => {
+        if (!smartInput.trim()) return;
+
+        setIsProcessing(true);
+        // Simular um leve delay para sensação de processamento
+        setTimeout(() => {
+            const parsed = parseSmartInput(smartInput);
+            setParsedData({
+                amount: parsed.amount || '',
+                description: parsed.description || smartInput,
+                type: parsed.type || 'expense',
+                category: parsed.category || '',
+                tags: parsed.tags || [],
+                date: new Date().toISOString().split('T')[0],
+                installments: parsed.installments || 1
+            });
+            setIsProcessing(false);
+            // Remover foco do teclado em mobile
+            if (window.innerWidth < 768) {
+                (document.activeElement as HTMLElement)?.blur();
+            }
+        }, 100);
+    };
+
+    // Inicializar via URL Params (OCR)
+    useEffect(() => {
+        if (searchParams && searchParams.get('action') === 'scan') {
+            const amt = searchParams.get('amount') || '';
+            const desc = searchParams.get('desc') || '';
+            const date = searchParams.get('date') || '';
+
+            if (amt) {
+                setSmartInput(`${desc} ${amt}`); // Preenche visualmente
+                setParsedData({
+                    amount: amt,
+                    description: desc,
+                    type: 'expense', // Default to expense for OCR
+                    category: '',
+                    tags: ['OCR'],
+                    date: date || new Date().toISOString().split('T')[0],
+                    installments: 1
+                });
+                // Limpar URL para não reprocessar no refresh
+                window.history.replaceState({}, '', '/dashboard');
+            }
+        }
+    }, []);
+
+    // Efeito para limpar dados se o input for apagado totalmente
     useEffect(() => {
         if (smartInput.trim()) {
-            setIsProcessing(true);
-            const timer = setTimeout(() => {
-                const parsed = parseSmartInput(smartInput);
-                setParsedData({
-                    amount: parsed.amount || '',
-                    description: parsed.description || smartInput,
-                    type: parsed.type || 'expense',
-                    category: parsed.category || '',
-                    tags: parsed.tags || [],
-                    date: new Date().toISOString().split('T')[0]
-                });
-                setIsProcessing(false);
-            }, 300); // Debounce de 300ms
-
-            return () => clearTimeout(timer);
+            // Keep data if manual input exists, do nothing
         } else {
             setParsedData(null);
-            setIsProcessing(false);
         }
     }, [smartInput]);
 
-
+    const [showMethodSelector, setShowMethodSelector] = useState(false);
+    const [pendingAccount, setPendingAccount] = useState<any>(null);
 
     const handleConfirm = async () => {
         if (!parsedData || !parsedData.amount || !userId) return;
@@ -70,20 +110,11 @@ export default function MagicTransactionForm({
 
         // Se estiver em 'all' ou null, tenta encontrar uma conta padrão válida
         if (!targetAccountId || targetAccountId === 'all') {
-            // Filtra contas reais (excluindo a 'all' se ela vier na lista, embora geralmente não venha do DB)
             const realAccounts = accounts.filter(a => a.id !== 'all');
-
             if (realAccounts.length === 1) {
-                // Se só tem uma conta, usa ela
                 targetAccountId = realAccounts[0].id;
             } else if (realAccounts.length > 0) {
-                // Se tem várias, pega a primeira (ou poderia pedir para selecionar)
-                // Por enquanto, vamos pegar a primeira para não bloquear o fluxo, 
-                // mas o ideal seria um seletor no card.
                 targetAccountId = realAccounts[0].id;
-
-                // Opcional: Avisar o usuário que foi para a conta X
-                // setFeedback({ type: 'success', message: `Adicionado em ${realAccounts[0].name}` });
             } else {
                 setFeedback({ type: 'error', message: 'Crie uma conta antes de adicionar transações!' });
                 return;
@@ -94,62 +125,160 @@ export default function MagicTransactionForm({
         setFeedback(null);
 
         try {
-            const amount = parseFloat(parsedData.amount);
-
-            // 1. Inserir Transação
-            const { error: transactionError } = await supabase
-                .from('transactions')
-                .insert([{
-                    user_id: userId,
-                    account_id: targetAccountId,
-                    amount: amount,
-                    description: parsedData.description,
-                    type: parsedData.type,
-                    category: parsedData.category,
-                    date: parsedData.date || new Date().toISOString().split('T')[0],
-                    tags: parsedData.tags
-                }]);
-
-            if (transactionError) throw transactionError;
-
-            // 2. Atualizar Saldo da Conta
-            const balanceChange = parsedData.type === 'income' ? amount : -amount;
-
+            // 1. Buscar detalhes da conta
             const { data: accountData, error: fetchError } = await supabase
                 .from('accounts')
-                .select('balance')
+                .select('*')
                 .eq('id', targetAccountId)
                 .single();
 
             if (fetchError) throw fetchError;
 
-            if (accountData) {
-                const { error: updateError } = await supabase
-                    .from('accounts')
-                    .update({ balance: accountData.balance + balanceChange })
-                    .eq('id', targetAccountId)
+            // VERIFICAÇÃO DE CARTÃO HÍBRIDO
+            // Se for conta corrente (checking) E tiver limite definido E for despesa
+            if (accountData.type === 'checking' && accountData.limit !== null && parsedData.type === 'expense') {
+                setPendingAccount(accountData);
+                setShowMethodSelector(true);
+                setIsSubmitting(false); // Pausa o submit
+                return; // Aguarda escolha do usuário
             }
 
-            // Sucesso!
-            // triggerConfetti(); // Removed as per user request
-            setFeedback({ type: 'success', message: 'Transação adicionada com sucesso!' });
-            setSmartInput('');
-            setParsedData(null);
-            setIsFocused(false);
-            onTransactionAdded();
-
-            setTimeout(() => setFeedback(null), 3000);
+            // Se não for híbrido, segue fluxo normal (assume débito para checking, crédito para credit)
+            await finalizeTransaction(accountData, null);
 
         } catch (error) {
-            console.error('Erro ao salvar:', error);
-            setFeedback({ type: 'error', message: 'Erro ao salvar transação. Tente novamente.' });
-        } finally {
+            console.error('Erro ao preparar transação:', error);
+            setFeedback({ type: 'error', message: 'Erro ao processar. Tente novamente.' });
             setIsSubmitting(false);
         }
     };
 
+    const finalizeTransaction = async (accountData: any, method: 'debit' | 'credit' | null) => {
+        if (!parsedData || !userId) return;
+        setIsSubmitting(true);
+        setShowMethodSelector(false);
+
+        try {
+            const amount = parseFloat(parsedData.amount);
+            const installments = parsedData.installments || 1;
+            const isInstallment = installments > 1;
+
+            // Gerar Group ID se for parcelado
+            const groupId = isInstallment ? crypto.randomUUID() : null;
+
+            let status = 'posted';
+            let isCreditPurchase = false;
+
+            // Determinar se é compra no crédito
+            if (accountData.type === 'credit') {
+                isCreditPurchase = true;
+            } else if (accountData.type === 'checking' && method === 'credit') {
+                isCreditPurchase = true;
+            }
+
+            // Loop para criar transações (1 ou N)
+            const transactionsToInsert = [];
+            const baseDate = new Date(parsedData.date || new Date());
+
+            for (let i = 0; i < installments; i++) {
+                let currentStatus = status;
+                let currentInvoiceMonth = null;
+
+                // Calcular data da parcela
+                const transactionDate = new Date(baseDate);
+                transactionDate.setMonth(baseDate.getMonth() + i);
+
+                // Lógica de Crédito (Fatura)
+                if (isCreditPurchase && parsedData.type === 'expense') {
+                    currentStatus = 'pending';
+
+                    // Calcular Mês da Fatura para ESTA parcela
+                    const closingDay = accountData.closing_day || 1;
+                    const invoiceDate = new Date(transactionDate);
+
+                    if (invoiceDate.getDate() >= closingDay) {
+                        invoiceDate.setMonth(invoiceDate.getMonth() + 1);
+                    }
+
+                    invoiceDate.setDate(1);
+                    currentInvoiceMonth = invoiceDate.toISOString().split('T')[0];
+                }
+
+                // Descrição da parcela (ex: "TV 1/10")
+                let description = parsedData.description;
+                if (isInstallment) {
+                    description = `${description} (${i + 1}/${installments})`;
+                }
+
+                // Valor da parcela
+                // Assumindo que o valor digitado é o TOTAL da compra se tiver parcelas
+                const installmentAmount = isInstallment ? (amount / installments) : amount;
+
+                transactionsToInsert.push({
+                    user_id: userId,
+                    account_id: accountData.id,
+                    amount: installmentAmount,
+                    description: description,
+                    type: parsedData.type,
+                    category: parsedData.category,
+                    date: transactionDate.toISOString().split('T')[0],
+                    tags: parsedData.tags,
+                    status: currentStatus,
+                    invoice_month: currentInvoiceMonth,
+                    installments_count: installments,
+                    installment_number: i + 1,
+                    group_id: groupId
+                });
+            }
+
+            // 2. Inserir Transações
+            const { error: transactionError } = await supabase
+                .from('transactions')
+                .insert(transactionsToInsert);
+
+            if (transactionError) throw transactionError;
+
+            // 3. Atualizar Saldo da Conta
+            let shouldUpdateBalance = true;
+            if (accountData.type === 'checking' && isCreditPurchase) {
+                shouldUpdateBalance = false; // Não mexe no saldo da conta corrente
+            }
+
+            if (shouldUpdateBalance) {
+                const totalAmount = amount; // Valor total da compra
+                const balanceChange = parsedData.type === 'income' ? totalAmount : -totalAmount;
+
+                const { error: updateError } = await supabase
+                    .from('accounts')
+                    .update({ balance: accountData.balance + balanceChange })
+                    .eq('id', accountData.id);
+
+                if (updateError) throw updateError;
+            } else if (accountData.type === 'credit') {
+                const totalAmount = amount;
+                const balanceChange = -totalAmount;
+                await supabase.from('accounts').update({ balance: accountData.balance + balanceChange }).eq('id', accountData.id);
+            }
+
+            // Sucesso!
+            setFeedback({ type: 'success', message: isInstallment ? `Compra parcelada em ${installments}x criada!` : 'Transação adicionada com sucesso!' });
+            setSmartInput('');
+            setParsedData(null);
+            setIsFocused(false);
+            onTransactionAdded();
+            setTimeout(() => setFeedback(null), 3000);
+
+        } catch (error) {
+            console.error('Erro ao salvar:', error);
+            setFeedback({ type: 'error', message: 'Erro ao salvar transação.' });
+        } finally {
+            setIsSubmitting(false);
+            setPendingAccount(null);
+        }
+    };
+
     const hasData = parsedData && parsedData.amount;
-    const showOverlay = isFocused || smartInput.length > 0;
+    const showOverlay = isFocused || smartInput.length > 0 || showMethodSelector;
 
     return (
         <>
@@ -161,8 +290,47 @@ export default function MagicTransactionForm({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 bg-background/80 backdrop-blur-md z-40 transition-all duration-500"
-                        onClick={() => setIsFocused(false)}
+                        onClick={() => {
+                            if (!showMethodSelector) setIsFocused(false);
+                        }}
                     />
+                )}
+            </AnimatePresence>
+
+            {/* Method Selector Modal */}
+            <AnimatePresence>
+                {showMethodSelector && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-card border border-border p-6 rounded-2xl shadow-2xl max-w-sm w-full"
+                        >
+                            <h3 className="text-xl font-bold mb-2 text-center">Como deseja pagar?</h3>
+                            <p className="text-center text-muted-foreground mb-6">Esta conta possui função débito e crédito.</p>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <button
+                                    onClick={() => finalizeTransaction(pendingAccount, 'debit')}
+                                    className="p-4 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors flex flex-col items-center gap-2"
+                                >
+                                    <span className="text-2xl">💸</span>
+                                    <span className="font-bold">Débito</span>
+                                    <span className="text-xs text-muted-foreground">Sai da conta agora</span>
+                                </button>
+
+                                <button
+                                    onClick={() => finalizeTransaction(pendingAccount, 'credit')}
+                                    className="p-4 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-colors flex flex-col items-center gap-2 border border-primary/20"
+                                >
+                                    <span className="text-2xl">💳</span>
+                                    <span className="font-bold">Crédito</span>
+                                    <span className="text-xs text-muted-foreground">Paga na fatura</span>
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
 
@@ -174,17 +342,17 @@ export default function MagicTransactionForm({
                         animate={{ opacity: 1, y: 0 }}
                         className="relative"
                     >
+
                         {/* Label */}
-                        <label className="flex items-center gap-2 mb-3 text-sm font-bold text-primary tracking-wide">
-                            <Sparkles className="w-4 h-4 animate-pulse" />
+                        <label className={`flex items-center gap-2 mb-3 text-sm font-bold tracking-wide ${monkColors.ai}`}>
+                            <MonkIcon type="ai" className="w-5 h-5 animate-pulse" />
                             <span>MONK.AI</span>
                         </label>
 
                         {/* Hero Input */}
                         <div className="relative group">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                <Wand2 className={`h-5 w-5 transition-colors ${smartInput ? 'text-primary' : 'text-muted-foreground'
-                                    }`} />
+                                <MonkIcon type="ai" className={`h-5 w-5 transition-colors ${smartInput ? 'opacity-100' : 'opacity-70'}`} />
                             </div>
 
                             <input
@@ -193,18 +361,22 @@ export default function MagicTransactionForm({
                                 onChange={(e) => setSmartInput(e.target.value)}
                                 onFocus={() => setIsFocused(true)}
                                 onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && hasData && !isSubmitting) {
-                                        handleConfirm();
+                                    if (e.key === 'Enter' && !isSubmitting) {
+                                        if (hasData) {
+                                            handleConfirm();
+                                        } else {
+                                            handleParse();
+                                        }
                                     }
                                 }}
-                                placeholder="✨ Peça ao Monk.AI: 'Uber 25 transporte'..."
+                                placeholder="✨ Monk.AI: 'Uber 25 transporte'..."
                                 className={`
                                     w-full pl-12 pr-4 py-4 text-lg font-medium rounded-2xl 
                                     bg-card border-2 outline-none transition-all duration-300 
                                     placeholder:text-muted-foreground/70 shadow-lg 
                                     ${showOverlay
-                                        ? 'border-primary shadow-primary/20 shadow-2xl scale-[1.02]'
-                                        : 'border-border hover:shadow-xl focus:border-primary'
+                                        ? 'border-purple-500 shadow-purple-500/20 shadow-2xl scale-[1.02]'
+                                        : 'border-border hover:shadow-xl focus:border-purple-500/50'
                                     }
                                 `}
                                 disabled={isSubmitting}
@@ -219,8 +391,8 @@ export default function MagicTransactionForm({
                                         exit={{ opacity: 0, scale: 0.8 }}
                                         className="absolute inset-y-0 right-0 pr-4 flex items-center gap-2"
                                     >
-                                        <span className="text-xs text-primary font-medium">Monk pensando...</span>
-                                        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                        <span className="text-xs text-purple-400 font-medium">Processando...</span>
+                                        <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -232,7 +404,7 @@ export default function MagicTransactionForm({
                             animate={{ opacity: smartInput ? 0 : 1 }}
                             className="mt-2 text-xs text-muted-foreground text-center"
                         >
-                            Eu organizo tudo para você. Apenas digite. 🐵
+                            Eu organizo tudo para você. Apenas digite. 🧠
                         </motion.p>
                     </motion.div>
                 </div>
@@ -265,6 +437,7 @@ export default function MagicTransactionForm({
                                 type={parsedData.type}
                                 category={parsedData.category}
                                 date={parsedData.date || new Date().toISOString().split('T')[0]}
+                                installments={parsedData.installments}
                                 onUpdate={(updates) => {
                                     setParsedData(prev => prev ? { ...prev, ...updates } : null);
                                 }}

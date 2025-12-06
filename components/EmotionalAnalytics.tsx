@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, AlertTriangle, Trophy } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertTriangle, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import MonkIcon, { monkColors } from './MonkIcon';
 
 type AnalyticsData = {
     averageScore: number;
@@ -46,10 +48,6 @@ export default function EmotionalAnalytics({ userId, refreshTrigger }: { userId:
             const averageScore = totalScore / transactions.length;
 
             // Calcular prejuízo emocional (dinheiro gasto em itens com nota <= 2)
-            // Nota 1: 80% de prejuízo, Nota 2: 60% de prejuízo (ajustado para ser mais rigoroso que o popup)
-            // Vamos usar a mesma lógica do popup:
-            // Nota 1: Valeu 20% -> Perdeu 80%
-            // Nota 2: Valeu 40% -> Perdeu 60%
             const totalEmotionalLoss = transactions.reduce((acc, t) => {
                 const score = t.happiness_score || 0;
                 if (score === 1) return acc + (t.amount * 0.8);
@@ -92,19 +90,22 @@ export default function EmotionalAnalytics({ userId, refreshTrigger }: { userId:
             {/* Header (Sempre visível) */}
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full p-4 flex items-center justify-between bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                className={`w-full p-4 flex items-center justify-between transition-colors ${data.totalEmotionalLoss > 0 ? 'bg-red-500/5 hover:bg-red-500/10' : 'bg-secondary/30 hover:bg-secondary/50'}`}
             >
                 <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-full ${data.averageScore >= 4 ? 'bg-green-500/20 text-green-600' :
                         data.averageScore >= 3 ? 'bg-yellow-500/20 text-yellow-600' :
                             'bg-red-500/20 text-red-600'
                         }`}>
-                        <TrendingUp className="w-5 h-5" />
+                        <MonkIcon type="sentry" className="w-5 h-5" />
                     </div>
                     <div className="text-left">
-                        <h3 className="font-bold text-sm">ROI Emocional</h3>
+                        <h3 className="font-bold text-sm flex items-center gap-2">
+                            Monk.Sentry Report
+                            {data.totalEmotionalLoss > 0 && <span className="text-[10px] bg-red-500 text-white px-1.5 rounded-full font-bold animate-pulse">ALERTA</span>}
+                        </h3>
                         <p className="text-xs text-muted-foreground">
-                            Média: {data.averageScore.toFixed(1)} ⭐ ({data.totalTransactions} avaliações)
+                            Monitorando comportamento... ({data.totalTransactions} eventos)
                         </p>
                     </div>
                 </div>

@@ -3,8 +3,9 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import { PrivacyProvider } from '@/lib/privacy-context';
-import BottomNav from '@/components/BottomNav';
+import MonkDock from '@/components/MonkDock';
 import { ThemeProvider } from '@/components/theme-provider';
+import { SentryProvider } from '@/lib/sentry-context';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -47,12 +48,14 @@ export default function RootLayout({
                     enableSystem
                     disableTransitionOnChange
                 >
-                    <AuthProvider>
-                        <PrivacyProvider>
-                            {children}
-                            <BottomNav />
-                        </PrivacyProvider>
-                    </AuthProvider>
+                    <SentryProvider>
+                        <AuthProvider>
+                            <PrivacyProvider>
+                                {children}
+                                <MonkDock />
+                            </PrivacyProvider>
+                        </AuthProvider>
+                    </SentryProvider>
                 </ThemeProvider>
             </body>
         </html>

@@ -4,6 +4,7 @@ export type ParsedTransaction = {
     category: string;
     type: 'income' | 'expense';
     tags: string[];
+    installments?: number;
 };
 
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -48,7 +49,17 @@ export function parseSmartInput(input: string): ParsedTransaction {
         });
     }
 
-    // 3. Detect Category & Type based on keywords
+    // 3. Extract Installments (10x, 12x)
+    const installmentMatch = text.match(/(\d+)x/i);
+    if (installmentMatch) {
+        const count = parseInt(installmentMatch[1]);
+        if (count > 1 && count <= 48) { // Limit reasonable installments
+            result.installments = count;
+            text = text.replace(installmentMatch[0], '').trim();
+        }
+    }
+
+    // 4. Detect Category & Type based on keywords
     const lowerText = text.toLowerCase();
 
     // Check for "Income" keywords first to set Type
@@ -67,7 +78,7 @@ export function parseSmartInput(input: string): ParsedTransaction {
         }
     }
 
-    // 4. Description is what's left
+    // 5. Description is what's left
     // Clean up extra spaces
     result.description = text.replace(/\s+/g, ' ').trim();
 

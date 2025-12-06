@@ -1,0 +1,74 @@
+'use client';
+
+import { useState } from 'react';
+import { Heart, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+export default function MonkLetter() {
+    const [likes, setLikes] = useState(342);
+    const [isLiked, setIsLiked] = useState(false);
+
+    const handleLike = () => {
+        setIsLiked(!isLiked);
+        setLikes(prev => isLiked ? prev - 1 : prev + 1);
+    };
+
+    return (
+        <div className="w-full px-1 py-4">
+            {/* The Card */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-[#0A0A0A] rounded-2xl border border-purple-500/20 p-5 relative overflow-hidden"
+            >
+                {/* Background Glow */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 blur-3xl rounded-full pointer-events-none" />
+
+                {/* Header */}
+                <div className="flex justify-between items-center mb-3">
+                    <div className="flex items-center gap-2">
+                        <span className="text-purple-500 font-bold text-xs tracking-widest uppercase">Monk&apos;s Letter</span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 font-medium">Hoje</span>
+                </div>
+
+                {/* Content */}
+                <div className="mb-6">
+                    <h3 className="text-white font-bold text-lg mb-2">A Chegada do Monk.Sentry</h3>
+                    <p className="text-gray-400 text-xs leading-relaxed">
+                        Implementamos o novo algoritmo de detecção de risco e melhoramos a performance do Vault. Veja o que mudou na Ordem.
+                    </p>
+                </div>
+
+                {/* Footer Controls */}
+                <div className="flex items-center justify-between border-t border-white/5 pt-4">
+                    <button
+                        onClick={handleLike}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 ${isLiked
+                            ? 'bg-purple-500/20 border-purple-500/50'
+                            : 'bg-[#111] border-white/10 hover:border-purple-500/30'
+                            }`}
+                    >
+                        <Heart
+                            size={14}
+                            className={`transition-colors ${isLiked ? 'fill-purple-500 text-purple-500' : 'text-gray-400'}`}
+                        />
+                        <span className={`text-xs font-medium tabular-nums ${isLiked ? 'text-purple-200' : 'text-gray-400'}`}>
+                            {likes}
+                        </span>
+                    </button>
+
+                    <button className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors group">
+                        Ler Completo
+                        <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                </div>
+            </motion.div>
+
+            {/* Subtext Footer */}
+            <p className="text-center text-[10px] text-gray-600 mt-3 font-medium tracking-wide">
+                Todo dia as 07:30h a melhor curadoria selecionado por cada Monk.
+            </p>
+        </div>
+    );
+}

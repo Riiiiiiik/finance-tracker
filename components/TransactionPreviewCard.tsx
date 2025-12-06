@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    DollarSign,
     TrendingUp,
     TrendingDown,
     Calendar,
@@ -20,7 +19,8 @@ import {
     Coffee,
     Check,
     X,
-    Plus
+    Plus,
+    Layers
 } from 'lucide-react';
 
 interface TransactionPreviewCardProps {
@@ -29,7 +29,8 @@ interface TransactionPreviewCardProps {
     type: 'income' | 'expense';
     category: string;
     date?: string;
-    onUpdate: (data: { amount?: string; type?: 'income' | 'expense'; date?: string; category?: string }) => void;
+    installments?: number;
+    onUpdate: (data: { amount?: string; type?: 'income' | 'expense'; date?: string; category?: string; installments?: number }) => void;
 }
 
 // Mapeamento de categorias para ícones
@@ -54,23 +55,27 @@ export default function TransactionPreviewCard({
     type,
     category,
     date,
+    installments = 1,
     onUpdate
 }: TransactionPreviewCardProps) {
     // Estados de Edição
     const [isEditingAmount, setIsEditingAmount] = useState(false);
     const [isEditingDate, setIsEditingDate] = useState(false);
     const [isEditingCategory, setIsEditingCategory] = useState(false);
+    const [isEditingInstallments, setIsEditingInstallments] = useState(false);
 
     // Estados Temporários
     const [tempAmount, setTempAmount] = useState(amount);
     const [tempType, setTempType] = useState(type);
     const [tempDate, setTempDate] = useState(date || new Date().toISOString().split('T')[0]);
     const [searchCategory, setSearchCategory] = useState('');
+    const [tempInstallments, setTempInstallments] = useState(installments);
 
     // Refs
     const amountInputRef = useRef<HTMLInputElement>(null);
     const dateInputRef = useRef<HTMLInputElement>(null);
     const categoryInputRef = useRef<HTMLInputElement>(null);
+    const installmentsInputRef = useRef<HTMLInputElement>(null);
 
     const isIncome = type === 'income';
     const numericAmount = parseFloat(amount) || 0;
@@ -105,6 +110,22 @@ export default function TransactionPreviewCard({
         }
     }, [isEditingCategory]);
 
+    // Focar no input quando abrir edição de parcelas
+    useEffect(() => {
+        if (isEditingInstallments && installmentsInputRef.current) {
+            installmentsInputRef.current.focus();
+            installmentsInputRef.current.select();
+        }
+    }, [isEditingInstallments]);
+
+    // Sincronizar estados temporários com props
+    useEffect(() => {
+        setTempAmount(amount);
+        setTempType(type);
+        setTempDate(date || new Date().toISOString().split('T')[0]);
+        setTempInstallments(installments);
+    }, [amount, type, date, installments]);
+
     // Salvar Valor
     const handleSaveAmount = () => {
         if (!tempAmount || isNaN(parseFloat(tempAmount))) return;
@@ -123,6 +144,13 @@ export default function TransactionPreviewCard({
         onUpdate({ category: newCategory });
         setIsEditingCategory(false);
         setSearchCategory('');
+    };
+
+    // Salvar Parcelas
+    const handleSaveInstallments = () => {
+        if (tempInstallments < 1) setTempInstallments(1);
+        onUpdate({ installments: tempInstallments });
+        setIsEditingInstallments(false);
     };
 
     const handleKeyDownAmount = (e: React.KeyboardEvent) => {
@@ -145,7 +173,7 @@ export default function TransactionPreviewCard({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="relative overflow-visible" // Changed to visible for dropdown
+            className="relative overflow-visible"
         >
             {/* Card Principal */}
             <div className={`
@@ -165,6 +193,7 @@ export default function TransactionPreviewCard({
                                 setIsEditingAmount(true);
                                 setIsEditingDate(false);
                                 setIsEditingCategory(false);
+                                setIsEditingInstallments(false);
                             }}
                             className="group w-full text-left transition-all hover:scale-105 active:scale-95"
                         >
@@ -274,7 +303,7 @@ export default function TransactionPreviewCard({
                     </div>
                 </div>
 
-                {/* Seção 3: Metadados (Data + Categoria) - Chips Clicáveis */}
+                {/* Seção 3: Metadados (Data + Categoria + Parcelas) - Chips Clicáveis */}
                 <div className="flex gap-2 flex-wrap relative">
                     {/* Chip de Data */}
                     {!isEditingDate ? (
@@ -284,6 +313,7 @@ export default function TransactionPreviewCard({
                                 setIsEditingDate(true);
                                 setIsEditingAmount(false);
                                 setIsEditingCategory(false);
+                                setIsEditingInstallments(false);
                             }}
                             className="group flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-all hover:scale-105 active:scale-95 border border-border/50"
                         >
@@ -317,6 +347,46 @@ export default function TransactionPreviewCard({
                         </div>
                     )}
 
+                    {/* Chip de Parcelas (Novo) */}
+                    {type === 'expense' && (
+                        !isEditingInstallments ? (
+                            <button
+                                onClick={() => {
+                                    setTempInstallments(installments);
+                                    setIsEditingInstallments(true);
+                                    setIsEditingDate(false);
+                                    setIsEditingAmount(false);
+                                    setIsEditingCategory(false);
+                                }}
+                                className="group flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-all hover:scale-105 active:scale-95 border border-border/50"
+                                title="Parcelas"
+                            >
+                                <Layers className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors">
+                                    {installments}x
+                                </span>
+                            </button>
+                        ) : (
+                            <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-200">
+                                <input
+                                    ref={installmentsInputRef}
+                                    type="number"
+                                    min="1"
+                                    max="48"
+                                    value={tempInstallments}
+                                    onChange={(e) => setTempInstallments(parseInt(e.target.value) || 1)}
+                                    className="w-12 px-2 py-1.5 rounded-lg bg-background border border-primary/50 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-center"
+                                />
+                                <button
+                                    onClick={handleSaveInstallments}
+                                    className="p-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90"
+                                >
+                                    <Check className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )
+                    )}
+
                     {/* Chip de Categoria */}
                     <div className="relative">
                         <button
@@ -324,6 +394,7 @@ export default function TransactionPreviewCard({
                                 setIsEditingCategory(!isEditingCategory);
                                 setIsEditingAmount(false);
                                 setIsEditingDate(false);
+                                setIsEditingInstallments(false);
                             }}
                             className={`
                                 group flex items-center gap-2 px-3 py-2 rounded-lg transition-all hover:scale-105 active:scale-95 border
@@ -380,7 +451,7 @@ export default function TransactionPreviewCard({
                                                 className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-primary/10 text-primary transition-colors text-left font-medium"
                                             >
                                                 <Plus className="w-4 h-4" />
-                                                <span>Criar "{searchCategory}"</span>
+                                                <span>Criar &quot;{searchCategory}&quot;</span>
                                             </button>
                                         )}
                                     </div>
@@ -395,7 +466,7 @@ export default function TransactionPreviewCard({
             </div>
 
             {/* Dica de Interatividade */}
-            {!isEditingAmount && !isEditingDate && !isEditingCategory && (
+            {!isEditingAmount && !isEditingDate && !isEditingCategory && !isEditingInstallments && (
                 <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

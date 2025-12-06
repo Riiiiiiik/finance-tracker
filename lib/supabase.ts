@@ -20,15 +20,11 @@ export type Transaction = {
     date: string;
     happiness_score?: number;
     account_id?: string;
-};
-
-export type Category = {
-    id: string;
-    user_id: string;
-    name: string;
-    type: 'income' | 'expense';
-    icon?: string;
-    created_at?: string;
+    status?: 'pending' | 'posted' | 'paid';
+    invoice_month?: string;
+    installments_count?: number;
+    installment_number?: number;
+    group_id?: string;
 };
 
 export type WishlistItem = {
@@ -55,5 +51,28 @@ export type Account = {
     balance: number;
     color: string;
     is_default: boolean;
+    created_at?: string;
+    limit?: number;
+    closing_day?: number;
+    due_day?: number;
+};
+
+export type Pocket = {
+    id: string;
+    user_id: string;
+    name: string;
+    goal_amount: number;
+    current_balance: number;
+    target_date?: string;
+    color: string;
+    icon: string;
+    created_at: string;
+    renewal_cycle?: 'monthly' | 'weekly' | 'one-off';
+};
+
+export type Category = {
+    id: string;
+    user_id: string;
+    name: string;
     created_at?: string;
 };
