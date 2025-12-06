@@ -2,72 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-    :root {
-        /* --- THE SANCTUM (Fundos) --- */
-        --bg-sanctum: #09090B;
-        --bg-card: #161616;
-        --border-subtle: #27272A;
+:root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 100%;
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 142 76% 36%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 142 76% 36%;
+    --radius: 0.5rem;
+}
 
-        /* --- THE BRAND (Monk) --- */
-        --monk-primary: #10B981;
-        /* Verde Botão */
-        --monk-glow: rgba(16, 185, 129, 0.4);
-        /* Brilho Neon */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        /* --- THE ORDER MODULES --- */
-        --color-wish: #6CA8FF;
-        --color-vault: #10B981;
-        --color-sentry: #FF4B4B;
-        --color-auditor: #3F68FF;
-        --color-pockets: #FFD659;
+html,
+body {
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    scroll-padding-top: 2rem;
+}
 
-        /* shadcn/ui defaults (keeping for compatibility) */
-        --background: 0 0% 100%;
-        --foreground: 240 10% 3.9%;
-        --card: 0 0% 100%;
-        --card-foreground: 240 10% 3.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 240 10% 3.9%;
-        --primary: 142.1 76.2% 36.3%;
-        --primary-foreground: 355.7 100% 97.3%;
-        --secondary: 240 4.8% 95.9%;
-        --secondary-foreground: 240 5.9% 10%;
-        --muted: 240 4.8% 95.9%;
-        --muted-foreground: 240 3.8% 46.1%;
-        --accent: 240 4.8% 95.9%;
-        --accent-foreground: 240 5.9% 10%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 240 5.9% 90%;
-        --input: 240 5.9% 90%;
-        --ring: 142.1 76.2% 36.3%;
-        --radius: 0.75rem;
-    }
-
-    .dark {
-        /* Monk Order Dark Theme Override */
-        --background: 240 10% 3.9%;
-        /* Matches --bg-sanctum approx */
-        --foreground: 0 0% 98%;
-        --card: 240 10% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --popover: 240 10% 3.9%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 142.1 70.6% 45.3%;
-        --primary-foreground: 144.9 80.4% 10%;
-        --secondary: 240 3.7% 15.9%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 240 3.7% 15.9%;
-        --muted-foreground: 240 5% 64.9%;
-        --accent: 240 3.7% 15.9%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 240 3.7% 15.9%;
-        --input: 240 3.7% 15.9%;
-        --ring: 142.4 71.8% 29.2%;
-    }
+body {
+    background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+    background-attachment: fixed;
+    color: hsl(var(--foreground));
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
 }
 
 @layer base {
@@ -76,69 +59,126 @@
     }
 
     body {
-        @apply bg-background text-foreground;
-        padding-bottom: env(safe-area-inset-bottom);
-    }
-
-    /* Improve touch feedback */
-    button,
-    a,
-    [role="button"] {
-        -webkit-tap-highlight-color: rgba(22, 163, 74, 0.2);
-        touch-action: manipulation;
-    }
-
-    button:active,
-    a:active,
-    [role="button"]:active {
-        transform: scale(0.98);
-        transition: transform 0.1s ease;
-    }
-
-    /* Ensure inputs don't trigger zoom on iOS */
-    input,
-    textarea,
-    select {
-        font-size: 16px !important;
-        /* Prevent zoom on focus */
-        max-height: 100%;
-    }
-
-    /* Disable double-tap zoom */
-    :root {
-        touch-action: manipulation;
-    }
-
-
-    * {
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* Remove spinner buttons */
-    input[type="number"]::-webkit-outer-spin-button,
-    input[type="number"]::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-
-    input[type="number"] {
-        -moz-appearance: textfield;
-        appearance: textfield;
+        @apply text-foreground;
     }
 }
 
 @layer utilities {
-
-    /* Hide scrollbar for Chrome, Safari and Opera */
-    .no-scrollbar::-webkit-scrollbar {
-        display: none;
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-in-out;
     }
 
-    /* Hide scrollbar for IE, Edge and Firefox */
-    .no-scrollbar {
-        -ms-overflow-style: none;
-        /* IE and Edge */
-        scrollbar-width: none;
-        /* Firefox */
+    .animate-slide-up {
+        animation: slideUp 0.4s ease-out;
     }
+
+    .animate-scale-in {
+        animation: scaleIn 0.3s ease-out;
+    }
+
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .gradient-primary {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .gradient-card {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
+    }
+
+    .text-gradient {
+        background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+    }
+
+    .hover-glow:hover {
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary));
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.8);
+}
+
+/* Animação do botão flutuante */
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+}
+
+.pulse-animation {
+    animation: pulse 2s infinite;
 }
