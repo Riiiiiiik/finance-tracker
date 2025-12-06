@@ -5,26 +5,7 @@ import { AuthProvider } from '@/lib/auth-context';
 import { PrivacyProvider } from '@/lib/privacy-context';
 import MonkDock from '@/components/MonkDock';
 import { ThemeProvider } from '@/components/theme-provider';
-import { SentryProvider } from '@/lib/sentry-context';
-
-const inter = Inter({ subsets: ['latin'] });
-
-export const metadata: Metadata = {
-    title: 'Finance Tracker',
-    description: 'Controle suas finanças de forma simples',
-    manifest: '/manifest.json',
-    appleWebApp: {
-        capable: true,
-        statusBarStyle: 'black-translucent',
-        title: 'Finance Tracker',
-    },
-};
-
-export const viewport: Viewport = {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
+userScalable: false,
     viewportFit: 'cover',
 };
 
