@@ -5,6 +5,7 @@ import { AuthProvider } from '@/lib/auth-context';
 import { PrivacyProvider } from '@/lib/privacy-context';
 import MonkDock from '@/components/MonkDock';
 import { ThemeProvider } from '@/components/theme-provider';
+import { SentryProvider } from '@/lib/sentry-context';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
