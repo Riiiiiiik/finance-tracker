@@ -147,7 +147,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Back Link */}
-                <div className="text-center mt-8">
+                <div className="text-center mt-8 relative z-10">
                     <Link href="/" className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#121212] border border-[#333] text-gray-400 hover:text-white hover:border-[#10B981] hover:bg-[#161616] transition-all duration-300 text-xs font-medium uppercase tracking-wider group">
                         Retornar à Ordem
                     </Link>
