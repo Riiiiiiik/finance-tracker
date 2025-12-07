@@ -39,7 +39,13 @@ export default function RegisterPage() {
                 password,
             });
 
-            if (signInError) throw signInError;
+            if (signInError) {
+                if (signInError.message.includes('Email not confirmed')) {
+                    router.push(`/verify?email=${encodeURIComponent(email)}`);
+                    return;
+                }
+                throw signInError;
+            }
 
             // 3. Redirecionar para o Onboarding
             router.push('/onboarding');

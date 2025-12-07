@@ -27,6 +27,10 @@ export default function LoginPage() {
                 if (error.message.includes('Invalid login credentials')) {
                     throw new Error('Email ou senha incorretos');
                 }
+                if (error.message.includes('Email not confirmed')) {
+                    router.push(`/verify?email=${encodeURIComponent(email)}`);
+                    return;
+                }
                 throw error;
             }
 
