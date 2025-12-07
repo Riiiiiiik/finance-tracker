@@ -1,0 +1,36 @@
+name: Daily Monk Newsletter
+
+on:
+  schedule:
+    # 07:30 BRT is 10:30 UTC
+    - cron: '30 10 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  run-newsletter:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Newsletter Bot
+      env:
+        # Secrets must be configured in GitHub Repo Settings -> Secrets and variables -> Actions
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+        # Setting Timezone for correct day detection
+        TZ: 'America/Sao_Paulo'
+        # Optional: If you changed the hardcoded secret in python script to env var
+        # CRON_SECRET: ${{ secrets.CRON_SECRET }} 
+      run: python scripts/daily_newsletter_bot.py
