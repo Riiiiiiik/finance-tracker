@@ -223,8 +223,8 @@ Saída deve ser EXATAMENTE neste formato JSON:
             url = "https://api.perplexity.ai/chat/completions"
             
             payload = {
-                # ATUALIZAÇÃO: Voltando para o modelo small que é válido (o large deu erro de modelo inválido)
-                "model": "llama-3.1-sonar-small-128k-online", 
+                # ATUALIZAÇÃO FINAL: Usando o modelo validado da lista oficial (2025)
+                "model": "llama-3.1-sonar-large-128k-chat", 
                 "messages": [
                     {
                         "role": "system",
