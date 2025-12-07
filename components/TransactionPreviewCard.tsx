@@ -31,6 +31,7 @@ interface TransactionPreviewCardProps {
     date?: string;
     installments?: number;
     onUpdate: (data: { amount?: string; type?: 'income' | 'expense'; date?: string; category?: string; installments?: number }) => void;
+    children?: React.ReactNode;
 }
 
 // Mapeamento de categorias para ícones
@@ -56,7 +57,8 @@ export default function TransactionPreviewCard({
     category,
     date,
     installments = 1,
-    onUpdate
+    onUpdate,
+    children
 }: TransactionPreviewCardProps) {
     // Estados de Edição
     const [isEditingAmount, setIsEditingAmount] = useState(false);
@@ -176,15 +178,17 @@ export default function TransactionPreviewCard({
             className="relative overflow-visible"
         >
             {/* Card Principal */}
+            {/* Card Principal */}
+            {/* Card Principal */}
             <div className={`
-                relative bg-gradient-to-br rounded-2xl p-6 shadow-2xl border-2 transition-all duration-300
+                relative bg-gradient-to-br rounded-2xl p-3 md:p-6 shadow-2xl border-2 transition-all duration-300
                 ${isIncome
                     ? 'from-green-500/10 to-green-600/5 border-green-500/30 hover:border-green-500/50'
                     : 'from-red-500/10 to-red-600/5 border-red-500/30 hover:border-red-500/50'
                 }
             `}>
                 {/* Seção 1: Valor (Grande e Destacado) */}
-                <div className="mb-6">
+                <div className="mb-3 md:mb-6">
                     {!isEditingAmount ? (
                         <button
                             onClick={() => {
@@ -197,32 +201,32 @@ export default function TransactionPreviewCard({
                             }}
                             className="group w-full text-left transition-all hover:scale-105 active:scale-95"
                         >
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <div className="flex items-center justify-between mb-1 md:mb-2">
+                                <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                     Valor
                                 </span>
                                 {isIncome ? (
-                                    <TrendingUp className="w-5 h-5 text-green-500" />
+                                    <TrendingUp className="w-3 h-3 md:w-5 md:h-5 text-green-500" />
                                 ) : (
-                                    <TrendingDown className="w-5 h-5 text-red-500" />
+                                    <TrendingDown className="w-3 h-3 md:w-5 md:h-5 text-red-500" />
                                 )}
                             </div>
 
                             <div className={`
-                                text-5xl font-black tracking-tight transition-all
+                                text-3xl md:text-5xl font-black tracking-tight transition-all
                                 ${isIncome ? 'text-green-500 group-hover:text-green-400' : 'text-red-500 group-hover:text-red-400'}
                             `}>
                                 {isIncome ? '+' : '-'} R$ {numericAmount.toFixed(2)}
                             </div>
 
-                            <div className="mt-1 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="mt-1 text-[10px] md:text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                                 Clique para editar
                             </div>
                         </button>
                     ) : (
                         <div className="animate-in fade-in zoom-in duration-200">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
                                     Editando Valor
                                 </span>
                                 <div className="flex gap-1 bg-secondary/50 p-1 rounded-lg">
@@ -230,19 +234,19 @@ export default function TransactionPreviewCard({
                                         onClick={() => setTempType('income')}
                                         className={`p-1 rounded ${tempType === 'income' ? 'bg-green-500 text-white' : 'text-muted-foreground hover:text-foreground'}`}
                                     >
-                                        <TrendingUp className="w-4 h-4" />
+                                        <TrendingUp className="w-3 h-3 md:w-4 md:h-4" />
                                     </button>
                                     <button
                                         onClick={() => setTempType('expense')}
                                         className={`p-1 rounded ${tempType === 'expense' ? 'bg-red-500 text-white' : 'text-muted-foreground hover:text-foreground'}`}
                                     >
-                                        <TrendingDown className="w-4 h-4" />
+                                        <TrendingDown className="w-3 h-3 md:w-4 md:h-4" />
                                     </button>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <span className={`text-3xl font-bold ${tempType === 'income' ? 'text-green-500' : 'text-red-500'}`}>
+                                <span className={`text-xl md:text-3xl font-bold ${tempType === 'income' ? 'text-green-500' : 'text-red-500'}`}>
                                     R$
                                 </span>
                                 <input
@@ -252,7 +256,7 @@ export default function TransactionPreviewCard({
                                     onChange={(e) => setTempAmount(e.target.value)}
                                     onKeyDown={handleKeyDownAmount}
                                     className={`
-                                        w-full bg-transparent text-4xl font-black outline-none border-b-2 transition-all
+                                        w-full bg-transparent text-2xl md:text-4xl font-black outline-none border-b-2 transition-all
                                         ${tempType === 'income'
                                             ? 'text-green-500 border-green-500/30 focus:border-green-500'
                                             : 'text-red-500 border-red-500/30 focus:border-red-500'
@@ -264,15 +268,15 @@ export default function TransactionPreviewCard({
                             <div className="flex justify-end gap-2 mt-4">
                                 <button
                                     onClick={() => setIsEditingAmount(false)}
-                                    className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                    className="p-1.5 md:p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-4 h-4 md:w-5 md:h-5" />
                                 </button>
                                 <button
                                     onClick={handleSaveAmount}
-                                    className="p-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                                    className="p-1.5 md:p-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                                 >
-                                    <Check className="w-5 h-5" />
+                                    <Check className="w-4 h-4 md:w-5 md:h-5" />
                                 </button>
                             </div>
                         </div>
@@ -280,23 +284,23 @@ export default function TransactionPreviewCard({
                 </div>
 
                 {/* Divisor */}
-                <div className="h-px bg-border/50 mb-6" />
+                <div className="h-px bg-border/50 mb-3 md:mb-6" />
 
                 {/* Seção 2: Descrição com Ícone */}
-                <div className="mb-6">
+                <div className="mb-3 md:mb-6">
                     <div className="flex items-center gap-3">
                         <div className={`
-                            w-12 h-12 rounded-xl flex items-center justify-center shrink-0
+                            w-8 h-8 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0
                             ${isIncome ? 'bg-green-500/20' : 'bg-red-500/20'}
                         `}>
-                            <CategoryIcon className={`w-6 h-6 ${isIncome ? 'text-green-500' : 'text-red-500'}`} />
+                            <CategoryIcon className={`w-4 h-4 md:w-6 md:h-6 ${isIncome ? 'text-green-500' : 'text-red-500'}`} />
                         </div>
 
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-foreground truncate">
+                            <h3 className="text-sm md:text-lg font-bold text-foreground truncate">
                                 {description || 'Sem descrição'}
                             </h3>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-[10px] md:text-sm text-muted-foreground">
                                 {isIncome ? 'Entrada de dinheiro' : 'Saída de dinheiro'}
                             </p>
                         </div>
@@ -463,10 +467,17 @@ export default function TransactionPreviewCard({
 
                 {/* Efeito de Brilho no Hover */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
+
+                {/* INJECTED CHILDREN (METHOD SELECTOR) */}
+                {children && (
+                    <div className="mt-6 pt-4 border-t border-white/10">
+                        {children}
+                    </div>
+                )}
             </div>
 
             {/* Dica de Interatividade */}
-            {!isEditingAmount && !isEditingDate && !isEditingCategory && !isEditingInstallments && (
+            {!isEditingAmount && !isEditingDate && !isEditingCategory && !isEditingInstallments && !children && (
                 <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

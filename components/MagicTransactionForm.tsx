@@ -404,79 +404,78 @@ export default function MagicTransactionForm({
                                 onUpdate={(updates) => {
                                     setParsedData(prev => prev ? { ...prev, ...updates } : null);
                                 }}
-                            />
-
-                            {/* INLINE METHOD SELECTOR or CONFIRM BUTTON */}
-                            {showMethodSelector ? (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="mt-4 bg-background/50 p-4 rounded-xl border border-border/50"
-                                >
-                                    <h4 className="text-sm font-bold text-center mb-1 text-white">Como deseja pagar?</h4>
-                                    <p className="text-xs text-center text-muted-foreground mb-4">Esta conta é híbrida (Débito e Crédito).</p>
-
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button
-                                            onClick={() => finalizeTransaction(pendingAccount, 'debit')}
-                                            className="p-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 transition-colors flex flex-col items-center gap-1"
-                                        >
-                                            <span className="text-xl">💸</span>
-                                            <span className="font-bold text-sm">Débito</span>
-                                            <span className="text-[10px] opacity-70">Sai na hora</span>
-                                        </button>
-
-                                        <button
-                                            onClick={() => finalizeTransaction(pendingAccount, 'credit')}
-                                            className="p-3 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-500 transition-colors flex flex-col items-center gap-1"
-                                        >
-                                            <span className="text-xl">💳</span>
-                                            <span className="font-bold text-sm">Crédito</span>
-                                            <span className="text-[10px] opacity-70">Na fatura</span>
-                                        </button>
-                                    </div>
-
-                                    <button
-                                        onClick={() => setShowMethodSelector(false)}
-                                        className="w-full mt-3 text-xs text-muted-foreground hover:text-white py-2"
+                            >
+                                {/* INLINE METHOD SELECTOR or CONFIRM BUTTON */}
+                                {showMethodSelector ? (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="bg-background/20 rounded-xl border border-white/5 overflow-hidden"
                                     >
-                                        Cancelar
-                                    </button>
-                                </motion.div>
-                            ) : (
-                                <motion.button
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={handleConfirm}
-                                    disabled={isSubmitting}
-                                    className={`
-                                        w-full mt-4 py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all
-                                        ${parsedData.type === 'income'
-                                            ? 'bg-green-500 hover:bg-green-600 text-white shadow-green-500/20'
-                                            : 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/20'
-                                        }
-                                        ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}
-                                    `}
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                            Salvando...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Check className="w-5 h-5" />
-                                            Confirmar Transação
-                                            <span className="ml-2 text-xs font-normal opacity-80 bg-black/20 px-2 py-0.5 rounded">
-                                                Enter
-                                            </span>
-                                        </>
-                                    )}
-                                </motion.button>
-                            )}
+                                        <div className="p-3 bg-black/20 text-center">
+                                            <h4 className="text-sm font-bold text-white">Como deseja pagar?</h4>
+                                            <p className="text-[10px] text-muted-foreground">Esta conta é híbrida.</p>
+                                        </div>
+
+                                        <div className="p-3 grid grid-cols-2 gap-3">
+                                            <button
+                                                onClick={() => finalizeTransaction(pendingAccount, 'debit')}
+                                                className="p-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 transition-colors flex flex-col items-center gap-1 group"
+                                            >
+                                                <span className="text-xl group-hover:scale-110 transition-transform">💸</span>
+                                                <span className="font-bold text-sm">Débito</span>
+                                                <span className="text-[10px] opacity-70">Sai na hora</span>
+                                            </button>
+
+                                            <button
+                                                onClick={() => finalizeTransaction(pendingAccount, 'credit')}
+                                                className="p-3 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-500 transition-colors flex flex-col items-center gap-1 group"
+                                            >
+                                                <span className="text-xl group-hover:scale-110 transition-transform">💳</span>
+                                                <span className="font-bold text-sm">Crédito</span>
+                                                <span className="text-[10px] opacity-70">Na fatura</span>
+                                            </button>
+                                        </div>
+
+                                        <button
+                                            onClick={() => setShowMethodSelector(false)}
+                                            className="w-full text-[10px] text-muted-foreground hover:text-white py-2 bg-black/20 hover:bg-black/40 transition-colors"
+                                        >
+                                            Cancelar Transação
+                                        </button>
+                                    </motion.div>
+                                ) : (
+                                    <motion.button
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={handleConfirm}
+                                        disabled={isSubmitting}
+                                        className={`
+                                            w-full mt-2 py-3 rounded-xl font-bold text-base shadow-lg flex items-center justify-center gap-2 transition-all
+                                            ${parsedData.type === 'income'
+                                                ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-green-500/20'
+                                                : 'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-red-500/20'
+                                            }
+                                            ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}
+                                        `}
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                Salvando...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Check className="w-4 h-4" />
+                                                Confirmar
+                                            </>
+                                        )}
+                                    </motion.button>
+                                )}
+                            </TransactionPreviewCard>
                         </div>
                     )}
                 </AnimatePresence>
