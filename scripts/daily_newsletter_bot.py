@@ -253,7 +253,7 @@ Saída deve ser EXATAMENTE neste formato JSON:
 
         try:
             print(f"   🤖 Tentando Gemini...")
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-pro')
             response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
             
             if response and response.text:
