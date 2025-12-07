@@ -179,6 +179,48 @@ body {
     }
 }
 
-.pulse-animation {
-    animation: pulse 2s infinite;
+
+/* Update Toast Notification */
+.update-toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #121212;
+    border: 1px solid #333;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    min-width: 300px;
+    justify-content: space-between;
+    animation: slideUp 0.3s ease-out;
+}
+
+.toast-message span {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.toast-button {
+    background-color: #10B981;
+    color: black;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: transform 0.1s;
+}
+
+.toast-button:active {
+    transform: scale(0.95);
 }
