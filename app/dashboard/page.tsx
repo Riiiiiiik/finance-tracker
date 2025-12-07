@@ -287,7 +287,7 @@ export default function DashboardPage() {
     if (loading) return <div className="p-8 text-center animate-pulse text-muted-foreground">Iniciando protocolo...</div>;
 
     return (
-        <div className="min-h-screen pb-24 max-w-md mx-auto bg-background selection:bg-emerald-500/30">
+        <div className="min-h-screen pb-16 max-w-md mx-auto bg-background selection:bg-emerald-500/30">
             {/* THE HEADER: IDENTITY */}
             <header className="flex justify-between items-center p-6 bg-transparent">
                 <div className="flex items-center gap-3">
