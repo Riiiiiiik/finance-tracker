@@ -91,7 +91,7 @@ export default function MonkRoster() {
                 Conheça os Monk&apos;s
             </h3>
 
-            <div className="flex flex-row gap-2 h-48 w-full">
+            <div className="flex flex-col md:flex-row gap-2 w-full h-[600px] md:h-48 pb-10 md:pb-0">
                 {ROSTER_DATA.map((monk) => {
                     const isActive = activeId === monk.id;
                     const Icon = monk.icon;
@@ -104,11 +104,11 @@ export default function MonkRoster() {
                             onHoverStart={() => setActiveId(monk.id)} // Hover to open on desktop
                             className={cn(
                                 "relative rounded-xl border border-white/5 overflow-hidden cursor-pointer transition-colors duration-300",
-                                isActive ? "flex-[4]" : "flex-[1]",
+                                isActive ? "flex-[3] md:flex-[4]" : "flex-[1] md:flex-[1]",
                                 isActive ? "bg-[#1A1A1A]" : "bg-[#111111] hover:bg-[#161616]"
                             )}
                             animate={{
-                                flex: isActive ? 4 : 1,
+                                flex: isActive ? (typeof window !== 'undefined' && window.innerWidth < 768 ? 3 : 4) : 1,
                             }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         >
@@ -123,7 +123,7 @@ export default function MonkRoster() {
 
                             <div className="absolute inset-0 p-3 flex flex-col items-center justify-center">
                                 {/* Icon Always Visible */}
-                                <motion.div layout="position" className="flex flex-col items-center gap-2">
+                                <motion.div layout="position" className={`flex ${isActive ? 'flex-row md:flex-col' : 'flex-col'} items-center gap-2`}>
                                     <div className={cn(
                                         "p-2 rounded-full backdrop-blur-sm transition-colors",
                                         isActive ? "bg-white/5" : "bg-transparent",
@@ -136,10 +136,10 @@ export default function MonkRoster() {
                                         <motion.span
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
-                                            className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground rotate-0 mt-4 whitespace-nowrap hidden sm:block"
-                                            style={{ writingMode: 'vertical-rl' }}
+                                            className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground md:rotate-0 md:writing-mode-vertical-rl md:mt-4 whitespace-nowrap block"
                                         >
-                                            {monk.title.split('.')[1]}
+                                            <span className="md:hidden">{monk.title}</span>
+                                            <span className="hidden md:block" style={{ writingMode: 'vertical-rl' }}>{monk.title.split('.')[1]}</span>
                                         </motion.span>
                                     )}
                                 </motion.div>
@@ -152,7 +152,7 @@ export default function MonkRoster() {
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: 10 }}
                                             transition={{ duration: 0.2, delay: 0.1 }}
-                                            className="w-full flex flex-col justify-between h-full pt-10 px-2 pb-2"
+                                            className="w-full flex flex-col justify-between h-full pt-2 md:pt-10 px-2 pb-2"
                                         >
                                             <div className="flex flex-col gap-1 items-start w-full">
                                                 <div className="flex items-center gap-2 w-full justify-between">
@@ -166,12 +166,10 @@ export default function MonkRoster() {
                                                     </div>
                                                 </div>
 
-                                                <p className="text-xs text-center sm:text-left text-gray-400 mt-2 leading-relaxed">
+                                                <p className="text-xs text-left text-gray-400 mt-2 leading-relaxed line-clamp-3 md:line-clamp-none">
                                                     &quot;{monk.description}&quot;
                                                 </p>
                                             </div>
-
-
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
