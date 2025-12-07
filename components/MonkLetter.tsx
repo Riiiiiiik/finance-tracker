@@ -1,12 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Heart, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
+
+import { supabase } from '@/lib/supabase';
 
 export default function MonkLetter() {
     const [likes, setLikes] = useState(342);
     const [isLiked, setIsLiked] = useState(false);
+    const [article, setArticle] = useState<any>(null);
+
+    useEffect(() => {
+        const fetchLatestNews = async () => {
+            const { data } = await supabase
+                .from('news_articles')
+                .select('title, summary, created_at')
+                .eq('is_published', true)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+
+            if (data) setArticle(data);
+        };
+        fetchLatestNews();
+    }, []);
 
     const handleLike = () => {
         setIsLiked(!isLiked);
@@ -29,14 +48,18 @@ export default function MonkLetter() {
                     <div className="flex items-center gap-2">
                         <span className="text-purple-500 font-bold text-xs tracking-widest uppercase">Monk&apos;s Letter</span>
                     </div>
-                    <span className="text-[10px] text-gray-500 font-medium">Hoje</span>
+                    <span className="text-[10px] text-gray-500 font-medium">
+                        {article ? new Date(article.created_at).toLocaleDateString('pt-BR') : 'Hoje'}
+                    </span>
                 </div>
 
                 {/* Content */}
                 <div className="mb-6">
-                    <h3 className="text-white font-bold text-lg mb-2">A Chegada do Monk.Sentry</h3>
-                    <p className="text-gray-400 text-xs leading-relaxed">
-                        Implementamos o novo algoritmo de detecção de risco e melhoramos a performance do Vault. Veja o que mudou na Ordem.
+                    <h3 className="text-white font-bold text-lg mb-2 line-clamp-1">
+                        {article?.title || "A Chegada do Monk.Sentry"}
+                    </h3>
+                    <p className="text-gray-400 text-xs leading-relaxed line-clamp-3">
+                        {article?.summary || "Implementamos o novo algoritmo de detecção de risco e melhoramos a performance do Vault. Veja o que mudou na Ordem."}
                     </p>
                 </div>
 
@@ -58,10 +81,10 @@ export default function MonkLetter() {
                         </span>
                     </button>
 
-                    <button className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors group">
+                    <Link href="/community/newsletter" className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors group">
                         Ler Completo
                         <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-                    </button>
+                    </Link>
                 </div>
             </motion.div>
 

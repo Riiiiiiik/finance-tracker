@@ -30,7 +30,7 @@ export default function MonkDock() {
     };
 
     // Não mostrar na tela de login, registro ou onboarding
-    if (['/login', '/register', '/onboarding', '/', '/about'].includes(pathname)) {
+    if (['/login', '/register', '/onboarding', '/', '/about', '/community/newsletter'].includes(pathname)) {
         return null;
     }
 
@@ -48,6 +48,7 @@ export default function MonkDock() {
 
                         // Renderização Especial para o Botão Central (FAB)
                         if (tab.isFab) {
+
                             return (
                                 <button
                                     key={tab.id}

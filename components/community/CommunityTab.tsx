@@ -7,7 +7,7 @@ import MonkLetter from '../MonkLetter';
 export default function CommunityTab() {
 
     return (
-        <div className="bg-[#09090B] min-h-screen text-white p-6 font-sans pb-24">
+        <div className="bg-[#09090B] min-h-screen text-white p-6 font-sans pb-24 max-w-md mx-auto">
 
             {/* HEADER DA COMUNIDADE */}
             <div className="mb-8 flex justify-between items-end">
@@ -23,14 +23,14 @@ export default function CommunityTab() {
                 </div>
             </div>
 
-            {/* 1. MONK ROSTER (Lore) */}
-            <div className="mb-8">
-                <MonkRoster />
-            </div>
-
             {/* 2. MONK LETTER (Updates) */}
             <div className="mb-8">
                 <MonkLetter />
+            </div>
+
+            {/* 1. MONK ROSTER (Lore) */}
+            <div className="mb-8">
+                <MonkRoster />
             </div>
 
             {/* FAB (Floating Action Button) - Criar Novo Tópico */}

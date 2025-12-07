@@ -86,12 +86,12 @@ export default function MonkRoster() {
     const [activeId, setActiveId] = useState<MonkType | null>(null);
 
     return (
-        <div className="w-full px-1 py-2">
-            <h3 className="text-[10px] text-muted-foreground/60 font-medium mb-3 uppercase tracking-[0.2em] px-1">
+        <div className="w-full">
+            <h3 className="text-[10px] text-muted-foreground/60 font-medium mb-4 uppercase tracking-[0.2em] px-1">
                 Conheça os Monk&apos;s
             </h3>
 
-            <div className="flex flex-col md:flex-row gap-2 w-full h-[600px] md:h-48 pb-10 md:pb-0">
+            <div className="flex flex-col gap-3 w-full pb-10">
                 {ROSTER_DATA.map((monk) => {
                     const isActive = activeId === monk.id;
                     const Icon = monk.icon;
@@ -100,73 +100,52 @@ export default function MonkRoster() {
                         <motion.div
                             key={monk.id}
                             layout
-                            onClick={() => setActiveId(isActive ? null : monk.id)} // Click to toggle on mobile/desktop
-                            onHoverStart={() => setActiveId(monk.id)} // Hover to open on desktop
+                            onClick={() => setActiveId(isActive ? null : monk.id)}
                             className={cn(
-                                "relative rounded-xl border border-white/5 overflow-hidden cursor-pointer transition-colors duration-300",
-                                isActive ? "flex-[3] md:flex-[4]" : "flex-[1] md:flex-[1]",
-                                isActive ? "bg-[#1A1A1A]" : "bg-[#111111] hover:bg-[#161616]"
+                                "relative rounded-2xl border border-white/5 overflow-hidden cursor-pointer transition-all duration-300",
+                                isActive ? "bg-[#1A1A1A] ring-1 ring-white/10" : "bg-[#09090B] hover:bg-[#111]"
                             )}
-                            animate={{
-                                flex: isActive ? (typeof window !== 'undefined' && window.innerWidth < 768 ? 3 : 4) : 1,
-                            }}
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         >
-                            {/* Background Gradient Effect */}
+                            {/* Background Gradient Effect - Subtle */}
                             {isActive && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className={`absolute inset-0 bg-gradient-to-b ${monk.bgColor} to-transparent opacity-20 pointer-events-none`}
+                                    className={`absolute inset-0 bg-gradient-to-br ${monk.bgColor} to-transparent opacity-10 pointer-events-none`}
                                 />
                             )}
 
-                            <div className="absolute inset-0 p-3 flex flex-col items-center justify-center">
-                                {/* Icon Always Visible */}
-                                <motion.div layout="position" className={`flex ${isActive ? 'flex-row md:flex-col' : 'flex-col'} items-center gap-2`}>
-                                    <div className={cn(
-                                        "p-2 rounded-full backdrop-blur-sm transition-colors",
-                                        isActive ? "bg-white/5" : "bg-transparent",
-                                        monk.color
-                                    )}>
-                                        <Icon className="w-5 h-5" />
-                                    </div>
+                            <div className="p-6 flex flex-col items-center justify-center text-center relative z-10">
+                                <div className={cn(
+                                    "p-2 rounded-xl mb-3 transition-transform duration-300",
+                                    isActive ? "scale-110" : "scale-100",
+                                    monk.color
+                                )}>
+                                    <Icon className="w-6 h-6" />
+                                </div>
 
-                                    {!isActive && (
-                                        <motion.span
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground md:rotate-0 md:writing-mode-vertical-rl md:mt-4 whitespace-nowrap block"
-                                        >
-                                            <span className="md:hidden">{monk.title}</span>
-                                            <span className="hidden md:block" style={{ writingMode: 'vertical-rl' }}>{monk.title.split('.')[1]}</span>
-                                        </motion.span>
-                                    )}
-                                </motion.div>
+                                <span className={cn(
+                                    "text-xs font-bold uppercase tracking-widest transition-colors",
+                                    isActive ? "text-white" : "text-gray-500"
+                                )}>
+                                    {monk.title}
+                                </span>
 
                                 {/* Expanded Content */}
                                 <AnimatePresence>
                                     {isActive && (
                                         <motion.div
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: 10 }}
-                                            transition={{ duration: 0.2, delay: 0.1 }}
-                                            className="w-full flex flex-col justify-between h-full pt-2 md:pt-10 px-2 pb-2"
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                                            className="overflow-hidden w-full"
                                         >
-                                            <div className="flex flex-col gap-1 items-start w-full">
-                                                <div className="flex items-center gap-2 w-full justify-between">
-                                                    <div>
-                                                        <h4 className={cn("text-base font-bold", monk.color)}>
-                                                            {monk.title}
-                                                        </h4>
-                                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                                                            {monk.role}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <p className="text-xs text-left text-gray-400 mt-2 leading-relaxed line-clamp-3 md:line-clamp-none">
+                                            <div className="pt-4 pb-2 flex flex-col items-center border-t border-white/5 mt-4 w-full">
+                                                <span className={cn("text-[10px] uppercase tracking-wider mb-2", monk.color)}>
+                                                    {monk.role}
+                                                </span>
+                                                <p className="text-sm text-gray-400 leading-relaxed max-w-[90%]">
                                                     &quot;{monk.description}&quot;
                                                 </p>
                                             </div>
