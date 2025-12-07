@@ -161,9 +161,14 @@ Atue como o sistema central "The Order".
 Analise esta notícia e gere uma saída JSON válida.
 
 ARTIGO:
+URL: {article['link']}
 Título: {article['title']}
 Fonte: {article['source']}
-Conteúdo: {content[:4000]}
+Contexto Extraído (se disponível): {content[:4000]}
+
+INSTRUÇÃO DE LEITURA:
+Use suas capacidades de navegação online para acessar a URL acima e ler o conteúdo completo e atualizado.
+Use o contexto extraído apenas como fallback.
 
 Saída deve ser EXATAMENTE neste formato JSON:
 {{
@@ -211,10 +216,10 @@ Saída deve ser EXATAMENTE neste formato JSON:
         if not self.perplexity_api_key:
             return None
         
-        # SEGURANÇA: Se o conteúdo for vazio ou muito curto, a Perplexity retorna erro 400.
+        # SEGURANÇA: Se o conteúdo for vazio, tentaremos via URL (Online Search)
         if not content or len(content) < 50:
-            print("   ⚠️ Conteúdo muito curto para processar na IA.")
-            return None
+            print("   ⚠️ Conteúdo curto. IA usará navegação online para ler o link.")
+            # Não retornamos None aqui, deixamos prosseguir para o modelo Online ler a URL
 
         prompt = self.generate_prompt(article, content)
 
