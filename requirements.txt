@@ -1,0 +1,7 @@
+requests
+python-dotenv
+feedparser
+newspaper3k
+google-generativeai
+pytz
+lxml_html_clean
