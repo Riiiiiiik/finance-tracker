@@ -30,7 +30,7 @@ export default function MonkDock() {
     };
 
     // Não mostrar na tela de login, registro ou onboarding
-    if (['/login', '/register', '/onboarding', '/'].includes(pathname)) {
+    if (['/login', '/register', '/onboarding', '/', '/about'].includes(pathname)) {
         return null;
     }
 

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShieldCheck, BrainCircuit, ShieldAlert, Star, ArrowRight, Activity } from 'lucide-react';
 
 export default function LandingPage() {
@@ -19,9 +20,7 @@ export default function LandingPage() {
             {/* --- NAVBAR --- */}
             <nav className="relative z-50 flex justify-between items-center px-6 py-6 max-w-7xl mx-auto">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-[#10B981] rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.4)]">
-                        <span className="font-bold text-black text-xl tracking-tighter">O.</span>
-                    </div>
+                    <Image src="/logo.png" alt="O." width={32} height={32} className="rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.4)]" />
                     <span className="font-bold tracking-tight text-lg">The Order</span>
                 </div>
                 <div className="flex items-center gap-4">
@@ -32,18 +31,18 @@ export default function LandingPage() {
                         Solicitar Acesso
                     </Link>
                 </div>
-            </nav>
+            </nav >
 
             {/* --- HERO SECTION --- */}
-            <main className="relative z-10 pt-20 pb-32 px-6 max-w-7xl mx-auto text-center">
+            < main className="relative z-10 pt-20 pb-32 px-6 max-w-7xl mx-auto text-center" >
 
 
 
                 {/* Headline */}
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-600 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                    Domine o Caos.<br />
+                < h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-600 animate-in fade-in slide-in-from-bottom-8 duration-1000" >
+                    Domine o Caos.< br />
                     <span className="text-white">Assuma o Comando.</span>
-                </h1>
+                </h1 >
 
                 <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-200">
                     Não é apenas um banco. É uma inteligência coletiva de agentes (Monks) projetada para blindar seu patrimônio e materializar seu futuro.
@@ -63,10 +62,10 @@ export default function LandingPage() {
                     </Link>
                 </div>
 
-            </main>
+            </main >
 
             {/* --- THE OPERATIVES (Grid de Features) --- */}
-            <section className="relative z-10 px-6 pb-32 max-w-7xl mx-auto">
+            < section className="relative z-10 px-6 pb-32 max-w-7xl mx-auto" >
                 <div className="mb-12 flex items-end justify-between border-b border-[#222] pb-4">
                     <div>
                         <h2 className="text-2xl font-bold text-white">Os Operadores</h2>
@@ -138,10 +137,10 @@ export default function LandingPage() {
                     </div>
 
                 </div>
-            </section>
+            </section >
 
             {/* --- THE ACCESS PASS (PREÇO) --- */}
-            <section className="relative z-10 py-32 px-6">
+            < section className="relative z-10 py-32 px-6" >
                 <div className="max-w-4xl mx-auto bg-[#0A0A0A] border border-[#222] rounded-3xl p-12 relative overflow-hidden text-center group hover:border-[#10B981] transition-all duration-500">
 
                     {/* Glow Effect */}
@@ -175,10 +174,10 @@ export default function LandingPage() {
                         </p>
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* --- FOOTER SIMPLES --- */}
-            <footer className="border-t border-[#222] py-12 text-center relative z-10 bg-[#050505]">
+            < footer className="border-t border-[#222] py-12 text-center relative z-10 bg-[#050505]" >
                 <p className="text-[#10B981] font-mono text-xs tracking-[0.3em] uppercase mb-4">
                     Trusted by the Elite
                 </p>
@@ -191,8 +190,8 @@ export default function LandingPage() {
                 <p className="text-gray-600 text-[10px] mt-12">
                     © 2025 The Order System. Todos os direitos reservados. Protocolo Seguro.
                 </p>
-            </footer>
+            </footer >
 
-        </div>
+        </div >
     );
 }

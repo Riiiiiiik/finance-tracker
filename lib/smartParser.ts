@@ -7,15 +7,36 @@ export type ParsedTransaction = {
     installments?: number;
 };
 
-const CATEGORY_KEYWORDS: Record<string, string[]> = {
+export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     'Alimentação': ['almoço', 'jantar', 'lanche', 'ifood', 'mercado', 'restaurante', 'café', 'padaria', 'pizza', 'burger', 'açaí', 'fome'],
     'Transporte': ['uber', '99', 'taxi', 'onibus', 'metrô', 'trem', 'gasolina', 'posto', 'estacionamento', 'pedagio', 'carro', 'moto'],
     'Lazer': ['cinema', 'filme', 'jogo', 'steam', 'psn', 'xbox', 'spotify', 'netflix', 'amazon', 'bar', 'cerveja', 'festa', 'show', 'livro'],
     'Saúde': ['farmacia', 'remedio', 'medico', 'consulta', 'exame', 'dentista', 'academia', 'suplemento', 'whey'],
     'Moradia': ['aluguel', 'luz', 'agua', 'internet', 'vivo', 'claro', 'tim', 'condominio', 'iptu', 'gas', 'limpeza'],
     'Educação': ['curso', 'faculdade', 'escola', 'livro', 'material', 'udemy', 'alura'],
-    'Salário': ['salario', 'pagamento', 'freela', 'pix recebido', 'deposito']
+    'Salário': ['salario', 'holerite', 'freela', 'pix recebido', 'deposito', 'remuneração']
 };
+
+// Helper to detect category from text
+export function detectCategory(text: string): string {
+    const lowerText = text.toLowerCase();
+
+    // Check for "Income" keywords first
+    if (CATEGORY_KEYWORDS['Salário'].some(k => lowerText.includes(k))) {
+        return 'Salário';
+    }
+
+    // Check other categories
+    for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+        if (cat === 'Salário') continue;
+
+        if (keywords.some(k => lowerText.includes(k))) {
+            return cat;
+        }
+    }
+
+    return '';
+}
 
 export function parseSmartInput(input: string): ParsedTransaction {
     let text = input.trim();
@@ -60,22 +81,9 @@ export function parseSmartInput(input: string): ParsedTransaction {
     }
 
     // 4. Detect Category & Type based on keywords
-    const lowerText = text.toLowerCase();
-
-    // Check for "Income" keywords first to set Type
-    if (CATEGORY_KEYWORDS['Salário'].some(k => lowerText.includes(k))) {
+    result.category = detectCategory(text);
+    if (result.category === 'Salário') {
         result.type = 'income';
-        result.category = 'Salário';
-    } else {
-        // Check other categories
-        for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-            if (cat === 'Salário') continue;
-
-            if (keywords.some(k => lowerText.includes(k))) {
-                result.category = cat;
-                break; // Stop at first match
-            }
-        }
     }
 
     // 5. Description is what's left

@@ -8,6 +8,7 @@ import TransactionPreviewCard from './TransactionPreviewCard';
 import { supabase, Account } from '@/lib/supabase';
 import MonkIcon, { monkColors } from './MonkIcon';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 interface MagicTransactionFormProps {
     userId: string;
@@ -39,7 +40,7 @@ export default function MagicTransactionForm({
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
     const [isFocused, setIsFocused] = useState(false);
 
-    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const searchParams = useSearchParams();
 
     // Parse input MANUALMENTE ao pressionar Enter ou botão
     const handleParse = () => {
@@ -72,6 +73,7 @@ export default function MagicTransactionForm({
             const amt = searchParams.get('amount') || '';
             const desc = searchParams.get('desc') || '';
             const date = searchParams.get('date') || '';
+            const category = searchParams.get('category') || '';
 
             if (amt) {
                 setSmartInput(`${desc} ${amt}`); // Preenche visualmente
@@ -79,16 +81,21 @@ export default function MagicTransactionForm({
                     amount: amt,
                     description: desc,
                     type: 'expense', // Default to expense for OCR
-                    category: '',
+                    category: category,
                     tags: ['OCR'],
                     date: date || new Date().toISOString().split('T')[0],
                     installments: 1
                 });
                 // Limpar URL para não reprocessar no refresh
                 window.history.replaceState({}, '', '/dashboard');
+            } else {
+                // Scan successful but no amount found
+                setFeedback({ type: 'error', message: 'Não identificamos o valor na nota. Insira manualmente.' });
+                if (desc) setSmartInput(desc);
+                window.history.replaceState({}, '', '/dashboard');
             }
         }
-    }, []);
+    }, [searchParams]);
 
     // Efeito para limpar dados se o input for apagado totalmente
     useEffect(() => {

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShieldCheck, Mail, Lock, UserPlus, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -75,10 +76,10 @@ export default function RegisterPage() {
 
                 {/* Header */}
                 <div className="p-8 pb-6 border-b border-[#333]/50">
-                    <div className="flex items-center justify-center gap-2 mb-4">
-                        <ShieldCheck size={24} className="text-[#10B981]" />
+                    <Link href="/" className="flex items-center justify-center gap-2 mb-4 hover:opacity-80 transition-opacity">
+                        <Image src="/logo.png" alt="Logo" width={24} height={24} className="rounded-md" />
                         <span className="text-[#10B981] font-bold text-sm uppercase tracking-[0.2em]">Monk.Vault</span>
-                    </div>
+                    </Link>
                     <h1 className="text-2xl font-bold text-center text-white tracking-tight">Novo Protocolo de Acesso</h1>
                     <p className="text-gray-500 text-center text-xs uppercase tracking-widest mt-2">Iniciando vinculação segura</p>
                 </div>

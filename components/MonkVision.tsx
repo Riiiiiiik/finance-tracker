@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { Camera, X, Check, Loader2, ScanLine } from 'lucide-react';
 import Tesseract from 'tesseract.js';
+import { parseSmartInput, detectCategory, CATEGORY_KEYWORDS } from '@/lib/smartParser';
 import { useRouter } from 'next/navigation';
 
 interface MonkVisionProps {
@@ -72,53 +73,127 @@ export default function MonkVision({ isOpen, onClose }: MonkVisionProps) {
     };
 
     const extractDataAndRedirect = (text: string) => {
-        // 1. Extract Amount (Procura por R$, vírgulas, etc)
-        // Regex para encontrar valores monetários: "digits,digits" ou "digits.digits,digits"
-        // Ex: 45,00 | 1.200,50 | R$ 50,00
-        const amountRegex = /(?:R\$\s?)?(\d{1,3}(?:\.\d{3})*,\d{2})/g;
-        const matches = [...text.matchAll(amountRegex)];
+        try {
+            // STRATEGY: Semantic Total Search -> Fallback to Max Value
 
-        // Estratégia: Pegar o MAIOR valor encontrado (geralmente é o TOTAL)
-        let maxAmount = 0;
-        let bestAmountStr = '';
+            const lines = text.split('\n');
+            const moneyRegex = /(?:R\$\s?)?(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})/g;
 
-        matches.forEach(match => {
-            const valStr = match[1].replace('.', '').replace(',', '.');
-            const val = parseFloat(valStr);
-            if (val > maxAmount) {
-                maxAmount = val;
-                bestAmountStr = valStr; // formato float string '45.50'
+            // 1. Semantic Search (Look for "Total", "Valor Pagar", etc)
+            let semanticTotal = 0;
+            const totalKeywords = ['total', 'pagar', 'soma', 'valor cobrado', 'valor total'];
+
+            for (const line of lines) {
+                const lowerLine = line.toLowerCase();
+                if (totalKeywords.some(k => lowerLine.includes(k))) {
+                    // Found a candidate line. Extract money values from this line.
+                    const matches = [...line.matchAll(moneyRegex)];
+                    matches.forEach(match => {
+                        const val = parseMoney(match[1]);
+                        // Usually the Total is the largest number on the "Total" line (ignoring taxes if listed)
+                        if (val > semanticTotal) semanticTotal = val;
+                    });
+                }
             }
-        });
 
-        // 2. Extract Date
-        // Regex para dd/mm/yyyy ou dd/mm/yy
-        const dateRegex = /(\d{2})\/(\d{2})\/(\d{2,4})/;
-        const dateMatch = text.match(dateRegex);
-        let dateStr = '';
-        if (dateMatch) {
-            // Converter para YYYY-MM-DD
-            const day = dateMatch[1];
-            const month = dateMatch[2];
-            let year = dateMatch[3];
-            if (year.length === 2) year = '20' + year;
-            dateStr = `${year}-${month}-${day}`;
+            // 2. Max Value Search (Fallback)
+            let globalMax = 0;
+            const allMatches = [...text.matchAll(moneyRegex)];
+            allMatches.forEach(match => {
+                const val = parseMoney(match[1]);
+                if (val > globalMax) globalMax = val;
+            });
+
+            // DECISION
+            const finalAmount = semanticTotal > 0 ? semanticTotal : globalMax;
+            const formattedAmountString = finalAmount > 0 ? finalAmount.toFixed(2) : '';
+
+            // Date Extraction
+            const dateRegex = /(\d{2})\/(\d{2})\/(\d{2,4})/;
+            const dateMatch = text.match(dateRegex);
+            let dateStr = '';
+            if (dateMatch) {
+                const day = dateMatch[1];
+                const month = dateMatch[2];
+                let year = dateMatch[3];
+                if (year.length === 2) year = '20' + year;
+                dateStr = `${year}-${month}-${day}`;
+            }
+
+            // Description Logic: Smart Item Detection -> Fallback to clean Header
+            let description = '';
+
+            // 1. Search for known items (Gasolina, Uber, Burger, etc.)
+            const lowerText = text.toLowerCase();
+            if (CATEGORY_KEYWORDS) {
+                for (const keywords of Object.values(CATEGORY_KEYWORDS)) {
+                    if (Array.isArray(keywords)) {
+                        const found = keywords.find(k => lowerText.includes(k.toLowerCase()));
+                        if (found) {
+                            // Return capitalized item name (e.g., "Gasolina")
+                            description = found.charAt(0).toUpperCase() + found.slice(1);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 2. If no item found, fallback to Header with strict filtering
+            if (!description) {
+                const potentialDescLines = lines.filter(l => {
+                    const clean = l.trim();
+                    if (clean.length < 4) return false;
+                    if (/^\d{2}\/\d{2}/.test(clean)) return false;
+                    if (/R\$|Total|Pagar|Troco|CNPJ|CPF|IE/i.test(clean)) return false;
+                    if ((clean.match(/\d/g) || []).length > clean.length * 0.3) return false;
+                    if (clean.split(' ').length > 1 && clean.length < 8) return false; // "Ao 11" type junk
+                    return true;
+                });
+
+                if (potentialDescLines.length > 0) {
+                    description = potentialDescLines[0]
+                        .substring(0, 30)
+                        .replace(/[^a-zA-Z0-9 \u00C0-\u00FF]/g, '')
+                        .trim();
+
+                    // Capitalize
+                    description = description.split(' ')
+                        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                        .join(' ');
+                } else {
+                    description = 'Nova Despesa';
+                }
+            }
+
+            // Category Detection
+            const detectedCategory = detectCategory(text);
+
+            const params = new URLSearchParams();
+            if (formattedAmountString) params.set('amount', formattedAmountString);
+            if (dateStr) params.set('date', dateStr);
+            if (detectedCategory) params.set('category', detectedCategory);
+            params.set('desc', description);
+            params.set('action', 'scan');
+
+            setIsProcessing(false); // Success! Stop spinner.
+            onClose();
+            router.push(`/dashboard?${params.toString()}`);
+
+        } catch (error) {
+            console.error("Extraction Logic Error:", error);
+            setIsProcessing(false);
+            alert("Erro ao processar os dados da nota.");
         }
+    };
 
-        // 3. Extract Possible Merchant (Simplificado: Pega primeira linha não vazia)
-        const lines = text.split('\n').filter(l => l.trim().length > 3);
-        const description = lines.length > 0 ? lines[0].substring(0, 30) : 'Nova Despesa';
-
-        // Redirect
-        const params = new URLSearchParams();
-        if (bestAmountStr) params.set('amount', bestAmountStr);
-        if (dateStr) params.set('date', dateStr);
-        if (description) params.set('desc', description);
-        params.set('action', 'scan');
-
-        // Fechar modal e navegar
-        onClose();
-        router.push(`/dashboard?${params.toString()}`);
+    const parseMoney = (rawValue: string): number => {
+        let val = 0;
+        if (/,\d{2}$/.test(rawValue)) {
+            val = parseFloat(rawValue.replace(/\./g, '').replace(',', '.'));
+        } else if (/\.\d{2}$/.test(rawValue)) {
+            val = parseFloat(rawValue.replace(/,/g, ''));
+        }
+        return isNaN(val) ? 0 : val;
     };
 
     return (
