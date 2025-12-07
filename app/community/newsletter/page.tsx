@@ -111,7 +111,7 @@ export default function NewsletterPage() {
                     </div>
 
                     {/* Chat Messages */}
-                    {article?.council_discussion ? (
+                    {article?.council_discussion && article.council_discussion.length > 0 ? (
                         article.council_discussion.map((msg: any, index: number) => {
                             // Map monk names to visuals
                             const visuals: any = {
