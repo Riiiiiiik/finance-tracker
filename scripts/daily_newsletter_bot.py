@@ -211,6 +211,11 @@ Saída deve ser EXATAMENTE neste formato JSON:
         if not self.perplexity_api_key:
             return None
         
+        # SEGURANÇA: Se o conteúdo for vazio ou muito curto, a Perplexity retorna erro 400.
+        if not content or len(content) < 50:
+            print("   ⚠️ Conteúdo muito curto para processar na IA.")
+            return None
+
         prompt = self.generate_prompt(article, content)
 
         try:
@@ -218,13 +223,24 @@ Saída deve ser EXATAMENTE neste formato JSON:
             url = "https://api.perplexity.ai/chat/completions"
             
             payload = {
-                "model": "llama-3.1-sonar-small-128k-online",
+                # ATUALIZAÇÃO IMPORTANTE: Modelo novo e mais estável
+                "model": "llama-3.1-sonar-large-128k-online", 
                 "messages": [
-                    {"role": "system", "content": "You are a JSON-only response bot. Output valid JSON only."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": "You are a specialized financial analyst bot. You output ONLY valid JSON. No markdown, no preambles."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
                 ],
-                "max_tokens": 1000,
-                "temperature": 0.2
+                # Reduzi um pouco os tokens para evitar estouro de limite
+                "max_tokens": 900, 
+                "temperature": 0.1,
+                "top_p": 0.9,
+                "return_citations": False,
+                "return_images": False
             }
             
             headers = {
@@ -233,13 +249,22 @@ Saída deve ser EXATAMENTE neste formato JSON:
             }
             
             response = requests.post(url, json=payload, headers=headers, timeout=60)
+            
+            # ISSO VAI TE SALVAR: Se der erro 400 de novo, ele vai imprimir a mensagem real da Perplexity
+            if response.status_code != 200:
+                print(f"   ❌ Detalhes do Erro da API: {response.text}")
+                
             response.raise_for_status()
             result = response.json()
             
             if 'choices' in result and len(result['choices']) > 0:
                 text_content = result['choices'][0]['message']['content']
                 print(f"   ✅ Perplexity respondeu.")
-                return self.parse_ai_json(text_content)
+                
+                # LIMPEZA: Remove os acentos ```json que a IA às vezes coloca e quebra o código
+                clean_text = text_content.replace("```json", "").replace("```", "").strip()
+                
+                return self.parse_ai_json(clean_text)
             return None
         except Exception as e:
             print(f"   ❌ Erro Perplexity: {e}")
