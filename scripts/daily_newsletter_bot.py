@@ -125,7 +125,7 @@ class DailyReporter:
 
         # CONFIGURAÇÃO DO SITE MONK
         # Mude para a URL real do seu site em produção ou localhost para teste
-        self.site_api_url = "https://seusite.netlify.app/api/news/ingest" 
+        self.site_api_url = "https://theordermonk.netlify.app/api/news/ingest" 
         self.site_api_secret = "monk_secret_123"
 
     def url_already_sent(self, url):
