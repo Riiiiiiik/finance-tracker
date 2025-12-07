@@ -183,7 +183,7 @@ body {
 /* Update Toast Notification */
 .update-toast {
     position: fixed;
-    bottom: 90px;
+    bottom: 120px;
     left: 50%;
     transform: translateX(-50%);
     background-color: #121212;
@@ -195,7 +195,7 @@ body {
     align-items: center;
     gap: 15px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
-    z-index: 9999;
+    z-index: 99999;
     min-width: 300px;
     justify-content: space-between;
     animation: slideUp 0.3s ease-out;
