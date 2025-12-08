@@ -39,7 +39,11 @@ function VerifyContent() {
                 router.refresh();
             }, 2000);
         } catch (err: any) {
-            setError(err.message || 'Código inválido. Tente novamente.');
+            if (err.message.includes('expired') || err.message.includes('invalid')) {
+                setError('Código expirado ou inválido. Solicite um novo código.');
+            } else {
+                setError(err.message || 'Código inválido. Tente novamente.');
+            }
         } finally {
             setLoading(false);
         }
