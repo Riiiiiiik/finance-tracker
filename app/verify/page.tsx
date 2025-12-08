@@ -121,14 +121,14 @@ function VerifyContent() {
                                     type="text"
                                     value={token}
                                     onChange={(e) => setToken(e.target.value.replace(/\D/g, ''))}
-                                    placeholder="000000"
-                                    maxLength={6}
+                                    placeholder="00000000"
+                                    maxLength={8}
                                     className="w-full bg-[#161616] border border-[#333] text-white rounded-lg p-3 pl-10 focus:border-[#10B981] focus:outline-none transition-all placeholder:text-gray-700 text-center text-2xl font-mono tracking-[0.5em] font-bold"
                                     required
                                 />
                             </div>
                             <p className="text-gray-600 text-[10px] uppercase tracking-wider pl-1 mt-1">
-                                Digite o código de 6 dígitos
+                                Digite o código de 8 dígitos
                             </p>
                         </div>
 
@@ -142,7 +142,7 @@ function VerifyContent() {
 
                         <button
                             type="submit"
-                            disabled={loading || token.length !== 6}
+                            disabled={loading || token.length !== 8}
                             className="w-full py-4 rounded-xl bg-[#10B981] hover:bg-[#0fa372] text-[#09090B] font-bold text-sm uppercase tracking-wide shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group"
                         >
                             {loading ? (
