@@ -298,6 +298,8 @@ export default function MemberProfile() {
                                 <span className="text-gray-500 text-sm">Dia</span>
                                 <input
                                     type="number"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     value={payday}
                                     onChange={(e) => setPayday(e.target.value)}
                                     className="bg-transparent outline-none w-full font-mono font-bold"

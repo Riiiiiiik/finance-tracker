@@ -1,0 +1,92 @@
+name: Deploy to Oracle Cloud
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Web App
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:latest
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build and push Bot
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.bot
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-bot:latest
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Oracle Cloud via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USER }}
+          key: ${{ secrets.ORACLE_KEY }}
+          script: |
+            # Login no GHCR dentro do servidor
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Cria diretório se não existir
+            mkdir -p ~/app
+            cd ~/app
+
+            # Atualiza o docker-compose.yml (simples overwrite manual ou git pull se preferir)
+            # Aqui vamos assumir que o usuário fará git pull ou criará o arquivo 1x.
+            # Para garantir atualização, podemos puxar do git:
+            # git pull origin main 
+            # Ou apenas baixar as imagens novas:
+            
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:latest
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-bot:latest
+
+            # Recria os containers
+            # Precisamos garantir que o docker-compose use as imagens do GHCR
+            # Para isso, seria ideal ter um docker-compose.prod.yml ou exportar variaveis
+            
+            # Vamos exportar os nomes das imagens para o docker compose usar
+            export WEB_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:latest
+            export BOT_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-bot:latest
+            
+            # Derruba e sobe (para pegar variaveis de ambiente novas se tiver)
+            docker compose down
+            docker compose up -d
