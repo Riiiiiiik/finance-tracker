@@ -128,6 +128,14 @@ function VerifyContent() {
                             </p>
                         </div>
 
+                        {/* Spam Warning */}
+                        <div className="p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-lg">
+                            <p className="text-yellow-500/80 text-[10px] uppercase tracking-wider font-medium flex items-center gap-2">
+                                <span className="text-yellow-500">⚠</span>
+                                Não recebeu? Verifique sua caixa de spam
+                            </p>
+                        </div>
+
                         <button
                             type="submit"
                             disabled={loading || token.length !== 6}
