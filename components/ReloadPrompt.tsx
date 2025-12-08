@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 
 export default function ReloadPrompt() {
-    const [needRefresh, setNeedRefresh] = useState(false);
     const [wb, setWb] = useState<any>(null);
 
     useEffect(() => {
@@ -15,8 +14,16 @@ export default function ReloadPrompt() {
 
             // Add event listeners to detect when a new SW is waiting
             const onWaiting = () => {
-                console.log('New service worker waiting. Prompting update.');
-                setNeedRefresh(true);
+                console.log('New service worker detected. Auto-updating...');
+
+                // Atualizar automaticamente SEM mostrar prompt
+                if (wbInstance) {
+                    wbInstance.messageSkipWaiting();
+
+                    wbInstance.addEventListener('controlling', () => {
+                        window.location.reload();
+                    });
+                }
             };
 
             wbInstance.addEventListener('waiting', onWaiting);
@@ -29,32 +36,6 @@ export default function ReloadPrompt() {
         }
     }, []);
 
-    const updateServiceWorker = async () => {
-        if (wb) {
-            // Tell the new SW to take control immediately
-            wb.messageSkipWaiting();
-
-            // Listen for the controlling event to reload the page once the new SW takes over
-            wb.addEventListener('controlling', () => {
-                window.location.reload();
-            });
-        }
-    };
-
-    if (!needRefresh) return null;
-
-    return (
-        <div className="update-toast">
-            <div className="toast-message flex items-center gap-2">
-                <span>Nova versão disponível! 🚀</span>
-            </div>
-            <button
-                className="toast-button flex items-center gap-2"
-                onClick={updateServiceWorker}
-            >
-                <RefreshCw size={14} className="animate-spin-slow" />
-                Atualizar
-            </button>
-        </div>
-    );
+    // Não renderizar nada - atualização é automática
+    return null;
 }
