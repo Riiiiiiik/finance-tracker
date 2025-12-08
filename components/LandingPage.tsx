@@ -156,13 +156,13 @@ export default function LandingPage() {
                         </h2>
 
                         <p className="text-gray-400 text-lg max-w-xl mx-auto mb-10">
-                            Garanta seu lugar na Ordem. Acesso vitalício ao protocolo inicial e todas as atualizações futuras da v1.0.
+                            Garanta seu lugar na Ordem. Acesso ao protocolo inicial e todas as atualizações futuras da v1.0.
                         </p>
 
                         <div className="flex items-center justify-center gap-1 mb-10">
                             <span className="text-2xl text-gray-500 font-medium relative top-[-8px]">R$</span>
                             <span className="text-7xl md:text-8xl font-bold text-white tracking-tighter">0,99</span>
-                            <span className="text-xl text-gray-500 self-end mb-4 ml-2">vitalício</span>
+                            <span className="text-xl text-gray-500 self-end mb-4 ml-2">/ mês</span>
                         </div>
 
                         <Link href="/register" className="inline-flex items-center gap-3 px-10 py-5 bg-[#10B981] text-black font-bold rounded-xl text-xl hover:bg-[#0EA572] transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:scale-105 transform">
@@ -170,7 +170,7 @@ export default function LandingPage() {
                         </Link>
 
                         <p className="text-gray-600 text-xs mt-6 uppercase tracking-wider">
-                            Pagamento único. Acesso vitalício garantido.
+                            Assinatura recorrente. Cancele quando quiser.
                         </p>
                     </div>
                 </div>
