@@ -162,7 +162,7 @@ export default function LandingPage() {
                         <div className="flex items-center justify-center gap-1 mb-10">
                             <span className="text-2xl text-gray-500 font-medium relative top-[-8px]">R$</span>
                             <span className="text-7xl md:text-8xl font-bold text-white tracking-tighter">0,99</span>
-                            <span className="text-xl text-gray-500 self-end mb-4 ml-2">/ mês</span>
+                            <span className="text-xl text-gray-500 self-end mb-4 ml-2">vitalício</span>
                         </div>
 
                         <Link href="/register" className="inline-flex items-center gap-3 px-10 py-5 bg-[#10B981] text-black font-bold rounded-xl text-xl hover:bg-[#0EA572] transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:scale-105 transform">
@@ -170,7 +170,7 @@ export default function LandingPage() {
                         </Link>
 
                         <p className="text-gray-600 text-xs mt-6 uppercase tracking-wider">
-                            Assinatura recorrente. Cancele quando quiser.
+                            Pagamento único. Acesso vitalício garantido.
                         </p>
                     </div>
                 </div>
