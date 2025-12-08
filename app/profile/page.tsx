@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { User, CreditCard, Cpu, Settings, LogOut, Trash2, Shield, Zap, BrainCircuit } from 'lucide-react';
+import { User, CreditCard, Cpu, Settings, LogOut, Trash2, Shield, Zap, BrainCircuit, Mail, CheckCircle, Clock, AlertCircle, Key } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 export default function MemberProfile() {
@@ -24,6 +24,18 @@ export default function MemberProfile() {
     const [isEditingIdentity, setIsEditingIdentity] = useState(false);
     const [tempName, setTempName] = useState('');
     const [tempAvatar, setTempAvatar] = useState('');
+
+    // Estados de Verificação de E-mail
+    const [userEmail, setUserEmail] = useState('');
+    const [emailVerified, setEmailVerified] = useState(false);
+    const [otpCode, setOtpCode] = useState('');
+    const [sendingOtp, setSendingOtp] = useState(false);
+    const [verifyingOtp, setVerifyingOtp] = useState(false);
+    const [otpMessage, setOtpMessage] = useState('');
+    const [otpError, setOtpError] = useState('');
+    const [accountCreatedAt, setAccountCreatedAt] = useState<Date | null>(null);
+    const [timeRemaining, setTimeRemaining] = useState<{ days: number; hours: number; minutes: number } | null>(null);
+    const [isExpired, setIsExpired] = useState(false);
 
     useEffect(() => {
         if (profile) {
@@ -53,6 +65,13 @@ export default function MemberProfile() {
 
     const loadProfile = async (uid: string) => {
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (session?.user) {
+                setUserEmail(session.user.email || '');
+                setAccountCreatedAt(new Date(session.user.created_at));
+            }
+
             const { data } = await supabase
                 .from('profiles')
                 .select('*')
@@ -61,6 +80,7 @@ export default function MemberProfile() {
 
             if (data) {
                 setProfile(data);
+                setEmailVerified(data.email_verified || false);
 
                 // Formatar Renda
                 if (data.monthly_income) {
@@ -77,6 +97,99 @@ export default function MemberProfile() {
             console.error('Erro ao carregar perfil:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Timer de 7 dias para verificação de e-mail
+    useEffect(() => {
+        if (!accountCreatedAt || emailVerified) return;
+
+        const updateTimer = () => {
+            const now = new Date();
+            const deadline = new Date(accountCreatedAt);
+            deadline.setDate(deadline.getDate() + 7); // 7 dias
+
+            const diff = deadline.getTime() - now.getTime();
+
+            if (diff <= 0) {
+                setIsExpired(true);
+                setTimeRemaining({ days: 0, hours: 0, minutes: 0 });
+                // Redirecionar para página de bloqueio
+                router.push('/blocked');
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+            setTimeRemaining({ days, hours, minutes });
+            setIsExpired(false);
+        };
+
+        updateTimer();
+        const interval = setInterval(updateTimer, 60000); // Atualizar a cada minuto
+
+        return () => clearInterval(interval);
+    }, [accountCreatedAt, emailVerified]);
+
+    const handleSendOtp = async () => {
+        setSendingOtp(true);
+        setOtpError('');
+        setOtpMessage('');
+
+        try {
+            const { error } = await supabase.auth.signInWithOtp({
+                email: userEmail,
+                options: {
+                    shouldCreateUser: false,
+                },
+            });
+
+            if (error) throw error;
+
+            setOtpMessage('Código enviado! Verifique seu e-mail (e spam).');
+        } catch (err: any) {
+            setOtpError(err.message || 'Erro ao enviar código.');
+        } finally {
+            setSendingOtp(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (!otpCode || otpCode.length !== 6) {
+            setOtpError('Código deve ter 6 dígitos.');
+            return;
+        }
+
+        setVerifyingOtp(true);
+        setOtpError('');
+        setOtpMessage('');
+
+        try {
+            const { error } = await supabase.auth.verifyOtp({
+                email: userEmail,
+                token: otpCode,
+                type: 'email',
+            });
+
+            if (error) throw error;
+
+            // Atualizar flag no perfil
+            if (userId) {
+                await supabase
+                    .from('profiles')
+                    .update({ email_verified: true })
+                    .eq('id', userId);
+            }
+
+            setEmailVerified(true);
+            setOtpMessage('✓ E-mail verificado com sucesso!');
+            setOtpCode('');
+        } catch (err: any) {
+            setOtpError(err.message || 'Código inválido. Tente novamente.');
+        } finally {
+            setVerifyingOtp(false);
         }
     };
 
@@ -264,6 +377,163 @@ export default function MemberProfile() {
                     )}
                 </div>
             </div>
+
+            {/* 2. VERIFICAÇÃO DE E-MAIL COM TIMER */}
+            {!emailVerified && timeRemaining && (
+                <div className="mb-8">
+                    {/* Banner de Alerta Progressivo */}
+                    {(() => {
+                        const { days, hours } = timeRemaining;
+                        const totalHours = days * 24 + hours;
+
+                        // Determinar cor e intensidade do alerta
+                        let bgColor, borderColor, textColor, icon, message, pulseClass;
+
+                        if (days >= 4) {
+                            // Verde: Mais de 3 dias
+                            bgColor = 'bg-[#10B981]/10';
+                            borderColor = 'border-[#10B981]/30';
+                            textColor = 'text-[#10B981]';
+                            icon = <Mail size={16} />;
+                            message = 'Sistema de Segurança: Verificação de E-mail Pendente';
+                            pulseClass = '';
+                        } else if (days >= 1) {
+                            // Amarelo: Entre 1-3 dias
+                            bgColor = 'bg-yellow-500/10';
+                            borderColor = 'border-yellow-500/30';
+                            textColor = 'text-yellow-500';
+                            icon = <Clock size={16} />;
+                            message = `ATENÇÃO: Protocolo de bloqueio será ativado em ${days} dia(s)`;
+                            pulseClass = 'animate-pulse';
+                        } else {
+                            // Vermelho: Menos de 1 dia
+                            bgColor = 'bg-red-500/10';
+                            borderColor = 'border-red-500/30';
+                            textColor = 'text-red-500';
+                            icon = <AlertCircle size={16} />;
+                            message = `ALERTA CRÍTICO: Sistema será bloqueado em ${hours}h ${timeRemaining.minutes}m`;
+                            pulseClass = 'animate-pulse';
+                        }
+
+                        return (
+                            <div className={`${bgColor} border ${borderColor} rounded-xl p-4 ${pulseClass}`}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className={textColor}>{icon}</span>
+                                    <p className={`${textColor} text-xs font-bold uppercase tracking-wider`}>
+                                        {message}
+                                    </p>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-gray-500 text-xs">
+                                        Tempo restante: <span className={`font-mono font-bold ${textColor}`}>
+                                            {days}d {hours}h {timeRemaining.minutes}m
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    {/* Seção de Verificação */}
+                    <div className="mt-4 bg-[#161616] border border-[#333] rounded-xl p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Mail size={18} className="text-[#10B981]" />
+                            <h3 className="text-white font-bold uppercase tracking-wider text-sm">
+                                Verificar E-mail
+                            </h3>
+                        </div>
+
+                        <p className="text-gray-400 text-xs mb-4 leading-relaxed">
+                            Verifique seu e-mail para manter acesso total ao sistema.
+                            Você receberá um <span className="text-[#10B981] font-bold">código de 6 dígitos</span> e
+                            um <span className="text-[#10B981] font-bold">link clicável</span> - use qualquer um.
+                        </p>
+
+                        {otpError && (
+                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs font-mono">
+                                <span className="font-bold">ERRO:</span> {otpError}
+                            </div>
+                        )}
+
+                        {otpMessage && (
+                            <div className="mb-4 p-3 bg-[#10B981]/10 border border-[#10B981]/20 rounded-lg text-[#10B981] text-xs font-mono">
+                                <span className="font-bold">OK:</span> {otpMessage}
+                            </div>
+                        )}
+
+                        <div className="space-y-4">
+                            {/* E-mail Display */}
+                            <div className="space-y-2">
+                                <label className="text-xs text-gray-500 font-bold uppercase">E-mail Registrado</label>
+                                <div className="bg-[#09090B] border border-[#333] rounded-lg p-3">
+                                    <p className="text-gray-400 text-sm font-mono">{userEmail}</p>
+                                </div>
+                            </div>
+
+                            {/* Botão Enviar Código */}
+                            <button
+                                onClick={handleSendOtp}
+                                disabled={sendingOtp}
+                                className="w-full py-3 rounded-lg bg-[#10B981]/10 hover:bg-[#10B981]/20 border border-[#10B981]/50 text-[#10B981] font-bold text-sm uppercase tracking-wide transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                <Mail size={16} />
+                                {sendingOtp ? 'Enviando...' : 'Enviar Código de Verificação'}
+                            </button>
+
+                            {/* Campo Código OTP */}
+                            <div className="space-y-2">
+                                <label className="text-xs text-[#10B981] font-bold uppercase">Código de 6 Dígitos</label>
+                                <div className="relative">
+                                    <Key size={16} className="absolute left-3 top-3.5 text-gray-500" />
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={otpCode}
+                                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                                        placeholder="000000"
+                                        maxLength={6}
+                                        className="w-full bg-[#09090B] border border-[#333] text-white rounded-lg p-3 pl-10 focus:border-[#10B981] focus:outline-none transition-all placeholder:text-gray-700 text-center text-xl font-mono tracking-[0.5em] font-bold"
+                                    />
+                                </div>
+                                <p className="text-gray-600 text-[10px] uppercase tracking-wider">
+                                    Digite o código recebido por e-mail ou clique no link
+                                </p>
+                            </div>
+
+                            {/* Botão Verificar */}
+                            <button
+                                onClick={handleVerifyOtp}
+                                disabled={verifyingOtp || otpCode.length !== 6}
+                                className="w-full py-3 rounded-lg bg-[#10B981] hover:bg-[#0fa372] text-[#09090B] font-bold text-sm uppercase tracking-wide shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {verifyingOtp ? (
+                                    'Verificando...'
+                                ) : (
+                                    <>
+                                        <CheckCircle size={16} />
+                                        Verificar E-mail
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Email Verificado Badge */}
+            {emailVerified && (
+                <div className="mb-8 bg-[#10B981]/10 border border-[#10B981]/30 rounded-xl p-4 flex items-center gap-3">
+                    <CheckCircle size={24} className="text-[#10B981]" />
+                    <div>
+                        <p className="text-[#10B981] font-bold text-sm uppercase tracking-wider">
+                            E-mail Verificado
+                        </p>
+                        <p className="text-gray-500 text-xs">
+                            Acesso total concedido • Segurança ativada
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* 2. MOTOR FINANCEIRO (Onde a IA atua) */}
             <div className="mb-6">

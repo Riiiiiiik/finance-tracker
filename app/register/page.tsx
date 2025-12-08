@@ -28,19 +28,23 @@ export default function RegisterPage() {
         }
 
         try {
-            // 1. Criar conta com confirmação de email
-            const { error: signUpError } = await supabase.auth.signUp({
+            // 1. Criar conta SEM confirmação de email obrigatória
+            const { data, error: signUpError } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/onboarding`,
+                    // Email confirmation desabilitada no Supabase Dashboard
+                    // Verificação será feita posteriormente no perfil via OTP
+                    data: {
+                        email_verified: false, // Flag para controlar verificação
+                    }
                 },
             });
 
             if (signUpError) throw signUpError;
 
-            // 2. Redirecionar para página de verificação
-            router.push(`/verify?email=${encodeURIComponent(email)}`);
+            // 2. Redirecionar diretamente para onboarding (sem verificação)
+            router.push('/onboarding');
         } catch (err: any) {
             setError(err.message || 'Erro ao criar conta. Tente novamente.');
         } finally {
