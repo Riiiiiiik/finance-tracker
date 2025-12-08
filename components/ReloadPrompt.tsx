@@ -23,9 +23,29 @@ export default function ReloadPrompt() {
             wbInstance.addEventListener('waiting', onWaiting);
             wbInstance.addEventListener('externalwaiting', onWaiting);
 
+            // Auto-check for updates every 30 minutes
+            const checkForUpdates = async () => {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        console.log('Checking for service worker updates...');
+                        await registration.update();
+                    }
+                } catch (error) {
+                    console.error('Error checking for updates:', error);
+                }
+            };
+
+            // Check immediately on mount
+            checkForUpdates();
+
+            // Then check every 30 minutes (1800000ms)
+            const updateInterval = setInterval(checkForUpdates, 30 * 60 * 1000);
+
             return () => {
                 wbInstance.removeEventListener('waiting', onWaiting);
                 wbInstance.removeEventListener('externalwaiting', onWaiting);
+                clearInterval(updateInterval);
             };
         }
     }, []);
