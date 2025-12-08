@@ -15,6 +15,7 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   register: true,
   skipWaiting: false, // Important: We want manual control
   disable: process.env.NODE_ENV === 'development',
+  buildId: 'v1.0.1', // Incrementar para forçar atualização em todos os usuários
 });
 
 module.exports = withPWA(nextConfig);
