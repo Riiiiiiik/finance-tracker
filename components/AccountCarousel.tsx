@@ -66,9 +66,9 @@ export default function AccountCarousel({
         .filter(a => a.type !== 'credit')
         .reduce((acc, account) => acc + account.balance, 0);
 
-    // Calculate Invoice Balance (Credit Accounts)
+    // Calculate Invoice Balance (Credit Accounts + Hybrid with negative balance)
     const totalInvoice = accounts
-        .filter(a => a.type === 'credit')
+        .filter(a => a.type === 'credit' || a.balance < 0)  // Include hybrid cards with debt
         .reduce((acc, account) => acc + account.balance, 0);
     const totalAccount: Account = {
         id: 'all',

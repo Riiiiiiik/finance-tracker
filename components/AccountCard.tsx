@@ -182,9 +182,9 @@ export default function AccountCard({ account, onUpdate, availableBalance, invoi
                         ) : (
                             <>
                                 <p className="text-white/80 text-xs mb-0.5">
-                                    {account.type === 'credit' ? 'Fatura Atual' : 'Saldo Atual'}
+                                    {account.type === 'credit' || account.balance < 0 ? 'Fatura Atual' : 'Saldo Atual'}
                                 </p>
-                                <p className={`text-white font-bold text-2xl ${account.type === 'credit' && account.balance < 0 ? 'text-red-200' : ''} ${isPrivacyMode ? 'blur-md' : ''}`}>
+                                <p className={`text-white font-bold text-2xl ${(account.type === 'credit' || account.balance < 0) && account.balance < 0 ? 'text-red-200' : ''} ${isPrivacyMode ? 'blur-md' : ''}`}>
                                     R$ {Math.abs(account.balance).toFixed(2)}
                                 </p>
                             </>
