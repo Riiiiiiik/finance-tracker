@@ -65,11 +65,11 @@ export default function ReloadPrompt() {
 
                                 <div className="flex-1">
                                     <h3 className="text-white font-bold text-xs sm:text-sm uppercase tracking-wider mb-0.5 flex items-center gap-2">
-                                        Atualização Disponível
+                                        Protocolo de Atualização
                                         <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-pulse"></span>
                                     </h3>
                                     <p className="text-gray-400 text-[10px] sm:text-xs">
-                                        Nova versão detectada
+                                        Sistema requer sincronização
                                     </p>
                                 </div>
                             </div>
@@ -80,7 +80,7 @@ export default function ReloadPrompt() {
                                 className="group w-full sm:w-auto flex-shrink-0 px-5 py-2.5 bg-[#10B981] hover:bg-[#0EA572] text-black font-bold rounded-lg text-xs uppercase tracking-wide transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] hover:scale-105 active:scale-95"
                             >
                                 <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-500" />
-                                Atualizar
+                                Sincronizar
                             </button>
                         </div>
                     </div>
