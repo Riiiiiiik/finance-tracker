@@ -28,37 +28,21 @@ export default function RegisterPage() {
         }
 
         try {
-            // 1. Criar conta
+            // 1. Criar conta com confirmação de email
             const { error: signUpError } = await supabase.auth.signUp({
                 email,
                 password,
+                options: {
+                    emailRedirectTo: `${window.location.origin}/onboarding`,
+                },
             });
 
             if (signUpError) throw signUpError;
 
-            // 2. Fazer login automático
-            const { error: signInError } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
-
-            if (signInError) {
-                if (signInError.message.includes('Email not confirmed')) {
-                    router.push(`/verify?email=${encodeURIComponent(email)}`);
-                    return;
-                }
-                throw signInError;
-            }
-
-            // 3. Redirecionar para o Onboarding
-            router.push('/onboarding');
-            router.refresh();
+            // 2. Redirecionar para página de verificação
+            router.push(`/verify?email=${encodeURIComponent(email)}`);
         } catch (err: any) {
-            if (err.message.includes('Email not confirmed')) {
-                router.push(`/verify?email=${encodeURIComponent(email)}`);
-            } else {
-                setError(err.message);
-            }
+            setError(err.message || 'Erro ao criar conta. Tente novamente.');
         } finally {
             setLoading(false);
         }
