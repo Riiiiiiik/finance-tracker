@@ -32,10 +32,18 @@ export default function ReloadPrompt() {
 
     const updateServiceWorker = async () => {
         if (wb) {
+            // Tell service worker to skip waiting
             wb.messageSkipWaiting();
+
+            // Add listener for when new SW takes control
             wb.addEventListener('controlling', () => {
                 window.location.reload();
             });
+
+            // Also reload immediately as fallback (in case event doesn't fire)
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
         }
     };
 
