@@ -7,7 +7,7 @@ import MonkDock from '@/components/MonkDock';
 import { ThemeProvider } from '@/components/theme-provider';
 import { SentryProvider } from '@/lib/sentry-context';
 import ReloadPrompt from '@/components/ReloadPrompt';
-import EmailGuard from '../components/EmailGuard';
+import EmailGuard from '@/components/EmailGuard';
 
 const inter = Inter({ subsets: ['latin'] });
 
