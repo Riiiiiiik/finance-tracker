@@ -200,7 +200,7 @@ export default function MagicTransactionForm({
                     currentStatus = 'pending';
 
                     // Calcular Mês da Fatura para ESTA parcela
-                    const closingDay = accountData.closing_day || 1;
+                    const closingDay = accountData.closing_day || 31; // Default para 31 para cair no mês atual se não configurado
                     const invoiceDate = new Date(transactionDate);
 
                     if (invoiceDate.getDate() >= closingDay) {
