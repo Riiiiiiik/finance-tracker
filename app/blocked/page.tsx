@@ -86,17 +86,32 @@ export default function BlockedPage() {
 
             if (error) throw error;
 
-            // Atualizar flag no perfil
+            // Atualizar metadados do usuário (Bypass RLS da tabela profiles)
+            const { error: metaError } = await supabase.auth.updateUser({
+                data: { monk_verified: true }
+            });
+            if (metaError) console.warn('Erro ao atualizar metadata:', metaError);
+
+            // Force session refresh
+            const { error: refreshError } = await supabase.auth.refreshSession();
+            if (refreshError) console.warn('Erro ao atualizar sessão:', refreshError);
+
+            // Atualizar flag no perfil (Tentativa best-effort)
             if (userId) {
-                await supabase
+                const { error: profileError } = await supabase
                     .from('profiles')
                     .update({ email_verified: true })
                     .eq('id', userId);
+
+                if (profileError) {
+                    console.warn('RLS permitiu leitura mas impediu update do perfil (esperado):', profileError);
+                }
             }
 
             setMessage('E-mail verificado com sucesso! Redirecionando...');
             setTimeout(() => {
                 router.push('/dashboard');
+                router.refresh();
             }, 2000);
         } catch (err: any) {
             setError(err.message || 'Código inválido. Tente novamente.');

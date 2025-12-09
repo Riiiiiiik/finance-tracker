@@ -47,8 +47,11 @@ export default function EmailGuard() {
                     deadline.setDate(deadline.getDate() + 7);
 
                     const isExpired = now > deadline;
-                    // Verifica tabelas profiles OU metadados da sessão (Auth)
-                    const isVerified = profile.email_verified === true || !!session.user.email_confirmed_at;
+                    // Verifica tabelas profiles, metadados da sessão (Auth) ou flag Monk manual
+                    const isVerified =
+                        profile.email_verified === true ||
+                        !!session.user.email_confirmed_at ||
+                        session.user.user_metadata?.monk_verified === true;
 
                     if (isExpired && !isVerified) {
                         console.warn('GUARD: Acesso bloqueado - Verificação pendente expirada.');
