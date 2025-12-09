@@ -326,16 +326,25 @@ export default function MagicTransactionForm({
                             </div>
 
                             <input
-                                type="text"
+                                type="search" // iOS: Tenta esconder a barra de acessório
+                                enterKeyHint="done" // iOS: Muda botão de retorno para Done
+                                inputMode="text"
+                                autoComplete="off"
+                                autoCorrect="off"
                                 value={smartInput}
                                 onChange={(e) => setSmartInput(e.target.value)}
                                 onFocus={() => setIsFocused(true)}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !isSubmitting) {
+                                        e.preventDefault(); // Previne submit de form se houver
                                         if (hasData) {
                                             handleConfirm();
                                         } else {
                                             handleParse();
+                                        }
+                                        // Tentar fechar teclado mobile
+                                        if (window.innerWidth < 768) {
+                                            (e.target as HTMLElement).blur();
                                         }
                                     }
                                 }}
