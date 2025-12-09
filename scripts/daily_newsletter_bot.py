@@ -1,7 +1,4 @@
 import os
-from dotenv import load_dotenv
-load_dotenv()
-
 import requests
 import json
 import random
@@ -10,91 +7,48 @@ import pytz
 import sqlite3
 import feedparser
 from newspaper import Article
-import google.generativeai as genai
 
-# Weekly Themed Feeds Schedule
-WEEKLY_FEEDS = {
-    0: {  # Segunda: Estratégia & Modelos Mentais
+# Weekly Themed Search Schedule
+WEEKLY_THEMES = {
+    0: {  # Segunda
         "theme": "🧠 Estratégia & Modelos Mentais",
         "emoji": "♟️",
-        # Busca textos que ensinam A PENSAR, não notícias.
-        "keywords": "(strategy OR \"mental models\" OR \"game theory\" OR \"decision making\" OR stoicism) AND (guide OR essay OR analysis) -news -politics",
-        "feeds": [
-            "https://fs.blog/feed/",  # Farnam Street (A bíblia dos modelos mentais)
-            "https://dailynous.com/feed/",
-            "https://jamesclear.com/feed",
-            "https://aeon.co/feed.rss" 
-        ]
+        "search_query": "best new guides, essays or analysis about 'mental models', 'strategy', 'game theory' or 'stoicism' published in the last week. Exclude politics and generic news."
     },
-    1: {  # Terça: Capital & Risco (Foco Financeiro/FIDC)
+    1: {  # Terça
         "theme": "💰 Private Markets & Risco",
         "emoji": "📊",
-        # Foco em dinheiro inteligente, não em "Bolsa subiu/desceu"
-        "keywords": "(\"private credit\" OR \"hedge fund\" OR \"venture capital\" OR \"risk management\" OR distressed) AND (outlook OR thesis OR report) -crypto -nft",
-        "feeds": [
-            "https://www.institutionalinvestor.com/rss",
-            "https://mergersandinquisitions.com/feed/",
-            "https://clarke.substack.com/feed", # Exemplo de substack focado em macro
-            "https://www.bridgewater.com/rss" # Ray Dalio Research
-        ]
+        "search_query": "deep analysis reports or thesis on 'private credit', 'hedge funds', 'venture capital' or 'distressed assets' published in the last week. Focus on financial risk manageent."
     },
-    2: {  # Quarta: Fronteira Tecnológica (AI & Code)
+    2: {  # Quarta
         "theme": "🤖 AI & Hard Tech",
         "emoji": "⚡",
-        "keywords": "(\"large language models\" OR \"generative ai\" OR \"agentic workflows\" OR automation OR \"software architecture\") -gadget -review -iphone",
-        "feeds": [
-            "https://stratechery.com/feed/", # Ben Thompson (Melhor analise tech)
-            "https://simonwillison.net/atom/everything/",
-            "https://news.ycombinator.com/rss", # Hacker News (precisa filtrar bem)
-            "https://bair.berkeley.edu/blog/feed.xml" # Berkeley AI Research
-        ]
+        "search_query": "impactful technical articles or essays about 'large language models', 'agentic workflows', 'software architecture' or 'automation' published in the last 2 days."
     },
-    3: {  # Quinta: Comportamento & Sociedade
+    3: {  # Quinta
         "theme": "👥 Engenharia Social & Comportamento",
         "emoji": "👁️",
-        "keywords": "(\"behavioral economics\" OR \"social psychology\" OR sociology OR influence OR negotiation) AND (research OR study) -celebrity",
-        "feeds": [
-            "https://www.behavioraleconomics.com/feed/",
-            "https://freakonomics.com/feed/",
-            "https://conversableeconomist.blogspot.com/feeds/posts/default"
-        ]
+        "search_query": "new research, studies or essays about 'behavioral economics', 'social psychology', 'influence' or 'negotiation' published recently."
     },
-    4: {  # Sexta: Biohacking & Longevidade (Substituindo Ciência Genérica)
+    4: {  # Sexta
         "theme": "🧬 Biohacking & Performance",
         "emoji": "🧬",
-        # Otimização do corpo humano
-        "keywords": "(longevity OR \"circadian rhythm\" OR neuroscience OR \"metabolic health\" OR biohacking) AND (research OR protocol) -diet -weightloss",
-        "feeds": [
-            "https://peterattiamd.com/feed/",
-            "https://hubermanlab.com/feed",
-            "https://www.nature.com/nature.rss"
-        ]
+        "search_query": "scientific articles, protocols or deep dives about 'longevity', 'circadian rhythm', 'neuroscience' or 'metabolic health' published recently. Exclude generic diet/weightloss."
     },
-    5: {  # Sábado: Deep Dive & Cultura (Substituindo "Diversos")
+    5: {  # Sábado
         "theme": "🏛️ Cultura & Arquitetura",
         "emoji": "🏛️",
-        "keywords": "(architecture OR \"design theory\" OR \"cinema history\" OR aesthetics OR brutalism) -gossip -hollywood",
-        "feeds": [
-            "https://99percentinvisible.org/feed/",
-            "https://www.archdaily.com/feed/rss/",
-            "https://thebaffler.com/feed"
-        ]
+        "search_query": "essays and theory articles about 'architecture', 'design theory', 'cinema history' or 'brutalism' published recently. Exclude gossip."
     },
-    6: {  # Domingo: O Grande Resumo (Ensaístico)
+    6: {  # Domingo
         "theme": "📜 Ensaios & Reflexões",
         "emoji": "☕",
-        # Domingo é dia de ler texto longo e calmo
-        "keywords": "(essay OR history OR philosophy OR literature) AND (review OR deep-dive)",
-        "feeds": [
-            "https://longreads.com/feed/", # Curadoria de textos longos
-            "https://aldaily.com/feed", # Arts & Letters Daily
-            "https://lithub.com/feed/"
-        ]
+        "search_query": "best long-form essays, reviews or deep-dives about 'history', 'philosophy' or 'literature' published this week."
     }
 }
 
 class DailyReporter:
-    def __init__(self, gemini_api_key=None, perplexity_api_key=None):
+    def __init__(self, perplexity_api_key=None):
         import sys
         if sys.platform == 'win32':
             try:
@@ -104,8 +58,12 @@ class DailyReporter:
         
         self.tz_BR = pytz.timezone('America/Sao_Paulo')
         
-        # MELHORIA 5: SQLite para histórico
-        self.conn = sqlite3.connect('history.db')
+        # MELHORIA 5: SQLite para histórico (PERSISTENTE NO VOLUME)
+        # Salva no mesmo diretório do script para persistir no volume ./scripts
+        db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'history.db')
+        print(f"   💾 Database: {db_path}")
+        
+        self.conn = sqlite3.connect(db_path)
         self.cursor = self.conn.cursor()
         self.cursor.execute('CREATE TABLE IF NOT EXISTS sent_articles (link TEXT PRIMARY KEY, date TEXT)')
         self.conn.commit()
@@ -115,18 +73,11 @@ class DailyReporter:
             print("✅ Perplexity API configurada!")
         else:
             print("⚠️ Perplexity API key não fornecida.")
-        
-        self.gemini_api_key = gemini_api_key
-        if self.gemini_api_key:
-            genai.configure(api_key=self.gemini_api_key)
-            print("✅ Gemini API configurada!")
-        else:
-            print("⚠️ Gemini API key não fornecida.")
 
         # CONFIGURAÇÃO DO SITE MONK
         # Mude para a URL real do seu site em produção ou localhost para teste
-        self.site_api_url = "https://theordermonk.netlify.app/api/news/ingest" 
-        self.site_api_secret = "monk_secret_123"
+        self.site_api_url = os.environ.get("SITE_API_URL", "https://theordermonk.netlify.app/api/news/ingest")
+        self.site_api_secret = os.environ.get("SITE_API_SECRET", "monk_secret_123")
 
     def url_already_sent(self, url):
         """MELHORIA 5: Verifica se URL já foi enviada usando SQLite"""
@@ -155,47 +106,43 @@ class DailyReporter:
             print(f"   ⚠️ Erro ao ler {url}: {e}")
             return None
 
-    def generate_prompt(self, article, content):
+    def get_random_monk(self):
+        monks = [
+            {"name": "Monk.Vault", "role": "Guardião", "persona": "Focado em proteção de patrimônio, segurança máxima, aversão a risco e visão conservadora. Cético."},
+            {"name": "Monk.Sentry", "role": "Sentinela", "persona": "Focado em riscos sistêmicos, geopolítica, ameaças futuras e oportunidades táticas de curto prazo. Alerta."},
+            {"name": "Monk.AI", "role": "Oráculo", "persona": "Analítico, baseado em dados, projeção de tendências tecnológicas, futurismo e lógica pura. Objetivo."},
+            {"name": "Monk.Pockets", "role": "Gerente", "persona": "Pragmático, focado em fluxo de caixa, rentabilidade real, gastos e alocação eficiente de recursos. Capitalista."}
+        ]
+        return random.choice(monks)
+
+    def generate_prompt(self, article, content, monk):
         return f"""
 Atue como o sistema central "The Order".
-Analise esta notícia e gere uma saída JSON válida.
+Você deve analisar esta notícia e gerar uma entrada para a Newsletter da Ordem.
 
 ARTIGO:
 URL: {article['link']}
 Título: {article['title']}
 Fonte: {article['source']}
-Contexto Extraído (se disponível): {content[:4000]}
+Contexto: {content[:3000]}
 
-INSTRUÇÃO DE LEITURA:
-Use suas capacidades de navegação online para acessar a URL acima e ler o conteúdo completo e atualizado.
-Use o contexto extraído apenas como fallback.
+PERSONAGEM PARA DISCUSSÃO:
+Nome: {monk['name']}
+Função: {monk['role']}
+Personalidade: {monk['persona']}
 
-Saída deve ser EXATAMENTE neste formato JSON:
+INSTRUÇÃO DE FORMATAÇÃO:
+Gere um JSON com os seguintes campos. O texto deve ser RICO em Markdown.
+IDIOMA: PORTUGUÊS (PT-BR). TUDO DEVE SER TRADUZIDO.
+
 {{
-  "summary": "Resumo executivo de alto nível em português (max 300 chars)",
-  "content": "Análise detalhada do impacto estratégico, riscos e oportunidades. Use tom profissional e direto. (max 1000 chars)",
-  "council_discussion": [
-    {{
-      "monk": "Monk.Vault",
-      "role": "Guardião",
-      "message": "Comentário focado em proteção de patrimônio, segurança e visão conservadora."
-    }},
-    {{
-      "monk": "Monk.Sentry",
-      "role": "Sentinela",
-      "message": "Comentário focado em riscos detectados, ameaças ou oportunidades táticas."
-    }},
-    {{
-      "monk": "Monk.AI",
-      "role": "Oráculo",
-      "message": "Análise de dados, projeção futura ou tendência lógica."
-    }},
-    {{
-      "monk": "Monk.Pockets",
-      "role": "Gerente",
-      "message": "Visão pragmática sobre fluxo de caixa, gastos ou alocação de recursos."
-    }}
-  ]
+  "summary": "3 itens curtos usando '• ' e QUEBRA DE LINHA entre eles. Exemplo: '\\n• Ponto 1\\n• Ponto 2'.",
+  "content": "Análise aprofundada em Português (2 parágrafos). Ao final, INCLUA: '🔗 [Ler artigo completo]({article['link']})' no markdown.",
+  "monk_commentary": {{
+      "monk": "{monk['name']}",
+      "role": "{monk['role']}",
+      "message": "Comentário em Português, primeira pessoa (max 2 frases) reagindo aos dados com a personalidade descrita."
+  }}
 }}
 """
 
@@ -212,7 +159,7 @@ Saída deve ser EXATAMENTE neste formato JSON:
             print(f"   ⚠️ Falha ao parsear JSON da IA. Usando fallback.")
             return None
 
-    def generate_summary_perplexity(self, article, content):
+    def generate_summary_perplexity(self, article, content, monk):
         if not self.perplexity_api_key:
             return None
         
@@ -221,15 +168,15 @@ Saída deve ser EXATAMENTE neste formato JSON:
             print("   ⚠️ Conteúdo curto. IA usará navegação online para ler o link.")
             # Não retornamos None aqui, deixamos prosseguir para o modelo Online ler a URL
 
-        prompt = self.generate_prompt(article, content)
+        prompt = self.generate_prompt(article, content, monk)
 
         try:
-            print(f"   🔮 Tentando Perplexity...")
+            print(f"   🔮 Tentando Perplexity ({monk['name']})...")
             url = "https://api.perplexity.ai/chat/completions"
             
             payload = {
                 # ATUALIZAÇÃO FINAL: Usando o modelo validado da lista oficial (2025)
-                "model": "llama-3.1-sonar-large-128k-chat", 
+                "model": "sonar-pro", 
                 "messages": [
                     {
                         "role": "system",
@@ -240,9 +187,8 @@ Saída deve ser EXATAMENTE neste formato JSON:
                         "content": prompt
                     }
                 ],
-                # Reduzi um pouco os tokens para evitar estouro de limite
-                "max_tokens": 900, 
-                "temperature": 0.1,
+                "max_tokens": 1200, 
+                "temperature": 0.2,
                 "top_p": 0.9,
                 "return_citations": False,
                 "return_images": False
@@ -255,7 +201,6 @@ Saída deve ser EXATAMENTE neste formato JSON:
             
             response = requests.post(url, json=payload, headers=headers, timeout=60)
             
-            # ISSO VAI TE SALVAR: Se der erro 400 de novo, ele vai imprimir a mensagem real da Perplexity
             if response.status_code != 200:
                 print(f"   ❌ Detalhes do Erro da API: {response.text}")
                 
@@ -266,7 +211,6 @@ Saída deve ser EXATAMENTE neste formato JSON:
                 text_content = result['choices'][0]['message']['content']
                 print(f"   ✅ Perplexity respondeu.")
                 
-                # LIMPEZA: Remove os acentos ```json que a IA às vezes coloca e quebra o código
                 clean_text = text_content.replace("```json", "").replace("```", "").strip()
                 
                 return self.parse_ai_json(clean_text)
@@ -275,35 +219,15 @@ Saída deve ser EXATAMENTE neste formato JSON:
             print(f"   ❌ Erro Perplexity: {e}")
             return None
 
-    def generate_summary_gemini(self, article, content):
-        if not self.gemini_api_key:
-            return None
-        
-        prompt = self.generate_prompt(article, content) + "\n\nResponda APENAS o JSON."
-
-        try:
-            print(f"   🤖 Tentando Gemini...")
-            model = genai.GenerativeModel('gemini-pro')
-            response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
-            
-            if response and response.text:
-                print(f"   ✅ Gemini respondeu.")
-                return self.parse_ai_json(response.text)
-            return None
-        except Exception as e:
-            print(f"   ❌ Erro Gemini: {e}")
-            return None
-
     def generate_summary(self, article, content):
         if not content:
             return None
 
-        # Tenta Perplexity primeiro
-        data = self.generate_summary_perplexity(article, content)
-        if data: return data
+        # Escolhe um Monk aleatório para este artigo
+        monk = self.get_random_monk()
 
-        # Tenta Gemini
-        data = self.generate_summary_gemini(article, content)
+        # Tenta Perplexity (Única IA)
+        data = self.generate_summary_perplexity(article, content, monk)
         if data: return data
         
         # Fallback se ambos falharem
@@ -313,45 +237,96 @@ Saída deve ser EXATAMENTE neste formato JSON:
             "council_discussion": []
         }
 
-    def fetch_from_rss(self, feeds_list):
-        """Busca artigos em feeds RSS"""
-        print(f"   📡 Buscando em feeds RSS...")
-        articles = []
-        for feed_url in feeds_list:
-            try:
-                print(f"      - {feed_url[:50]}...")
-                feed = feedparser.parse(feed_url)
-                for entry in feed.entries[:3]:  # 3 mais recentes de cada feed
-                    articles.append({
-                        "title": entry.title,
-                        "link": entry.link,
-                        "source": feed.feed.get('title', 'RSS'),
-                        "summary": getattr(entry, 'summary', '')
-                    })
-            except Exception as e:
-                print(f"      ⚠️ Erro no feed: {e}")
-                continue
-        return articles
+    def search_stories_with_perplexity(self, query):
+        """Usa Perplexity para encontrar URLs relevantes"""
+        if not self.perplexity_api_key:
+            print("   ⚠️ Sem chave Perplexity para busca.")
+            return []
+
+        print(f"   🔍 Perplexity buscando: {query}")
+        
+        url = "https://api.perplexity.ai/chat/completions"
+        
+        prompt = f"""
+        You are a research assistant. 
+        Search for: "{query}"
+        
+        Return a valid JSON object with a list of the 4 most relevant and high-quality articles found.
+        Format:
+        {{
+            "articles": [
+                {{ "title": "Article Title", "url": "https://example.com/article" }},
+                ...
+            ]
+        }}
+        Do not include general homepages, only specific article URLs.
+        Output ONLY the JSON.
+        """
+
+        payload = {
+            "model": "sonar-pro", 
+            "messages": [
+                {"role": "system", "content": "You are a helpful research assistant. Output strictly JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            "max_tokens": 500,
+            "temperature": 0.1,
+            "return_citations": True
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {self.perplexity_api_key}",
+            "Content-Type": "application/json"
+        }
+
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=60)
+            
+            if response.status_code != 200:
+                 print(f"   ❌ Erro API Search: {response.status_code} - {response.text}")
+
+            response.raise_for_status()
+            result = response.json()
+            
+            if 'choices' in result and len(result['choices']) > 0:
+                content = result['choices'][0]['message']['content']
+                data = self.parse_ai_json(content.replace("```json", "").replace("```", ""))
+                return data.get("articles", [])
+        except Exception as e:
+            print(f"   ❌ Erro na Busca Perplexity: {e}")
+            return []
+        
+        return []
 
     def collect_data(self):
-        """Busca artigos apenas dos feeds RSS configurados"""
+        """Coordena a busca de dados via Perplexity"""
         today = datetime.now(self.tz_BR).weekday()
-        cfg = WEEKLY_FEEDS[today]
+        cfg = WEEKLY_THEMES[today]
         
-        print(f"📅 Tema: {cfg['theme']}")
+        print(f"📅 Tema do Dia: {cfg['theme']}")
         
-        # Busca apenas em RSS
-        articles = self.fetch_from_rss(cfg["feeds"])
+        # Busca URLs via IA
+        found_articles = self.search_stories_with_perplexity(cfg["search_query"])
         
-        # Filtra já enviados usando SQLite
-        new = [a for a in articles if not self.url_already_sent(a["link"])]
+        # Filtra já enviados
+        new_articles = []
+        for a in found_articles:
+            # Padroniza chaves para o formato esperado pelo resto do bot
+            article_struct = {
+                "title": a.get("title", "Sem titulo"),
+                "link": a.get("url", ""),
+                "source": "Perplexity Discovery",
+                "summary": ""
+            }
+            if article_struct["link"] and not self.url_already_sent(article_struct["link"]):
+                new_articles.append(article_struct)
         
-        print(f"📊 Total: {len(articles)} | Novos: {len(new)}")
+        print(f"📊 Encontrados: {len(found_articles)} | Novos: {len(new_articles)}")
         
-        if not new:
+        if not new_articles:
             return None, cfg
-        
-        return random.sample(new, min(2, len(new))), cfg
+            
+        return new_articles[:3], cfg
     
     def send_to_site(self, article, ai_data, theme):
         """Envia o artigo processado para o database do site"""
@@ -360,11 +335,17 @@ Saída deve ser EXATAMENTE neste formato JSON:
             
             if not ai_data: return False
 
+            # Adaptação para o formato do site:
+            # O site espera 'council_discussion' como lista. Vamos criar uma lista com 1 item.
+            council_data = []
+            if 'monk_commentary' in ai_data:
+                council_data.append(ai_data['monk_commentary'])
+            
             payload = {
                 "title": article['title'],
                 "summary": ai_data.get('summary'),
                 "content": ai_data.get('content'), 
-                "council_discussion": ai_data.get('council_discussion', []),
+                "council_discussion": council_data,
                 "theme": theme,
                 "monk_author": "Monk.AI",
                 "image_url": article.get('image_url')
@@ -397,7 +378,7 @@ Saída deve ser EXATAMENTE neste formato JSON:
         
         articles, cfg = result
         
-        print(f"� Processando {len(articles)} artigos...")
+        print(f"--- Processando {len(articles)} artigos...")
         
         for article in articles:
             print(f"\n--- Processando: {article['title']} ---")
@@ -419,8 +400,9 @@ Saída deve ser EXATAMENTE neste formato JSON:
                 self.mark_as_sent(article["link"])
 
 if __name__ == "__main__":
-    gemini_api_key = os.environ.get("GEMINI_API_KEY")
     perplexity_api_key = os.environ.get("PERPLEXITY_API_KEY")
+    # Tenta remover espaços em branco invisíveis se houver
+    if perplexity_api_key: perplexity_api_key = perplexity_api_key.strip()
     
-    reporter = DailyReporter(gemini_api_key, perplexity_api_key)
+    reporter = DailyReporter(perplexity_api_key)
     reporter.process_and_send()

@@ -7,6 +7,7 @@ import MonkDock from '@/components/MonkDock';
 import { ThemeProvider } from '@/components/theme-provider';
 import { SentryProvider } from '@/lib/sentry-context';
 import ReloadPrompt from '@/components/ReloadPrompt';
+import EmailGuard from '@/components/EmailGuard';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -57,10 +58,10 @@ export default function RootLayout({
                         <AuthProvider>
                             <PrivacyProvider>
                                 <main className="min-h-screen bg-background relative overflow-hidden">
-                                    {/* Background patterns */}
                                     <div className="absolute inset-0 bg-[#000000] z-[-2]"></div>
                                     <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px] z-[-1] opacity-50"></div>
 
+                                    <EmailGuard />
                                     {children}
                                     <MonkDock />
                                     <ReloadPrompt />

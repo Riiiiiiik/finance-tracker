@@ -4,10 +4,10 @@ WORKDIR /app
 
 # Install system dependencies required for lxml and others
 RUN apt-get update && apt-get install -y \
-    gcc \
-    libxml2-dev \
-    libxslt-dev \
-    && rm -rf /var/lib/apt/lists/*
+  gcc \
+  libxml2-dev \
+  libxslt-dev \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 
@@ -21,20 +21,7 @@ COPY scripts/ ./scripts/
 # or use a tailored scheduler script.
 # Let's create a runner script on the fly or embedded here.
 
-COPY <<EOF /app/start.sh
-#!/bin/bash
-echo "Starting Scheduler..."
-while true; do
-  echo "Running Daily Newsletter Bot..."
-  python scripts/daily_newsletter_bot.py
-  echo "Bot finished. Sleeping for 1 hour before checking again (or waiting for next schedule)..."
-  # O script do bot roda e sai. 
-  # Se quisermos que ele rode 1x por dia, melhor controlar dentro do python ou aqui com sleep longo.
-  # Como o bot atual não tem loop infinito (ele roda e para), vamos fazer um loop de 6h
-  sleep 21600 
-done
-EOF
-
+COPY scripts/start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
 CMD ["/app/start.sh"]

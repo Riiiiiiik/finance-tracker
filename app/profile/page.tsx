@@ -157,8 +157,8 @@ export default function MemberProfile() {
     };
 
     const handleVerifyOtp = async () => {
-        if (!otpCode || otpCode.length !== 6) {
-            setOtpError('Código deve ter 6 dígitos.');
+        if (!otpCode || otpCode.length !== 8) {
+            setOtpError('Código deve ter 8 dígitos.');
             return;
         }
 
@@ -445,7 +445,7 @@ export default function MemberProfile() {
 
                         <p className="text-gray-400 text-xs mb-4 leading-relaxed">
                             Verifique seu e-mail para manter acesso total ao sistema.
-                            Você receberá um <span className="text-[#10B981] font-bold">código de 6 dígitos</span> e
+                            Você receberá um <span className="text-[#10B981] font-bold">código de 8 dígitos</span> e
                             um <span className="text-[#10B981] font-bold">link clicável</span> - use qualquer um.
                         </p>
 
@@ -490,8 +490,8 @@ export default function MemberProfile() {
                                         inputMode="numeric"
                                         value={otpCode}
                                         onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                                        placeholder="000000"
-                                        maxLength={6}
+                                        placeholder="00000000"
+                                        maxLength={8}
                                         className="w-full bg-[#09090B] border border-[#333] text-white rounded-lg p-3 pl-10 focus:border-[#10B981] focus:outline-none transition-all placeholder:text-gray-700 text-center text-xl font-mono tracking-[0.5em] font-bold"
                                     />
                                 </div>
