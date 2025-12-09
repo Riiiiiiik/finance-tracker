@@ -27,15 +27,17 @@ export default function EmailGuard() {
         const checkGuard = async () => {
             setChecking(true);
             try {
-                const { data: { session } } = await supabase.auth.getSession();
+                // USAR getUser() PARA DADOS FRESCOS DO SERVIDOR
+                // getSession() pode retornar dados em cache, causando o loop.
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-                if (!session) return; // AuthProvider lidará com redirect de login
+                if (userError || !user) return; // AuthProvider lida com login
 
                 // Buscar perfil para verificar status
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('created_at, email_verified')
-                    .eq('id', session.user.id)
+                    .eq('id', user.id)
                     .single();
 
                 if (profile) {
@@ -47,14 +49,15 @@ export default function EmailGuard() {
                     deadline.setDate(deadline.getDate() + 7);
 
                     const isExpired = now > deadline;
-                    // Verifica tabelas profiles, metadados da sessão (Auth) ou flag Monk manual
+
+                    // Verifica status com dados REAIS do servidor
                     const isVerified =
                         profile.email_verified === true ||
-                        !!session.user.email_confirmed_at ||
-                        session.user.user_metadata?.monk_verified === true;
+                        !!user.email_confirmed_at ||
+                        user.user_metadata?.monk_verified === true;
 
                     if (isExpired && !isVerified) {
-                        console.warn('GUARD: Acesso bloqueado - Verificação pendente expirada.');
+                        console.warn('GUARD: Acesso bloqueado - Verificação pendente expirada (Server Check).');
                         router.replace('/blocked');
                     }
                 }
