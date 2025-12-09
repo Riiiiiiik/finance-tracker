@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Merriweather, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import { PrivacyProvider } from '@/lib/privacy-context';
@@ -9,7 +9,17 @@ import { SentryProvider } from '@/lib/sentry-context';
 import ReloadPrompt from '@/components/ReloadPrompt';
 import EmailGuard from '@/components/EmailGuard';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const merriweather = Merriweather({
+    subsets: ['latin'],
+    weight: ['300', '400', '700', '900'],
+    variable: '--font-serif'
+});
+const playfair = Playfair_Display({
+    subsets: ['latin'],
+    weight: ['400', '500', '600', '700', '800', '900'],
+    variable: '--font-heading'
+});
 
 export const metadata: Metadata = {
     title: 'Finance Tracker',
@@ -47,7 +57,7 @@ export default function RootLayout({
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
                 <meta name="theme-color" content="#10B981" />
             </head>
-            <body className={inter.className}>
+            <body className={`${inter.variable} ${merriweather.variable} ${playfair.variable} font-sans`}>
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="dark"

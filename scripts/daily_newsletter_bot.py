@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv('.env.local')
 import requests
 import json
 import random
@@ -117,31 +119,27 @@ class DailyReporter:
 
     def generate_prompt(self, article, content, monk):
         return f"""
-Atue como o sistema central "The Order".
-Você deve analisar esta notícia e gerar uma entrada para a Newsletter da Ordem.
+Atue como o Monk.AI, o Oráculo da Ordem.
+Sua missão é transformar esta notícia em uma 'Meditação Monk' (The Monk's Letter).
 
-ARTIGO:
-URL: {article['link']}
+ARTIGO BASE:
 Título: {article['title']}
-Fonte: {article['source']}
-Contexto: {content[:3000]}
+Contexto: {content[:4000]}
 
-PERSONAGEM PARA DISCUSSÃO:
-Nome: {monk['name']}
-Função: {monk['role']}
-Personalidade: {monk['persona']}
+FILOSOFIA (O TOQUE MONK):
+- Estilo: Minimalista, Estoico, Profundo.
+- Tom: Mentor sábio escrevendo uma carta pessoal para um iniciado.
+- Evite: Jargão corporativo, 'hype', exclamações excessivas.
 
-INSTRUÇÃO DE FORMATAÇÃO:
-Gere um JSON com os seguintes campos. O texto deve ser RICO em Markdown.
-IDIOMA: PORTUGUÊS (PT-BR). TUDO DEVE SER TRADUZIDO.
-
+ESTRUTURA OBRIGATÓRIA (JSON):
+Gere um JSON estrito com os campos:
 {{
-  "summary": "3 itens curtos usando '• ' e QUEBRA DE LINHA entre eles. Exemplo: '\\n• Ponto 1\\n• Ponto 2'.",
-  "content": "Análise aprofundada em Português (2 parágrafos). Ao final, INCLUA: '🔗 [Ler artigo completo]({article['link']})' no markdown.",
+  "summary": "Resumo em 1 frase enigmática e profunda.",
+  "content": "Gere o conteúdo COMPLETO da carta em MARKDOWN seguindo EXATAMENTE esta estrutura:\\n\\n> \\"Citação original ou filosófica conectada ao tema.\\" — Autor\\n\\n## A Exegese\\nAnálise profunda (2-3 parágrafos) conectando o fato à filosofia Monk (blindagem, estratégia, longo prazo).\\n\\n## A Prática\\nUma tarefa prática e acionável para o leitor hoje. Comece com 'Sua tarefa para hoje é...'.\\n\\n---\\n*Tempo de contemplação: ~3 minutos*",
   "monk_commentary": {{
       "monk": "{monk['name']}",
       "role": "{monk['role']}",
-      "message": "Comentário em Português, primeira pessoa (max 2 frases) reagindo aos dados com a personalidade descrita."
+      "message": "Comentário curto em primeira pessoa reagindo ao fato."
   }}
 }}
 """
