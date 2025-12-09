@@ -184,7 +184,7 @@ export default function LandingPage() {
                 <h2 className="text-3xl font-bold text-white mb-8">
                     Junte-se à Ordem hoje.
                 </h2>
-                <Link href="/signup" className="text-gray-400 hover:text-white underline text-sm">
+                <Link href="/register" className="text-gray-400 hover:text-white underline text-sm">
                     Iniciar cadastro gratuito
                 </Link>
                 <p className="text-gray-600 text-[10px] mt-12">
