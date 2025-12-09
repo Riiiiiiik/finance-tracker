@@ -287,10 +287,17 @@ export default function MemberProfile() {
         try {
             // Limpeza em cascata (supondo policies ou manual)
             if (userId) {
+                // 1. Dados Transacionais
                 await supabase.from('transactions').delete().eq('user_id', userId);
+                await supabase.from('accounts').delete().eq('user_id', userId); // Was missing!
                 await supabase.from('categories').delete().eq('user_id', userId);
-                await supabase.from('wishlist_items').delete().eq('user_id', userId); // Ensure correct table
-                await supabase.from('profiles').delete().eq('id', userId);
+                await supabase.from('wishlist_items').delete().eq('user_id', userId);
+
+                // 2. Perfil
+                const { error: profileError } = await supabase.from('profiles').delete().eq('id', userId);
+                if (profileError) console.warn('Erro ao deletar perfil (pode ser restrição de RLS):', profileError);
+
+                // 3. Logout
                 await supabase.auth.signOut();
                 router.push('/login');
             }
