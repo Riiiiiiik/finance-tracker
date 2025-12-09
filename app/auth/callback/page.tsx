@@ -12,7 +12,18 @@ export default function AuthCallback() {
     useEffect(() => {
         const handleAuthCallback = async () => {
             try {
-                // Get the session from the URL hash
+                // Tenta capturar o CODE da URL (PKCE Flow)
+                const searchParams = new URLSearchParams(window.location.search);
+                const code = searchParams.get('code');
+                const next = searchParams.get('next') || '/dashboard';
+
+                if (code) {
+                    const { error } = await supabase.auth.exchangeCodeForSession(code);
+                    if (error) throw error;
+                    // Se a troca foi bem sucedida, supabase.auth.getSession() abaixo retornará a sessão
+                }
+
+                // Get the session 
                 const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
                 if (sessionError) throw sessionError;
@@ -29,7 +40,7 @@ export default function AuthCallback() {
 
                     if (updateError) {
                         console.error('Error updating email_verified:', updateError);
-                        throw updateError;
+                        // Não vamos travar o login se falhar o update do profile, mas logamos
                     }
 
                     setStatus('success');
@@ -37,10 +48,12 @@ export default function AuthCallback() {
 
                     // Redirect to dashboard
                     setTimeout(() => {
-                        router.push('/dashboard');
+                        router.push(next);
                     }, 1500);
                 } else {
-                    throw new Error('Sessão não encontrada');
+                    // Se não tiver código e não tiver sessão, erro
+                    if (!code) throw new Error('Link de autenticação inválido ou expirado.');
+                    throw new Error('Sessão não estabelecida.');
                 }
             } catch (error: any) {
                 console.error('Auth callback error:', error);
@@ -50,7 +63,7 @@ export default function AuthCallback() {
                 // Redirect to login after error
                 setTimeout(() => {
                     router.push('/login');
-                }, 3000);
+                }, 4000);
             }
         };
 
