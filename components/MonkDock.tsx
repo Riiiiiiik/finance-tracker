@@ -29,8 +29,8 @@ export default function MonkDock() {
         setShowVision(true);
     };
 
-    // Não mostrar na tela de login, registro, verificação ou onboarding
-    if (['/login', '/register', '/verify', '/onboarding', '/', '/about', '/community/newsletter'].includes(pathname)) {
+    // Não mostrar na tela de login, registro, verificação, onboarding ou BLOQUEADO
+    if (['/login', '/register', '/verify', '/onboarding', '/', '/about', '/community/newsletter', '/blocked'].includes(pathname)) {
         return null;
     }
 
