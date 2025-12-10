@@ -4,6 +4,16 @@ import sqlite3
 import google.generativeai as genai
 from datetime import datetime
 
+
+# ==============================================================================
+# SEGURANÇA CRÍTICA - ARQUITETURA DE MEDIAÇÃO (AIR GAP LÓGICO)
+# ==============================================================================
+# 1. A IA (Gemini/DeepSeek) NUNCA deve conectar diretamente ao banco de dados.
+# 2. Este script Python age como o "Mediador Seguro".
+# 3. Fluxo de Dados: [Banco de Dados] -> (SQL Seguro) -> [Python Script] -> (JSON Anônimo) -> [IA]
+# 4. A IA recebe apenas dados anonimizados sem PII (Nome, CPF, Email).
+# ==============================================================================
+
 # 1. Configuração da API do Google (Antigravity/Gemini)
 # Ele vai buscar a chave nas variáveis de ambiente (mais seguro)
 api_key = os.environ.get("GOOGLE_API_KEY")
