@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, ChevronUp, Terminal, Activity, ShieldCheck } from 'lucide-react';
+import { Shield, ChevronUp, Terminal, Activity } from 'lucide-react';
 import MonkForge from './MonkForge';
 
 interface MonkRiskWidgetProps {
@@ -58,7 +58,7 @@ export default function MonkRiskWidget({ riskLevel, onNavigate, isLoading = fals
         borderColorClass = 'border-[#047857]';
         bgColorClass = 'bg-[#047857]/10';
         shadowClass = 'shadow-[0_0_30px_rgba(4,120,87,0.2)]';
-        icon = <ShieldCheck size={32} />;
+        icon = <Shield size={32} />;
         title = "SERENO";
         message = "> O Fluxo permanece inalterado. Nenhuma perturbação no campo.";
     }
