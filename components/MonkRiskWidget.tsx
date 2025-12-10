@@ -141,28 +141,3 @@ export default function MonkRiskWidget({ riskLevel, onNavigate, isLoading = fals
     );
 }
 
-                <div className="text-xs text-gray-400 mb-6 border-l-2 border-gray-700 pl-3 leading-relaxed">
-                    {`> `}{message}
-                    <br />
-                    {`> `}Cálculo baseado em projeção de 30 dias.
-                </div>
-
-                <button
-                    onClick={onNavigate}
-                    className={`
-                        w-full group relative overflow-hidden
-                        border ${borderColorClass} ${colorClass}
-                        hover:bg-opacity-20 hover:${bgColorClass}
-                        px-4 py-3 text-xs font-bold uppercase tracking-widest
-                        transition-all flex items-center justify-center gap-2
-                    `}
-                >
-                    <span className="relative z-10 flex items-center gap-2">
-                        [ VER MATRIZ TÁTICA ]
-                        <ChevronUp size={14} className="group-hover:-translate-y-1 transition-transform" />
-                    </span>
-                </button>
-            </div >
-        </div >
-    );
-}
