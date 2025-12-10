@@ -1,12 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ShieldAlert, ChevronUp, Terminal, Activity } from 'lucide-react';
+import MonkForge from './MonkForge';
 
 interface MonkRiskWidgetProps {
     riskLevel: string; // "SEGURO", "MODERADO", "CRÍTICO"
     onNavigate: () => void;
+    isLoading?: boolean;
 }
 
-export default function MonkRiskWidget({ riskLevel, onNavigate }: MonkRiskWidgetProps) {
+export default function MonkRiskWidget({ riskLevel, onNavigate, isLoading = false }: MonkRiskWidgetProps) {
+    // Estado local para simular "Forja" se estiver carregando ou se o risco for indefinido
+    const showForge = isLoading || !riskLevel;
+
+    if (showForge) {
+        return (
+            <div className="w-full rounded-xl border border-[#333] bg-[#050505] relative overflow-hidden h-[300px]">
+                <MonkForge
+                    moduleName="ANALISANDO RISCO..."
+                    description="O Oráculo está processando seus dados financeiros."
+                    fullScreen={false}
+                />
+            </div>
+        );
+    }
+
     const isCritical = riskLevel === 'CRÍTICO';
     const isModerate = riskLevel === 'MODERADO';
     const isSafe = riskLevel === 'SEGURO';
