@@ -273,10 +273,7 @@ export default function AnalyticsPage() {
                 <MonkRiskWidget
                     riskLevel={statusRisco}
                     onNavigate={() => {
-                        const chartSection = document.getElementById('charts-section');
-                        if (chartSection) {
-                            chartSection.scrollIntoView({ behavior: 'smooth' });
-                        }
+                        router.push('/vision');
                     }}
                 />
 

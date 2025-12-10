@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ShieldAlert, ChevronUp, Terminal, Activity } from 'lucide-react';
 import MonkForge from './MonkForge';
 
@@ -9,17 +9,8 @@ interface MonkRiskWidgetProps {
 }
 
 export default function MonkRiskWidget({ riskLevel, onNavigate, isLoading = false }: MonkRiskWidgetProps) {
-    // Estado para forçar a animação de "Forja/Scan" ao iniciar
-    const [isScanning, setIsScanning] = useState(true);
-
-    useEffect(() => {
-        // Simula o tempo de análise da IA (3 segundos)
-        const timer = setTimeout(() => setIsScanning(false), 3000);
-        return () => clearTimeout(timer);
-    }, []);
-
-    // Mostra a Forja se estiver carregando, sem risco, ou durante o scan inicial
-    const showForge = isLoading || !riskLevel || isScanning;
+    // Estado local para simular "Forja" se estiver carregando ou se o risco for indefinido
+    const showForge = isLoading || !riskLevel;
 
     if (showForge) {
         return (
