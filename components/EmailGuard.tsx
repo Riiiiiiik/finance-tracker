@@ -50,8 +50,9 @@ export default function EmailGuard() {
 
                     const isExpired = now > deadline;
 
-                    // Verifica status com dados REAIS do servidor
+                    // Verifica status com dados REAIS do servidor OU Bypass Local (Instantâneo)
                     const isVerified =
+                        (typeof window !== 'undefined' && localStorage.getItem('monk_verified_client') === 'true') ||
                         profile.email_verified === true ||
                         !!user.email_confirmed_at ||
                         user.user_metadata?.monk_verified === true;

@@ -108,11 +108,14 @@ export default function BlockedPage() {
                 }
             }
 
-            setMessage('E-mail verificado com sucesso! Redirecionando...');
+            setMessage('E-mail verificado com sucesso! Acesso liberado.');
+
+            // Bypass Instantâneo: Marcar no navegador
+            if (typeof window !== 'undefined') localStorage.setItem('monk_verified_client', 'true');
+
             setTimeout(() => {
-                router.push('/dashboard');
-                router.refresh();
-            }, 2000);
+                window.location.href = '/dashboard';
+            }, 1000);
         } catch (err: any) {
             setError(err.message || 'Código inválido. Tente novamente.');
         } finally {
