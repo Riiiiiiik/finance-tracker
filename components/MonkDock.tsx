@@ -2,7 +2,7 @@
 
 import { Home, ShieldAlert, Plus, Star, Users } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import MonkVision from './MonkVision';
 
@@ -10,6 +10,7 @@ export default function MonkDock() {
     const pathname = usePathname();
     const [optimisticPath, setOptimisticPath] = useState(pathname);
     const [showVision, setShowVision] = useState(false);
+    const router = useRouter();
 
     // Sincronizar quando a rota muda de fato (para back/forward do navegador)
     useEffect(() => {
@@ -26,7 +27,8 @@ export default function MonkDock() {
     ];
 
     const handleAddClick = () => {
-        setShowVision(true);
+        // Redireciona para a nova página do Monk Vision (Forge)
+        router.push('/vision');
     };
 
     // Não mostrar na tela de login, registro, verificação, onboarding ou BLOQUEADO

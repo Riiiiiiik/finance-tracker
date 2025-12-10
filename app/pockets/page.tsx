@@ -85,7 +85,7 @@ export default function PocketsPage() {
         <div className="min-h-screen bg-black text-white pb-24">
             <div className="p-4">
                 <header className="flex items-center gap-4 mb-8">
-                    <Link href="/" className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors">
+                    <Link href="/dashboard" className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors">
                         <ArrowLeft className="w-6 h-6" />
                     </Link>
                     <h1 className="text-2xl font-bold">Monk.Pockets</h1>
