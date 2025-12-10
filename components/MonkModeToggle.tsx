@@ -7,6 +7,8 @@ import { Eye, Terminal, Monitor } from 'lucide-react';
 export default function MonkModeToggle() {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
+    // Estado local otimista para resposta instantânea ao clique
+    const [optimisticMonk, setOptimisticMonk] = useState<boolean | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -17,8 +19,7 @@ export default function MonkModeToggle() {
     }
 
     const isMonkTheme = theme === 'monk';
-    // Estado local otimista para resposta instantânea ao clique
-    const [optimisticMonk, setOptimisticMonk] = useState<boolean | null>(null);
+
 
     const isMonk = optimisticMonk !== null ? optimisticMonk : isMonkTheme;
 

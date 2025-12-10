@@ -211,6 +211,7 @@ export default function MonkVision({ isOpen, onClose }: MonkVisionProps) {
                 <div className="relative w-64 h-64 border-2 border-emerald-500/50 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(16,185,129,0.2)] bg-black/50">
                     {image ? (
                         <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={image} alt="Captured" className="w-full h-full object-cover opacity-50" />
                             {isProcessing && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -218,6 +219,7 @@ export default function MonkVision({ isOpen, onClose }: MonkVisionProps) {
                                 </div>
                             )}
                         </>
+
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
                             <Camera className="w-16 h-16 text-emerald-500/30" />

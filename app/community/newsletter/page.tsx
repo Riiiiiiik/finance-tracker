@@ -22,7 +22,8 @@ const SimpleMarkdown = ({ content }: { content: string }) => {
                     const [text, author] = quoteText.split('—');
                     return (
                         <blockquote key={index} className="border-l-4 border-[#8B5CF6] pl-6 my-8 italic text-xl text-gray-200 bg-white/5 py-4 rounded-r-lg">
-                            "{text.trim()}"
+                            &quot;{text.trim()}&quot;
+
                             {author && <footer className="text-sm text-[#8B5CF6] font-bold mt-2 not-italic tracking-widest uppercase">— {author.trim()}</footer>}
                         </blockquote>
                     );
@@ -198,7 +199,8 @@ Sua tarefa para hoje é auditar suas assinaturas recorrentes. Identifique uma qu
                                         {msg.monk}
                                     </div>
                                     <p className="text-gray-400 italic text-sm font-serif leading-relaxed">
-                                        "{msg.message}"
+                                        &quot;{msg.message}&quot;
+
                                     </p>
                                 </div>
                             ))}
@@ -206,7 +208,8 @@ Sua tarefa para hoje é auditar suas assinaturas recorrentes. Identifique uma qu
 
                         <div className="mt-16 text-center">
                             <p className="text-xs text-gray-600 font-serif italic">
-                                "Memento Mori. Você recebeu esta carta porque escolheu trilhar este caminho."
+                                &quot;Memento Mori. Você recebeu esta carta porque escolheu trilhar este caminho.&quot;
+
                             </p>
                         </div>
                     </motion.div>

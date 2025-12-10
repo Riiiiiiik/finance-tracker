@@ -98,7 +98,8 @@ export default function DashboardPage() {
 
     useEffect(() => {
         checkUser();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
 
     // Recarregar transações quando mudar a conta selecionada
     useEffect(() => {
@@ -301,7 +302,9 @@ export default function DashboardPage() {
 
                 <Link href="/profile" className="relative w-9 h-9 rounded-full overflow-hidden border border-border/50 hover:border-emerald-500/50 transition-colors">
                     {avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+
                     ) : (
                         <div className="w-full h-full bg-secondary flex items-center justify-center">
                             <User className="w-4 h-4 text-muted-foreground" />

@@ -19,7 +19,8 @@ export default function BlockedPage() {
 
     useEffect(() => {
         checkBlockedStatus();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
 
     const checkBlockedStatus = async () => {
         try {

@@ -46,7 +46,8 @@ export default function MemberProfile() {
 
     useEffect(() => {
         checkUser();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
 
     const checkUser = async () => {
         try {
@@ -359,11 +360,14 @@ export default function MemberProfile() {
                         <>
                             <div className="relative">
                                 <div className="w-20 h-20 rounded-full bg-gray-700 overflow-hidden border-2 border-[#10B981] p-0.5 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
                                         src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name || 'User'}`}
                                         alt="Avatar"
                                         className="w-full h-full rounded-full bg-[#222] object-cover"
                                     />
+
+
                                 </div>
                                 <div className="absolute bottom-0 right-0 bg-[#09090B] p-1 rounded-full border border-[#10B981]/30">
                                     <Shield size={16} className="text-[#10B981] fill-[#10B981]" />

@@ -39,7 +39,8 @@ export default function PocketsPage() {
 
     useEffect(() => {
         fetchPockets();
-    }, [user]);
+    }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
     const handleAddMoney = (amount: number) => {
         // Implement logic to add money to a pocket

@@ -209,7 +209,8 @@ export default function LandingPage() {
                     </p>
 
                     <h2 className="text-2xl font-bold text-white mb-8 font-serif italic text-[#10B981]/80">
-                        "Amor Fati"
+                        &quot;Amor Fati&quot;
+
                     </h2>
 
                     <Link href="/register" className="text-gray-400 hover:text-white text-sm transition-colors">

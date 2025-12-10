@@ -67,7 +67,10 @@ function WishlistItemCard({
                 <div className="flex gap-3">
                     {/* Image */}
                     {item.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={item.image_url} alt={item.name} className="w-20 h-20 object-cover rounded-lg" />
+
+
                     ) : (
                         <div className="w-20 h-20 bg-secondary rounded-lg flex items-center justify-center">
                             {isPurchased ? (
@@ -238,7 +241,8 @@ export default function WishlistPage() {
 
     useEffect(() => {
         checkUser();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
 
     const checkUser = async () => {
         try {
@@ -786,6 +790,7 @@ export default function WishlistPage() {
 
                                     {imageUrl && (
                                         <div className="mt-3 relative w-full h-32 rounded-xl overflow-hidden border border-[#333] bg-[#09090B] flex items-center justify-center">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
                                                 src={imageUrl}
                                                 alt="Preview"
@@ -794,6 +799,7 @@ export default function WishlistPage() {
                                                     (e.target as HTMLImageElement).style.display = 'none';
                                                 }}
                                             />
+
                                         </div>
                                     )}
                                 </div>

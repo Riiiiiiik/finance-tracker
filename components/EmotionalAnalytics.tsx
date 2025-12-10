@@ -24,7 +24,8 @@ export default function EmotionalAnalytics({ userId, refreshTrigger }: { userId:
         if (userId) {
             loadAnalytics();
         }
-    }, [userId, refreshTrigger]);
+    }, [userId, refreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
     const loadAnalytics = async () => {
         try {

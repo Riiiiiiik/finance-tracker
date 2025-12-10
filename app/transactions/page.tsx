@@ -22,7 +22,8 @@ export default function TransactionsPage() {
 
     useEffect(() => {
         checkUser();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
 
     const checkUser = async () => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -192,8 +193,8 @@ export default function TransactionsPage() {
                                     key={type.id}
                                     onClick={() => setSelectedType(type.id as any)}
                                     className={`flex-1 py-2 rounded-md text-xs font-bold transition-all ${selectedType === type.id
-                                            ? 'bg-[#3F68FF] text-white shadow-lg'
-                                            : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                                        ? 'bg-[#3F68FF] text-white shadow-lg'
+                                        : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
                                         }`}
                                 >
                                     {type.label}

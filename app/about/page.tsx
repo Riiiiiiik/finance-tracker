@@ -56,7 +56,8 @@ export default function AboutPage() {
                             A Clareza
                         </h2>
                         <p className="text-gray-400 font-mono text-sm leading-relaxed">
-                            A riqueza exige silêncio. "The Order" rejeita a complexidade desnecessária. Nós aplicamos a filosofia monástica aos dados: eliminar o supérfluo para revelar o essencial. Nossos agentes (Monks) não buscam apenas lucro; buscam a verdade matemática por trás de cada centavo.
+                            A riqueza exige silêncio. &quot;The Order&quot; rejeita a complexidade desnecessária. Nós aplicamos a filosofia monástica aos dados: eliminar o supérfluo para revelar o essencial. Nossos agentes (Monks) não buscam apenas lucro; buscam a verdade matemática por trás de cada centavo.
+
                         </p>
                     </section>
 

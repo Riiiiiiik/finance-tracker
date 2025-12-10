@@ -24,7 +24,8 @@ export default function FutureInvoices({ userId }: FutureInvoicesProps) {
 
     useEffect(() => {
         loadFutureInvoices();
-    }, [userId]);
+    }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
     const loadFutureInvoices = async () => {
         try {
