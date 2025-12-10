@@ -69,7 +69,7 @@ export default function RootLayout({
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
                 <meta name="theme-color" content="#10B981" />
             </head>
-            <body className={`${inter.variable} ${merriweather.variable} ${playfair.variable} ${cormorant.variable} ${jetbrains.variable} font-sans`}>
+            <body className={`${inter.variable} ${merriweather.variable} ${playfair.variable} ${cormorant.variable} ${jetbrains.variable} font-sans`} suppressHydrationWarning>
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="dark"
