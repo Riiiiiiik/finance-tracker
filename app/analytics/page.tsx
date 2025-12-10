@@ -5,7 +5,7 @@ import { supabase, Transaction } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { Eye, ShieldCheck, ShieldAlert, TrendingDown, TrendingUp, Activity, PieChart as PieChartIcon } from 'lucide-react';
-import SpendingCalendar from '@/components/SpendingCalendar';
+import MonkRiskWidget from '@/components/MonkRiskWidget';
 import { usePrivacy } from '@/lib/privacy-context';
 
 const COLORS = ['#FF4B4B', '#FF8042', '#7C3AED', '#B91C1C', '#EAB308', '#F87171'];
@@ -129,6 +129,7 @@ export default function AnalyticsPage() {
 
             {/* CABEÇALHO DO SENTINELA */}
             <header className="mb-8 border-b border-gray-800 pb-4 flex justify-between items-end">
+                {/* ... header content ... */}
                 <div className="flex items-center gap-3">
                     <div className="bg-[#FF4B4B]/20 p-2 rounded-lg border border-[#FF4B4B]/30">
                         <Eye size={24} className="text-[#FF4B4B]" />
@@ -156,7 +157,7 @@ export default function AnalyticsPage() {
 
             {/* HUD PRINCIPAL (Cards) */}
             <div className="grid grid-cols-1 gap-4 mb-6">
-
+                {/* ... Cards ... */}
                 {/* Drenagem (Saídas) - DESTAQUE */}
                 <div className="bg-[#161616] p-5 rounded-xl border-t-2 border-t-[#FF4B4B] relative overflow-hidden shadow-[0_0_15px_rgba(255,75,75,0.1)] group">
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -199,7 +200,7 @@ export default function AnalyticsPage() {
             <div className="space-y-6">
 
                 {/* Gráfico (Mapeamento) */}
-                <div className="bg-[#161616] rounded-xl border border-[#333] p-6 relative">
+                <div id="charts-section" className="bg-[#161616] rounded-xl border border-[#333] p-6 relative">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-white font-bold flex items-center gap-2 text-sm">
                             <PieChartIcon size={16} className="text-[#FF4B4B]" />
@@ -268,55 +269,16 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Calendário (Registro de Ocorrências) */}
-                <div className="bg-[#161616] rounded-xl border border-[#333] p-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-white font-bold flex items-center gap-2 text-sm">
-                            <Activity size={16} className="text-[#FF4B4B]" />
-                            Frequência de Impacto
-                        </h3>
-                        <span className="text-[10px] text-gray-500 uppercase tracking-widest">
-                            {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                        </span>
-                    </div>
-
-                    <div className="grid grid-cols-7 gap-1 text-center text-sm mb-2">
-                        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(d => (
-                            <div key={d} className="text-gray-600 font-bold text-[10px]">{d}</div>
-                        ))}
-                    </div>
-
-                    {/* Dias */}
-                    <div className="grid grid-cols-7 gap-1.5">
-                        {Array.from({ length: daysInMonth }).map((_, i) => {
-                            const day = i + 1;
-                            const spent = dailyExpenses[day] || 0;
-
-                            // Lógica visual do Sentry: Dias com gasto alto (acima da média) são vermelhos
-                            const isHighRisk = spent > (averageDailyExpense * 1.5) && averageDailyExpense > 0;
-                            const hasActivity = spent > 0;
-
-                            return (
-                                <div key={i} className={`
-                                    aspect-square flex items-center justify-center rounded-md border text-[10px] transition-all hover:scale-110 cursor-default
-                                    ${isHighRisk ? 'bg-[#FF4B4B]/20 border-[#FF4B4B] text-[#FF4B4B] shadow-[0_0_8px_rgba(255,75,75,0.3)] font-bold' :
-                                        hasActivity ? 'bg-[#333]/50 border-[#444] text-gray-300' :
-                                            'bg-[#09090B] border-[#222] text-gray-700'}
-                                `} title={spent > 0 ? `Gasto: R$ ${spent.toFixed(2)}` : ''}>
-                                    {day}
-                                </div>
-                            )
-                        })}
-                    </div>
-
-                    <div className="mt-4 flex gap-4 text-[10px] justify-center">
-                        <div className="flex items-center gap-1.5 text-gray-500">
-                            <div className="w-2 h-2 bg-[#333]/50 border border-[#444] rounded"></div> Normal
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[#FF4B4B]">
-                            <div className="w-2 h-2 bg-[#FF4B4B]/20 border border-[#FF4B4B] rounded shadow-[0_0_5px_rgba(255,75,75,0.5)]"></div> Alto Impacto
-                        </div>
-                    </div>
-                </div>
+                {/* Monk Risk Widget (Substituindo Calendário) */}
+                <MonkRiskWidget
+                    riskLevel={statusRisco}
+                    onNavigate={() => {
+                        const chartSection = document.getElementById('charts-section');
+                        if (chartSection) {
+                            chartSection.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    }}
+                />
 
             </div>
 
