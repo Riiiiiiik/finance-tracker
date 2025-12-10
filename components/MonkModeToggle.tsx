@@ -42,7 +42,7 @@ export default function MonkModeToggle() {
         >
             {isMonk ? <Terminal size={14} /> : <Eye size={14} />}
             <span className="text-xs font-mono uppercase font-bold tracking-wider">
-                {isMonk ? 'MONK_ON' : 'MONK_OFF'}
+                {isMonk ? 'MODO: ATIVO' : 'MODO: PADRÃO'}
             </span>
         </button>
     );
