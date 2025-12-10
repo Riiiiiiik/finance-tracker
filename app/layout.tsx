@@ -86,9 +86,7 @@ export default function RootLayout({
                                     <EmailGuard />
                                     {children}
                                     <MonkDock />
-                                    <EmailGuard />
-                                    {children}
-                                    <MonkDock />
+
                                     <ReloadPrompt />
                                     <MonkModeToggle />
                                     <PWAInstallBanner />
