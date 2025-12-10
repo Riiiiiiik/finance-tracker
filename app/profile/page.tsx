@@ -80,7 +80,12 @@ export default function MemberProfile() {
 
             if (data) {
                 setProfile(data);
-                setEmailVerified(data.email_verified || false);
+                // Verificação Robusta (Mesma lógica do EmailGuard)
+                const isMetaVerified = session.user.user_metadata?.monk_verified === true;
+                const isAuthVerified = !!session.user.email_confirmed_at;
+                const isLocalVerified = typeof window !== 'undefined' && localStorage.getItem('monk_verified_client') === 'true';
+
+                setEmailVerified(data.email_verified || isMetaVerified || isAuthVerified || isLocalVerified);
 
                 // Formatar Renda
                 if (data.monthly_income) {
@@ -115,7 +120,8 @@ export default function MemberProfile() {
                 setIsExpired(true);
                 setTimeRemaining({ days: 0, hours: 0, minutes: 0 });
                 // Redirecionar para página de bloqueio
-                router.push('/blocked');
+                // REMOVIDO: Deixar o EmailGuard lidar com o bloqueio globalmente para evitar loops.
+                // router.push('/blocked');
                 return;
             }
 
