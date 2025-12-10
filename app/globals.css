@@ -23,6 +23,43 @@
     --radius: 0.5rem;
 }
 
+.monk {
+    --background: 120 100% 2%;
+    /* Almost Black #000800 */
+    --foreground: 120 100% 50%;
+    /* Matrix Green #00FF00 */
+    --card: 120 50% 3%;
+    --card-foreground: 120 100% 50%;
+    --primary: 120 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 120 30% 10%;
+    --secondary-foreground: 120 100% 50%;
+    --muted: 120 20% 10%;
+    --muted-foreground: 120 60% 40%;
+    --accent: 120 100% 50%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 120 100% 50%;
+    --border: 120 100% 20%;
+    --input: 120 100% 20%;
+    --ring: 120 100% 50%;
+    --radius: 0;
+
+    /* Monk Specific Overrides */
+    --font-sans: 'Courier New', 'Fira Code', monospace;
+    font-family: 'Courier New', 'Fira Code', monospace;
+}
+
+.monk .glass-effect {
+    background: rgba(0, 20, 0, 0.9);
+    border: 1px solid var(--primary);
+    box-shadow: none;
+}
+
+.monk * {
+    border-radius: 0 !important;
+}
+
 * {
     margin: 0;
     padding: 0;

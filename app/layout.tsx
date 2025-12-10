@@ -8,6 +8,8 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { SentryProvider } from '@/lib/sentry-context';
 import ReloadPrompt from '@/components/ReloadPrompt';
 import EmailGuard from '@/components/EmailGuard';
+import PWAInstallBanner from '@/components/PWAInstallBanner';
+import MonkModeToggle from '@/components/MonkModeToggle';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 const merriweather = Merriweather({
@@ -84,7 +86,12 @@ export default function RootLayout({
                                     <EmailGuard />
                                     {children}
                                     <MonkDock />
+                                    <EmailGuard />
+                                    {children}
+                                    <MonkDock />
                                     <ReloadPrompt />
+                                    <MonkModeToggle />
+                                    <PWAInstallBanner />
                                 </main>
                             </PrivacyProvider>
                         </AuthProvider>
