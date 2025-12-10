@@ -58,18 +58,7 @@ export default function EmailGuard() {
 
                     const isVerified = localBypass || profileVerified || authVerified || metaVerified;
 
-                    console.log('🛡️ GUARD DEBUG:', {
-                        isExpired,
-                        isVerified,
-                        details: {
-                            localBypass,
-                            profileVerified,
-                            authVerified,
-                            metaVerified,
-                            createdAt: profile.created_at,
-                            deadline: deadline.toISOString()
-                        }
-                    });
+
 
                     if (isExpired && !isVerified) {
                         console.warn('GUARD: Acesso bloqueado - Verificação pendente expirada (Server Check).');
