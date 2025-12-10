@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Terminal, Cpu, ShieldCheck } from 'lucide-react';
+import { Terminal, Cpu, ShieldCheck, X } from 'lucide-react';
 
 interface MonkForgeProps {
     moduleName?: string;
     description?: string;
     fullScreen?: boolean;
+    onClose?: () => void;
 }
 
 const LOG_MESSAGES = [
@@ -25,7 +26,8 @@ const LOG_MESSAGES = [
 export default function MonkForge({
     moduleName = "MÓDULO DESCONHECIDO",
     description = "Este território está sendo mapeado.",
-    fullScreen = false
+    fullScreen = false,
+    onClose
 }: MonkForgeProps) {
     const [logs, setLogs] = useState<string[]>([]);
     const [progress, setProgress] = useState(0);
@@ -61,6 +63,16 @@ export default function MonkForge({
 
     return (
         <div className={`${containerClasses} flex flex-col items-center justify-center text-white font-mono p-6`}>
+            {/* Botão de Fechar */}
+            {onClose && (
+                <button
+                    onClick={onClose}
+                    className="absolute top-6 right-6 z-50 p-2 text-gray-500 hover:text-white hover:bg-white/10 rounded-full transition-all"
+                >
+                    <X size={24} />
+                </button>
+            )}
+
             {/* Scanline Overlay */}
             <div className="absolute inset-0 pointer-events-none opacity-5 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.5)_51%)] bg-[size:100%_4px] z-10"></div>
             <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_center,transparent_0%,#000_100%)] z-10"></div>
