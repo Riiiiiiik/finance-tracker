@@ -16,14 +16,23 @@ export default function MonkModeToggle() {
         return null;
     }
 
-    const isMonk = theme === 'monk';
+    const isMonkTheme = theme === 'monk';
+    // Estado local otimista para resposta instantânea ao clique
+    const [optimisticMonk, setOptimisticMonk] = useState<boolean | null>(null);
+
+    const isMonk = optimisticMonk !== null ? optimisticMonk : isMonkTheme;
 
     const toggleMonk = () => {
-        if (isMonk) {
-            setTheme('dark');
-        } else {
-            setTheme('monk');
-        }
+        // Feedback tátil/visual imediato
+        const newState = !isMonk;
+        setOptimisticMonk(newState);
+
+        // Aplica o tema real com um leve delay se necessário para animação, ou direto
+        // setTimeout(() => setTheme(newState ? 'monk' : 'dark'), 50); 
+        setTheme(newState ? 'monk' : 'dark');
+
+        // Sincroniza estado final após transição (opcional, mas garante consistência)
+        setTimeout(() => setOptimisticMonk(null), 500);
     };
 
     return (
