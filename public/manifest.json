@@ -1,7 +1,7 @@
 {
-    "name": "Finance Tracker",
-    "short_name": "Finance",
-    "description": "Controle suas finanças de forma simples e inteligente",
+    "name": "The Monk Protocol",
+    "short_name": "Monk",
+    "description": "Terminal de controle financeiro e inteligência de dados.",
     "start_url": "/dashboard",
     "display": "standalone",
     "background_color": "#09090B",
@@ -27,10 +27,18 @@
     ],
     "screenshots": [
         {
-            "src": "/screenshot-mobile.png",
-            "sizes": "390x844",
+            "src": "/screenshot-mobile-monk.png",
+            "sizes": "720x1280",
             "type": "image/png",
-            "form_factor": "narrow"
+            "form_factor": "narrow",
+            "label": "Acesso Mobile"
+        },
+        {
+            "src": "/screenshot-desktop-monk.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Painel de Controle Monk"
         }
     ]
 }
