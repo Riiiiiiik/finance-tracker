@@ -12,11 +12,11 @@ export default function AboutPage() {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#10B981] opacity-[0.03] blur-[150px] rounded-full pointer-events-none"></div>
 
             {/* --- CONTENT --- */}
-            <main className="max-w-3xl mx-auto relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <main className="max-w-7xl mx-auto relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 w-full">
 
                 {/* Header */}
                 <div className="text-center mb-16">
-                    <Link href="/" className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-[#10B981] transition-colors mb-8 uppercase tracking-widest">
+                    <Link href="/" className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-[#10B981] transition-colors mb-8 uppercase tracking-widest font-mono">
                         <ArrowLeft size={14} /> Retornar à Base
                     </Link>
 
@@ -24,50 +24,64 @@ export default function AboutPage() {
                         <Shield size={48} className="text-[#10B981] opacity-80" />
                     </div>
 
-                    <h1 className="text-4xl md:text-6xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-700">
-                        O Manifesto.
+                    <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-700 font-serif italic">
+                        The Monk Code.
                     </h1>
                 </div>
 
-                {/* Text Body */}
-                <div className="space-y-12 text-lg md:text-xl leading-relaxed text-gray-400 text-justify">
+                {/* Three Columns Grid (The Path) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left max-w-6xl mx-auto">
 
-                    <section>
-                        <h2 className="text-white text-2xl font-bold mb-4 flex items-center gap-3">
-                            <span className="text-[#10B981]">01.</span> O Caos
+                    {/* 01. O Ruído */}
+                    <section className="group bg-[#0A0A0A]/80 backdrop-blur-md border border-[#222] p-8 rounded-2xl hover:border-red-500/50 transition-all duration-500 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-20 transition-opacity duration-500">
+                            <span className="text-6xl font-bold text-red-500">01</span>
+                        </div>
+                        <h2 className="text-3xl font-bold mb-6 flex items-center gap-3 font-serif text-white group-hover:animate-pulse">
+                            <span className="text-red-500 text-sm font-mono tracking-widest uppercase block mb-1">Passo 01</span>
+                            O Ruído
                         </h2>
-                        <p>
-                            O sistema financeiro tradicional foi desenhado para ser confuso. Taxas ocultas, interfaces lentas, letras miúdas. Eles lucram com a sua desatenção. Eles dependem do seu caos pessoal para manter o controle. Enquanto você luta para organizar suas contas, eles constroem impérios com o seu dinheiro.
+                        <p className="text-gray-400 font-mono text-sm leading-relaxed">
+                            O mundo moderno é desenhado para a distração. O mercado financeiro lucra com a sua ansiedade, vendendo complexidade e escondendo a verdade em letras miúdas. O caos não é um erro do sistema; é a ferramenta deles para manter você reativo, emocionado e dependente.
                         </p>
                     </section>
 
-                    <section>
-                        <h2 className="text-white text-2xl font-bold mb-4 flex items-center gap-3">
-                            <span className="text-[#10B981]">02.</span> A Ordem
+                    {/* 02. A Clareza */}
+                    <section className="group bg-[#0A0A0A]/80 backdrop-blur-md border border-[#222] p-8 rounded-2xl hover:border-[#10B981]/50 transition-all duration-500 relative overflow-hidden transform md:-translate-y-4">
+                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-20 transition-opacity duration-500">
+                            <span className="text-6xl font-bold text-[#10B981]">02</span>
+                        </div>
+                        <h2 className="text-3xl font-bold mb-6 flex items-center gap-3 font-serif text-white">
+                            <span className="text-[#10B981] text-sm font-mono tracking-widest uppercase block mb-1">Passo 02</span>
+                            A Clareza
                         </h2>
-                        <p>
-                            Acreditamos que o controle financeiro é a forma mais pura de liberdade. "The Order" não é apenas um app. É uma doutrina. É a retomada do controle. Nossos agentes (Monks) não dormem, não erram e não têm piedade com desperdícios. Nós trazemos clareza onde havia neblina.
+                        <p className="text-gray-400 font-mono text-sm leading-relaxed">
+                            A riqueza exige silêncio. "The Order" rejeita a complexidade desnecessária. Nós aplicamos a filosofia monástica aos dados: eliminar o supérfluo para revelar o essencial. Nossos agentes (Monks) não buscam apenas lucro; buscam a verdade matemática por trás de cada centavo.
                         </p>
                     </section>
 
-                    <section>
-                        <h2 className="text-white text-2xl font-bold mb-4 flex items-center gap-3">
-                            <span className="text-[#10B981]">03.</span> O Protocolo
+                    {/* 03. A Maestria */}
+                    <section className="group bg-[#0A0A0A]/80 backdrop-blur-md border border-[#222] p-8 rounded-2xl hover:border-[#F59E0B]/50 transition-all duration-500 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-20 transition-opacity duration-500">
+                            <span className="text-6xl font-bold text-[#F59E0B]">03</span>
+                        </div>
+                        <h2 className="text-3xl font-bold mb-6 flex items-center gap-3 font-serif text-white group-hover:text-[#F59E0B] transition-colors">
+                            <span className="text-[#F59E0B] text-sm font-mono tracking-widest uppercase block mb-1">Passo 03</span>
+                            A Maestria
                         </h2>
-                        <p>
-                            Ao entrar para a Ordem, você deixa de ser um passageiro e assume o comando. Centralize tudo. Automatize o chato. Visualize o futuro. Nós fornecemos as armas; você vence a guerra.
+                        <p className="text-gray-400 font-mono text-sm leading-relaxed">
+                            O Protocolo não é uma muleta, é uma extensão da sua vontade. Ao ativá-lo, você deixa de ser um passageiro do sistema para se tornar o arquiteto do seu futuro. Automatize o trivial. Domine o vital. Nós fornecemos a estrutura; você fornece a disciplina.
                         </p>
                     </section>
-
                 </div>
 
                 {/* Footer / CTA */}
-                <div className="mt-20 text-center border-t border-[#222] pt-12">
-                    <p className="text-sm text-gray-500 mb-6 uppercase tracking-widest">
-                        Você está pronto para assumir o comando?
+                <div className="mt-20 text-center border-t border-[#222] pt-12 max-w-2xl mx-auto">
+                    <p className="text-sm text-gray-500 mb-8 uppercase tracking-widest font-mono">
+                        Sua jornada começa agora.
                     </p>
-                    <Link href="/register" className="inline-flex items-center gap-3 px-8 py-4 bg-[#10B981] text-black font-bold rounded-xl text-lg hover:bg-[#0EA572] transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] group">
-                        Inicializar Protocolo <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                    <Link href="/register" className="inline-flex items-center gap-3 px-10 py-5 bg-[#10B981] text-black font-bold rounded-xl text-xl hover:bg-[#0EA572] transition-all shadow-[0_0_30px_rgba(16,185,129,0.2)] hover:scale-105 transform group font-serif">
+                        Iniciar a Transição <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </Link>
                 </div>
 

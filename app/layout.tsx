@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Merriweather, Playfair_Display } from 'next/font/google';
+import { Inter, Merriweather, Playfair_Display, Cormorant_Garamond, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import { PrivacyProvider } from '@/lib/privacy-context';
@@ -19,6 +19,16 @@ const playfair = Playfair_Display({
     subsets: ['latin'],
     weight: ['400', '500', '600', '700', '800', '900'],
     variable: '--font-heading'
+});
+const cormorant = Cormorant_Garamond({
+    subsets: ['latin'],
+    weight: ['300', '400', '500', '600', '700'],
+    variable: '--font-cormorant'
+});
+const jetbrains = JetBrains_Mono({
+    subsets: ['latin'],
+    weight: ['400', '500', '700'],
+    variable: '--font-mono-code'
 });
 
 export const metadata: Metadata = {
@@ -57,7 +67,7 @@ export default function RootLayout({
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
                 <meta name="theme-color" content="#10B981" />
             </head>
-            <body className={`${inter.variable} ${merriweather.variable} ${playfair.variable} font-sans`}>
+            <body className={`${inter.variable} ${merriweather.variable} ${playfair.variable} ${cormorant.variable} ${jetbrains.variable} font-sans`}>
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="dark"
