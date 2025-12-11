@@ -87,6 +87,8 @@ export function BankLogo({ bankName, className = "w-6 h-6", unboxed = false }: B
     if (simpleIconSlug && !simpleIconError) {
         return (
             <div className={baseClasses}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src={`https://cdn.simpleicons.org/${simpleIconSlug}/${unboxed ? 'white' : ''}`}
                     alt={bankName}
@@ -102,6 +104,7 @@ export function BankLogo({ bankName, className = "w-6 h-6", unboxed = false }: B
     if (domain && !clearbitError) {
         return (
             <div className={unboxed ? `flex items-center justify-center ${className}` : `relative flex items-center justify-center overflow-hidden rounded-full bg-white border border-white/5 ${className}`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src={`https://logo.clearbit.com/${domain}`}
                     alt={bankName}
