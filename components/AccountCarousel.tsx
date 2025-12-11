@@ -84,7 +84,7 @@ export default function AccountCarousel({
     const totalAccount: Account = {
         id: 'all',
         user_id: userId,
-        name: 'Carteira Total',
+        name: 'Patrimônio da Ordem',
         balance: totalAvailable, // Usar apenas saldo disponível (exclui crédito)
         type: 'checking',
         color: '#0f172a', // Slate 900 (Dark)

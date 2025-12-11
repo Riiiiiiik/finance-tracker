@@ -9,12 +9,12 @@ export type ParsedTransaction = {
 
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     'Alimentação': ['almoço', 'jantar', 'lanche', 'ifood', 'mercado', 'restaurante', 'café', 'padaria', 'pizza', 'burger', 'açaí', 'fome'],
-    'Transporte': ['uber', '99', 'taxi', 'onibus', 'metrô', 'trem', 'gasolina', 'posto', 'estacionamento', 'pedagio', 'carro', 'moto'],
+    'Transporte': ['uber', '99', 'taxi', 'onibus', 'ônibus', 'metrô', 'trem', 'gasolina', 'posto', 'estacionamento', 'pedagio', 'pedágio', 'carro', 'moto'],
     'Lazer': ['cinema', 'filme', 'jogo', 'steam', 'psn', 'xbox', 'spotify', 'netflix', 'amazon', 'bar', 'cerveja', 'festa', 'show', 'livro'],
-    'Saúde': ['farmacia', 'remedio', 'medico', 'consulta', 'exame', 'dentista', 'academia', 'suplemento', 'whey'],
-    'Moradia': ['aluguel', 'luz', 'agua', 'internet', 'vivo', 'claro', 'tim', 'condominio', 'iptu', 'gas', 'limpeza'],
+    'Saúde': ['farmacia', 'farmácia', 'remedio', 'remédio', 'medico', 'médico', 'consulta', 'exame', 'dentista', 'academia', 'suplemento', 'whey'],
+    'Moradia': ['aluguel', 'luz', 'agua', 'água', 'internet', 'vivo', 'claro', 'tim', 'condominio', 'condomínio', 'iptu', 'gas', 'gás', 'limpeza'],
     'Educação': ['curso', 'faculdade', 'escola', 'livro', 'material', 'udemy', 'alura'],
-    'Salário': ['salario', 'holerite', 'freela', 'pix recebido', 'deposito', 'remuneração']
+    'Salário': ['salario', 'salário', 'holerite', 'freela', 'pix recebido', 'deposito', 'depósito', 'remuneração', 'pagamento']
 };
 
 // Helper to detect category from text

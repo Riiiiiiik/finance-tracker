@@ -81,6 +81,77 @@ export default function AccountCard({ account, onUpdate, availableBalance, invoi
         }
     };
 
+    // Monk Aesthetic for "Patrimônio da Ordem" (id === 'all')
+    if (account.id === 'all') {
+        return (
+            <div
+                className="relative w-full min-h-32 h-auto rounded-lg p-5 flex flex-col justify-between shadow-2xl transition-all duration-500 hover:scale-[1.01] border border-emerald-900/30 group"
+                style={{
+                    background: `
+                        linear-gradient(to bottom, rgba(10, 10, 12, 0.95), rgba(5, 5, 7, 0.98)),
+                        radial-gradient(circle at 50% 0%, rgba(52, 211, 153, 0.05), transparent 70%)
+                    `,
+                    boxShadow: '0 20px 40px -10px rgba(0,0,0,0.8), 0 0 20px -10px rgba(16, 185, 129, 0.1)',
+                }}
+            >
+                {/* Texture Overlay */}
+                <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none mix-blend-overlay"
+                    style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+                    }}
+                ></div>
+
+                {/* Content */}
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                    {/* Header */}
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-3">
+                            {/* Monk Icon / Glyph */}
+                            <div className="w-8 h-8 rounded-md bg-emerald-950/30 border border-emerald-500/20 flex items-center justify-center">
+                                <span className="text-emerald-500/80 text-xs font-serif">M</span>
+                            </div>
+                            <div>
+                                <span className="block text-emerald-500/60 text-[10px] uppercase tracking-[0.2em] mb-0.5 font-sans">Total Assets</span>
+                                <h3 className="text-gray-200 font-heading text-lg tracking-wide leading-none">{account.name}</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Value */}
+                    <div className="mt-6 mb-4">
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-emerald-600/60 font-mono text-lg">R$</span>
+                            <span className={`text-4xl font-mono-code font-medium text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 to-emerald-400 ${isPrivacyMode ? 'blur-lg' : ''}`}>
+                                {typeof availableBalance !== 'undefined' ? availableBalance.toFixed(2) : Math.abs(account.balance).toFixed(2)}
+                            </span>
+                        </div>
+                        <p className="text-emerald-500/40 text-[10px] font-mono mt-1 pl-1">
+                             // FUNDS_AVAILABLE
+                        </p>
+                    </div>
+
+                    {/* Footer / Breakdown */}
+                    {(typeof availableBalance !== 'undefined' && invoiceBalance !== 0) && (
+                        <div className="border-t border-dashed border-emerald-500/20 pt-3 mt-1 grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-gray-500 text-[9px] uppercase tracking-wider mb-1">Forecast (Free)</p>
+                                <p className={`text-gray-300 font-mono text-sm ${isPrivacyMode ? 'blur-sm' : ''}`}>
+                                    R$ {(availableBalance + (invoiceBalance || 0)).toFixed(2)}
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-red-900/60 text-[9px] uppercase tracking-wider mb-1">Invoice Debt</p>
+                                <p className={`text-red-400/80 font-mono text-sm ${isPrivacyMode ? 'blur-sm' : ''}`}>
+                                    R$ {Math.abs(invoiceBalance || 0).toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div
             className="account-card-stacked relative w-full min-h-32 h-auto rounded-2xl p-4 flex flex-col justify-between shadow-lg transition-all duration-500 hover:scale-[1.02]"
@@ -153,56 +224,16 @@ export default function AccountCard({ account, onUpdate, availableBalance, invoi
                     </div>
 
                     <div className="relative z-10">
-                        {account.id === 'all' && typeof availableBalance !== 'undefined' ? (
-                            <div className="flex gap-4">
-                                <div>
-                                    <p className="text-white/80 text-[10px] mb-0.5">Saldo Disponível</p>
-                                    <p className={`text-emerald-300 font-bold text-xl ${isPrivacyMode ? 'blur-md' : ''}`}>
-                                        R$ {availableBalance.toFixed(2)}
-                                    </p>
-                                </div>
-                                {invoiceBalance !== 0 && (
-                                    <div className="border-l border-white/20 pl-4 flex flex-col justify-between">
-                                        <div>
-                                            <p className="text-white/80 text-[10px] mb-0.5">Fatura Atual</p>
-                                            <p className={`text-red-300 font-bold text-xl ${isPrivacyMode ? 'blur-md' : ''}`}>
-                                                R$ {Math.abs(invoiceBalance || 0).toFixed(2)}
-                                            </p>
-                                        </div>
-                                        {onPayInvoice && (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onPayInvoice();
-                                                }}
-                                                className="mt-1 text-[10px] bg-red-500/20 hover:bg-red-500/40 text-red-200 px-2 py-1 rounded transition-colors"
-                                            >
-                                                Pagar Fatura
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <>
-                                <p className="text-white/80 text-xs mb-0.5">
-                                    {account.type === 'credit' || account.balance < 0 ? 'Fatura Atual' : 'Saldo Atual'}
-                                </p>
-                                <p className={`text-white font-bold text-2xl ${(account.type === 'credit' || account.balance < 0) && account.balance < 0 ? 'text-red-200' : ''} ${isPrivacyMode ? 'blur-md' : ''}`}>
-                                    R$ {Math.abs(account.balance).toFixed(2)}
-                                </p>
-                            </>
-                        )}
+                        {/* Default rendering for regular accounts */}
 
-                        {/* Previsto (Saldo - Fatura) para o Total */}
-                        {account.id === 'all' && typeof availableBalance !== 'undefined' && (
-                            <div className="mt-2 pt-2 border-t border-white/10 flex justify-between items-center">
-                                <span className="text-[10px] text-white/60">Previsto (Livre)</span>
-                                <span className={`text-sm font-bold text-white ${isPrivacyMode ? 'blur-sm' : ''}`}>
-                                    R$ {(availableBalance + (invoiceBalance || 0)).toFixed(2)}
-                                </span>
-                            </div>
-                        )}
+                        <>
+                            <p className="text-white/80 text-xs mb-0.5">
+                                {account.type === 'credit' || account.balance < 0 ? 'Fatura Atual' : 'Saldo Atual'}
+                            </p>
+                            <p className={`text-white font-bold text-2xl ${(account.type === 'credit' || account.balance < 0) && account.balance < 0 ? 'text-red-200' : ''} ${isPrivacyMode ? 'blur-md' : ''}`}>
+                                R$ {Math.abs(account.balance).toFixed(2)}
+                            </p>
+                        </>
                     </div>
                 </>
             )}
