@@ -304,7 +304,7 @@ export default function MagicTransactionForm({
                 )}
             </AnimatePresence>
 
-            <div className={`relative transition-all duration-500 ${showOverlay ? 'z-[70] scale-105' : 'z-10'}`}>
+            <div className={`relative transition-all duration-500 ${showOverlay ? 'z-[50] md:z-[70] md:scale-105' : 'z-10'}`}>
                 {/* Hero Input Block - REFACTORED FOR MINIMALISM */}
                 <div className="mb-2">
                     <motion.div
