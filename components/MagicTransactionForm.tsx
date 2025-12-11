@@ -540,7 +540,10 @@ export default function MagicTransactionForm({
                                     </div>
                                 )}
                             </AnimatePresence>
-                        </div>
+                        </motion.div>
                     </>
-                );
+                )}
+            </AnimatePresence>
+        </>
+    );
 }
