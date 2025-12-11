@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { LogOut, User, Eye, EyeOff, Star, Trash2 } from 'lucide-react';
+import { LogOut, User, Eye, EyeOff, Star, Trash2, Repeat } from 'lucide-react';
+import { checkAndGenerateRecurrences } from '@/lib/recurrence';
 import Link from 'next/link';
 import { motion, useAnimation, PanInfo } from 'framer-motion';
 import EmotionalAnalytics from '@/components/EmotionalAnalytics';
@@ -56,7 +57,12 @@ function TransactionItem({
             >
                 <div className="flex justify-between items-start">
                     <div>
-                        <p className="font-medium">{transaction.description}</p>
+                        <div className="flex items-center gap-2">
+                            <p className="font-medium">{transaction.description}</p>
+                            {transaction.recurrence_id && (
+                                <Repeat className="w-3 h-3 text-muted-foreground/60" />
+                            )}
+                        </div>
                         <div className="flex items-center gap-2">
                             <p className="text-xs text-muted-foreground">{new Date(transaction.date).toLocaleDateString()}</p>
                             {transaction.happiness_score && (
@@ -77,6 +83,10 @@ function TransactionItem({
     );
 }
 
+import CreateRecurrenceModal from '@/components/CreateRecurrenceModal';
+
+// ... (existing helper functions)
+
 export default function DashboardPage() {
     const router = useRouter();
     const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
@@ -90,6 +100,7 @@ export default function DashboardPage() {
     const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
     const [accounts, setAccounts] = useState<any[]>([]);
     const [showPayInvoiceModal, setShowPayInvoiceModal] = useState(false);
+    const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
 
     // Monk Grid Data States
     const [wishlistMain, setWishlistMain] = useState({ name: 'Nova Meta', percent: 0 });
@@ -107,35 +118,6 @@ export default function DashboardPage() {
             loadTransactions(userId, selectedAccountId);
         }
     }, [selectedAccountId, userId]);
-
-    const checkUser = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-            router.push('/login');
-            return;
-        }
-
-        setUserId(session.user.id);
-
-        // Load user profile
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, avatar_url')
-            .eq('id', session.user.id)
-            .single();
-
-        if (profile) {
-            setUserName(profile.full_name || '');
-            setAvatarUrl(profile.avatar_url || '');
-        }
-
-        // Carregar dados iniciais
-        await loadAccounts(session.user.id);
-        loadTransactions(session.user.id, 'all');
-        loadWishlist(session.user.id);
-
-        setLoading(false);
-    };
 
     const loadWishlist = async (uid: string) => {
         // 1. Fetch Total Balance (Integridade)
@@ -159,10 +141,6 @@ export default function DashboardPage() {
             .from('wishlist_items')
             .select('*')
             .eq('user_id', uid);
-        // .eq('status', 'active'); // Filter relaxed to debug "Nova Meta"
-
-        console.log('Dashboard Debug - Wishlist Fetch:', { uid, wishlistItems }); // DEBUG LOG
-        console.log('Dashboard Debug - Balance:', { accountsData, totalBalance }); // DEBUG LOG
 
         if (wishlistItems && wishlistItems.length > 0) {
             // Priority Map
@@ -196,19 +174,10 @@ export default function DashboardPage() {
             if (error) throw error;
             setAccounts(data || []);
 
-            // Calculate Daily Allowance (Simple Logic: Balance / 30 for now, or just static)
+            // ----------------------------------------------------
+            // AUDITOR LOGIC: Calculate Nearest Invoice Date
+            // ----------------------------------------------------
             if (data) {
-                const total = data.reduce((acc, curr) => {
-                    if (['checking', 'savings', 'investment', 'cash'].includes(curr.type)) {
-                        return acc + curr.balance;
-                    }
-                    return acc;
-                }, 0);
-                setDailyAllowance(Math.max(0, total / 30));
-
-                // ----------------------------------------------------
-                // AUDITOR LOGIC: Calculate Nearest Invoice Date
-                // ----------------------------------------------------
                 const creditAccounts = data.filter(a => a.type === 'credit' || a.closing_day);
                 if (creditAccounts.length > 0) {
                     const today = new Date();
@@ -251,6 +220,26 @@ export default function DashboardPage() {
             }
         } catch (error) {
             console.error('Erro ao carregar contas:', error);
+        }
+    };
+
+    const loadPockets = async (userId: string) => {
+        try {
+            const { data, error } = await supabase
+                .from('pockets')
+                .select('current_balance')
+                .eq('user_id', userId);
+
+            if (error) throw error;
+
+            const totalPockets = data
+                ? data.reduce((acc, curr) => acc + curr.current_balance, 0)
+                : 0;
+
+            setDailyAllowance(totalPockets);
+
+        } catch (error) {
+            console.error('Erro ao carregar pockets:', error);
         }
     };
 
@@ -314,13 +303,74 @@ export default function DashboardPage() {
                     .eq('id', transaction.account_id);
             }
 
+            // 4. Update Pocket Balance (Refund)
+            // Se a transação estava ligada a um pocket, devolvemos o dinheiro ao pocket
+            if (transaction.pocket_id) {
+                const { data: pocket } = await supabase
+                    .from('pockets')
+                    .select('current_balance')
+                    .eq('id', transaction.pocket_id)
+                    .single();
+
+                if (pocket) {
+                    // Se era despesa, devolvemos (soma). Se era renda, tiramos (subtrai).
+                    // Budget Logic: Expense reduces balance. Deleting expense increases balance.
+                    const refundAmount = transaction.type === 'expense' ? transaction.amount : -transaction.amount;
+                    await supabase
+                        .from('pockets')
+                        .update({ current_balance: pocket.current_balance + refundAmount })
+                        .eq('id', transaction.pocket_id);
+                }
+            }
+
             setTransactions(transactions.filter(t => t.id !== id));
             setUpdateTrigger(prev => prev + 1);
-            if (userId) loadAccounts(userId);
+            if (userId) {
+                loadAccounts(userId);
+                loadPockets(userId); // Refresh pockets UI
+            }
         } else {
             console.error('Erro ao deletar transação:', error);
             alert('Erro ao deletar transação');
         }
+    };
+
+    const checkUser = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            router.push('/login');
+            return;
+        }
+
+        setUserId(session.user.id);
+
+        // Load user profile
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, avatar_url')
+            .eq('id', session.user.id)
+            .single();
+
+        if (profile) {
+            setUserName(profile.full_name || '');
+            setAvatarUrl(profile.avatar_url || '');
+        }
+
+        // Check for Recurrences
+        checkAndGenerateRecurrences(session.user.id).then((result) => {
+            if (result.success && result.count && result.count > 0) {
+                loadTransactions(session.user.id, selectedAccountId || 'all');
+                loadAccounts(session.user.id);
+            }
+        });
+
+        // Carregar dados iniciais
+        await loadAccounts(session.user.id);
+        loadPockets(session.user.id); // Load Pockets Sum
+        loadTransactions(session.user.id, 'all');
+        loadWishlist(session.user.id);
+
+        setLoading(false);
     };
 
     if (loading) return <div className="p-8 text-center animate-pulse text-muted-foreground">Iniciando protocolo...</div>;
@@ -329,6 +379,7 @@ export default function DashboardPage() {
         <div className="min-h-screen pb-16 max-w-md mx-auto bg-background selection:bg-emerald-500/30">
             {/* THE HEADER: IDENTITY */}
             <header className="flex justify-between items-center p-6 bg-transparent">
+                {/* ... existing header content ... */}
                 <div className="flex items-center gap-3">
                     <div>
                         <h1 className="font-bold text-lg tracking-tight">The Order</h1>
@@ -363,6 +414,7 @@ export default function DashboardPage() {
                             accounts={accounts}
                             onTransactionAdded={() => {
                                 loadAccounts(userId);
+                                loadPockets(userId); // Refresh pockets
                                 if (userId && selectedAccountId) {
                                     loadTransactions(userId, selectedAccountId);
                                     loadWishlist(userId);
@@ -374,6 +426,7 @@ export default function DashboardPage() {
                 )}
 
                 {/* SECTION 2: VAULT CONTEXT (WIDGET STYLE) */}
+                {/* ... existing sections ... */}
                 {userId && (
                     <section className="relative animate-in slide-in-from-bottom-5 duration-700 delay-100">
                         <AccountCarousel
@@ -390,7 +443,6 @@ export default function DashboardPage() {
                     </section>
                 )}
 
-                {/* SECTION 3: OPERATIONS MUDULES */}
                 {userId && (
                     <section className="animate-in slide-in-from-bottom-5 duration-700 delay-200">
                         <div className="flex items-center gap-2 mb-3">
@@ -453,6 +505,19 @@ export default function DashboardPage() {
                     userId={userId}
                     accounts={accounts}
                     onPaymentComplete={() => loadAccounts(userId)}
+                />
+            )}
+
+            {/* Recurrence Modal */}
+            {userId && (
+                <CreateRecurrenceModal
+                    isOpen={showRecurrenceModal}
+                    onClose={() => setShowRecurrenceModal(false)}
+                    userId={userId}
+                    onComplete={() => {
+                        loadTransactions(userId, selectedAccountId || 'all');
+                        loadAccounts(userId);
+                    }}
                 />
             )}
         </div>

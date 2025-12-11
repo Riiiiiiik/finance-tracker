@@ -71,9 +71,19 @@ export default function CreatePocketModal({ isOpen, onClose, onCreated, initialD
 
             if (initialData) {
                 // Update existing pocket
+                const newGoal = parseFloat(amount.replace(',', '.'));
+                const goalDiff = newGoal - initialData.goal_amount;
+
+                const updatePayload: any = { ...pocketData };
+
+                // If limit changed, update balance by the same delta to preserve "amount spent" logic
+                if (goalDiff !== 0) {
+                    updatePayload.current_balance = initialData.current_balance + goalDiff;
+                }
+
                 const { error: updateError } = await supabase
                     .from('pockets')
-                    .update(pocketData)
+                    .update(updatePayload)
                     .eq('id', initialData.id);
                 error = updateError;
             } else {
@@ -82,7 +92,7 @@ export default function CreatePocketModal({ isOpen, onClose, onCreated, initialD
                     .from('pockets')
                     .insert({
                         ...pocketData,
-                        current_balance: 0
+                        current_balance: pocketData.goal_amount // Initialize with full budget available
                     });
                 error = insertError;
             }
@@ -133,7 +143,7 @@ export default function CreatePocketModal({ isOpen, onClose, onCreated, initialD
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             placeholder="0"
-                            className="bg-transparent text-6xl font-bold w-48 text-center outline-none placeholder:text-gray-800 font-mono"
+                            className="bg-transparent text-6xl font-bold w-48 text-center outline-none placeholder:text-gray-800 font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             autoFocus
                         />
                     </div>
@@ -158,8 +168,8 @@ export default function CreatePocketModal({ isOpen, onClose, onCreated, initialD
                                 key={p.id}
                                 onClick={() => setSelectedIcon(p.id)}
                                 className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${selectedIcon === p.id
-                                        ? 'bg-[#FFD659] border-[#FFD659] text-black shadow-[0_0_15px_rgba(255,214,89,0.4)]'
-                                        : 'bg-[#09090B] border-[#333] text-gray-400 hover:bg-[#222]'
+                                    ? 'bg-[#FFD659] border-[#FFD659] text-black shadow-[0_0_15px_rgba(255,214,89,0.4)]'
+                                    : 'bg-[#09090B] border-[#333] text-gray-400 hover:bg-[#222]'
                                     }`}
                             >
                                 {p.icon}

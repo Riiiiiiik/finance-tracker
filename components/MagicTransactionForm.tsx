@@ -5,7 +5,7 @@ import { Wand2, Sparkles, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { parseSmartInput } from '@/lib/smartParser';
 import { motion, AnimatePresence } from 'framer-motion';
 import TransactionPreviewCard from './TransactionPreviewCard';
-import { supabase, Account } from '@/lib/supabase';
+import { supabase, Account, Pocket } from '@/lib/supabase';
 import MonkIcon, { monkColors } from './MonkIcon';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -109,6 +109,40 @@ export default function MagicTransactionForm({
     const [showMethodSelector, setShowMethodSelector] = useState(false);
     const [pendingAccount, setPendingAccount] = useState<any>(null);
 
+    // Recurrence State
+    const [isRecurrenceMode, setIsRecurrenceMode] = useState(false);
+    const [recurrenceFreq, setRecurrenceFreq] = useState<'monthly' | 'weekly'>('monthly');
+    const [recurrenceLimit, setRecurrenceLimit] = useState<string>(''); // Empty = Infinite
+
+    // Temp state for Method Selector (Installments)
+    const [tempInstallments, setTempInstallments] = useState<number>(1);
+
+    // Pockets State
+    const [pockets, setPockets] = useState<Pocket[]>([]);
+    const [selectedPocketId, setSelectedPocketId] = useState<string | null>(null);
+
+    // Load Pockets
+    useEffect(() => {
+        if (!userId) return;
+        const fetchPockets = async () => {
+            const { data } = await supabase
+                .from('pockets')
+                .select('*')
+                .eq('user_id', userId)
+                .order('name');
+            if (data) setPockets(data);
+        };
+        fetchPockets();
+    }, [userId]);
+
+    useEffect(() => {
+        if (parsedData?.installments) {
+            setTempInstallments(parsedData.installments);
+        } else {
+            setTempInstallments(1);
+        }
+    }, [parsedData]);
+
     const handleConfirm = async () => {
         if (!parsedData || !parsedData.amount || !userId) return;
 
@@ -145,6 +179,7 @@ export default function MagicTransactionForm({
             // Se for conta corrente (checking) E tiver limite definido E for despesa
             if (accountData.type === 'checking' && accountData.limit !== null && parsedData.type === 'expense') {
                 setPendingAccount(accountData);
+                setTempInstallments(parsedData.installments || 1);
                 setShowMethodSelector(true);
                 setIsSubmitting(false); // Pausa o submit
                 return; // Aguarda escolha do usuário
@@ -167,11 +202,52 @@ export default function MagicTransactionForm({
 
         try {
             const amount = parseFloat(parsedData.amount);
-            const installments = parsedData.installments || 1;
+
+            // Use tempInstallments if we are in the method selector flow (implied by method being set), otherwise parsedData
+            const installments = method ? tempInstallments : (parsedData.installments || 1);
             const isInstallment = installments > 1;
 
             // Gerar Group ID se for parcelado
             const groupId = isInstallment ? crypto.randomUUID() : null;
+
+            let recurrenceId = null;
+            let scheduledDay = new Date().getDate();
+
+            // 0. CRIAR REGRA DE RECORRÊNCIA (SE ATIVADO)
+            if (isRecurrenceMode) {
+                // Calcular dia de cobrança baseado na data da transação
+                const transactionDateObj = new Date(parsedData.date || new Date());
+                if (parsedData.date) {
+                    const parts = parsedData.date.split('-');
+                    if (parts.length === 3) scheduledDay = parseInt(parts[2]);
+                } else {
+                    scheduledDay = transactionDateObj.getDate();
+                }
+
+                // Parse limit
+                const limitInt = recurrenceLimit ? parseInt(recurrenceLimit) : null;
+
+                const { data: recurrenceData, error: recurrenceError } = await supabase
+                    .from('recurrences')
+                    .insert({
+                        user_id: userId,
+                        name: parsedData.description,
+                        amount: amount, // Valor base da recorrência
+                        type: parsedData.type,
+                        category: parsedData.category,
+                        frequency: recurrenceFreq,
+                        due_day: scheduledDay,
+                        total_occurrences: limitInt,
+                        start_date: parsedData.date || new Date().toISOString().split('T')[0],
+                        last_generated: parsedData.date || new Date().toISOString().split('T')[0], // Já marcamos como gerada hoje
+                        active: true
+                    })
+                    .select('id')
+                    .single();
+
+                if (recurrenceError) throw recurrenceError;
+                recurrenceId = recurrenceData.id;
+            }
 
             let status = 'posted';
             let isCreditPurchase = false;
@@ -234,7 +310,9 @@ export default function MagicTransactionForm({
                     invoice_month: currentInvoiceMonth,
                     installments_count: installments,
                     installment_number: i + 1,
-                    group_id: groupId
+                    group_id: groupId,
+                    recurrence_id: recurrenceId, // Linkar à recorrência se houver
+                    pocket_id: selectedPocketId // Linkar ao pocket se selecionado
                 });
             }
 
@@ -267,11 +345,35 @@ export default function MagicTransactionForm({
                 await supabase.from('accounts').update({ balance: accountData.balance + balanceChange }).eq('id', accountData.id);
             }
 
+            // 4. Update Pocket Balance (Subtract if Expense, Add if Income?)
+            // Logic: Budget logic per user request. "Expense" subtracts "Available" (which is current_balance).
+            // Actually, simply deducting the expense from current_balance works for budget logic.
+            if (selectedPocketId && parsedData.type === 'expense') {
+                // Fetch current pocket balance first to be safe or use what we have? 
+                // Better to do a stored procedure or atomic update, but simple update is fine for MVP.
+                // We need to fetch the LATEST pocket balance to avoid race conditions?
+                // For now, simple decrement.
+                const { data: pocketData } = await supabase.from('pockets').select('current_balance').eq('id', selectedPocketId).single();
+                if (pocketData) {
+                    await supabase.from('pockets').update({
+                        current_balance: pocketData.current_balance - amount
+                    }).eq('id', selectedPocketId);
+                }
+            }
+
             // Sucesso!
-            setFeedback({ type: 'success', message: isInstallment ? `Compra parcelada em ${installments}x criada!` : 'Transação adicionada com sucesso!' });
+            const successMessage = isRecurrenceMode
+                ? `Repetição definida para todo dia ${scheduledDay}!`
+                : (isInstallment ? `Compra parcelada em ${installments}x criada!` : 'Transação adicionada com sucesso!');
+
+            setFeedback({ type: 'success', message: successMessage });
             setSmartInput('');
             setParsedData(null);
             setIsFocused(false);
+            setIsRecurrenceMode(false); // Reset recurrence toggle
+            setRecurrenceLimit(''); // Reset limit
+            setTempInstallments(1); // Reset installments
+            setSelectedPocketId(null); // Reset pocket
             onTransactionAdded();
             setTimeout(() => setFeedback(null), 3000);
 
@@ -438,10 +540,134 @@ export default function MagicTransactionForm({
                                             category={parsedData.category}
                                             date={parsedData.date || new Date().toISOString().split('T')[0]}
                                             installments={parsedData.installments}
+                                            hideInstallments={isRecurrenceMode} // Hide installments if recurrence is active
                                             onUpdate={(updates) => {
-                                                setParsedData(prev => prev ? { ...prev, ...updates } : null);
+                                                setParsedData(prev => {
+                                                    if (!prev) return null;
+                                                    // If setting installments > 1, turn off recurrence
+                                                    if (updates.installments && updates.installments > 1 && isRecurrenceMode) {
+                                                        setIsRecurrenceMode(false);
+                                                    }
+                                                    return { ...prev, ...updates };
+                                                });
                                             }}
                                         >
+                                            {/* POCKET SELECTOR (Optional) */}
+                                            {!showMethodSelector && (
+                                                <div className="mb-4 px-1">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">Pocket (Opcional)</span>
+                                                        {selectedPocketId && (
+                                                            <button
+                                                                onClick={() => setSelectedPocketId(null)}
+                                                                className="text-[9px] text-zinc-600 hover:text-red-400 transition-colors"
+                                                            >
+                                                                (Remover)
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {pockets.length > 0 ? (
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {pockets.map(pocket => (
+                                                                <button
+                                                                    key={pocket.id}
+                                                                    onClick={() => setSelectedPocketId(pocket.id === selectedPocketId ? null : pocket.id)}
+                                                                    className={`
+                                                                        px-2.5 py-1.5 rounded-sm border text-[10px] uppercase tracking-wider font-mono transition-all
+                                                                        ${selectedPocketId === pocket.id
+                                                                            ? `border-${pocket.color || 'yellow'}-500/50 bg-${pocket.color || 'yellow'}-500/10 text-${pocket.color || 'yellow'}-500`
+                                                                            : 'border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
+                                                                        }
+                                                                    `}
+                                                                >
+                                                                    {pocket.name}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-[10px] text-zinc-700 italic">Nenhum pocket disponível.</span>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* RECURRENCE TOGGLE (Aesthetic Match) */}
+                                            {/* Only show if parsedData has no installments (or is 1) and not in method selector */}
+                                            {!showMethodSelector && (!parsedData.installments || parsedData.installments === 1) && (
+                                                <div className="mb-4">
+                                                    <button
+                                                        onClick={() => {
+                                                            const newMode = !isRecurrenceMode;
+                                                            setIsRecurrenceMode(newMode);
+                                                            // If turning on recurrence, reset installments to 1
+                                                            if (newMode) {
+                                                                setParsedData(prev => prev ? { ...prev, installments: 1 } : null);
+                                                                setTempInstallments(1);
+                                                            }
+                                                        }}
+                                                        className={`w-full flex items-center justify-between p-2 rounded-sm border transition-all duration-200 ${isRecurrenceMode ? 'bg-zinc-800/50 border-emerald-500/30 text-emerald-500' : 'bg-transparent border-transparent text-zinc-600 hover:text-zinc-400'}`}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <div className={`w-3 h-3 rounded flex items-center justify-center border ${isRecurrenceMode ? 'border-emerald-500 bg-emerald-500/20' : 'border-zinc-700'}`}>
+                                                                {isRecurrenceMode && <Check className="w-2 h-2" />}
+                                                            </div>
+                                                            <span className="text-[10px] uppercase tracking-widest font-mono">Repetir Transação</span>
+                                                        </div>
+                                                        {isRecurrenceMode && <span className="text-[9px] font-serif italic text-emerald-400">Ativado</span>}
+                                                    </button>
+
+                                                    {/* Recurrence Options */}
+                                                    <AnimatePresence>
+                                                        {isRecurrenceMode && (
+                                                            <motion.div
+                                                                initial={{ height: 0, opacity: 0 }}
+                                                                animate={{ height: 'auto', opacity: 1 }}
+                                                                exit={{ height: 0, opacity: 0 }}
+                                                                className="overflow-hidden"
+                                                            >
+                                                                <div className="pt-2 pl-6 pr-2">
+                                                                    <div className="flex items-stretch gap-2 mb-1">
+                                                                        {/* Frequency */}
+                                                                        <div className="flex flex-1 gap-1">
+                                                                            <button
+                                                                                onClick={() => setRecurrenceFreq('monthly')}
+                                                                                className={`flex-1 py-1.5 text-[9px] uppercase tracking-wider font-mono border rounded-sm transition-colors ${recurrenceFreq === 'monthly' ? 'bg-emerald-900/20 border-emerald-900/50 text-emerald-500' : 'border-zinc-800 text-zinc-600 hover:border-zinc-700'}`}
+                                                                            >
+                                                                                Mensal
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => setRecurrenceFreq('weekly')}
+                                                                                className={`flex-1 py-1.5 text-[9px] uppercase tracking-wider font-mono border rounded-sm transition-colors ${recurrenceFreq === 'weekly' ? 'bg-emerald-900/20 border-emerald-900/50 text-emerald-500' : 'border-zinc-800 text-zinc-600 hover:border-zinc-700'}`}
+                                                                            >
+                                                                                Semanal
+                                                                            </button>
+                                                                        </div>
+
+                                                                        {/* Recurrence Limit (Count) */}
+                                                                        <div className="flex flex-[0.8] items-center gap-1 border border-zinc-800 rounded-sm px-2 bg-zinc-900/30">
+                                                                            <span className="text-[9px] text-zinc-500 uppercase font-mono whitespace-nowrap">Vezes:</span>
+                                                                            <input
+                                                                                type="number"
+                                                                                min="1"
+                                                                                max="999"
+                                                                                placeholder="∞"
+                                                                                value={recurrenceLimit}
+                                                                                onChange={(e) => setRecurrenceLimit(e.target.value)}
+                                                                                className="w-full bg-transparent text-right text-xs font-mono text-zinc-300 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-zinc-600"
+                                                                            />
+                                                                            <span className="text-[9px] text-zinc-600 font-mono">x</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <p className="text-[9px] text-zinc-500 font-mono text-center pt-0.5">
+                                                                        {recurrenceFreq === 'monthly' ? (recurrenceLimit ? `Por ${recurrenceLimit} meses` : 'Todo mês (Indeterminado)') : (recurrenceLimit ? `Por ${recurrenceLimit} semanas` : 'Toda semana (Indeterminado)')}
+                                                                    </p>
+                                                                </div>
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
+                                            )}
+
                                             {/* INLINE METHOD SELECTOR or CONFIRM BUTTON */}
                                             {showMethodSelector ? (
                                                 <motion.div
@@ -452,7 +678,26 @@ export default function MagicTransactionForm({
                                                 >
                                                     <div className="p-2 border-b border-[#27272a] text-center">
                                                         <h4 className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase">Método de Alocação</h4>
-                                                        <p className="text-[9px] text-zinc-600 font-serif italic">&quot;A escolha define o compromisso.&quot;</p>
+                                                    </div>
+
+                                                    {/* Installments Input */}
+                                                    <div className="px-3 pt-3 pb-1 flex items-center justify-between">
+                                                        <span className="text-[10px] text-zinc-400 font-serif italic">Parcelar em:</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => setTempInstallments(Math.max(1, tempInstallments - 1))}
+                                                                className="w-6 h-6 flex items-center justify-center rounded-sm border border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
+                                                            >
+                                                                -
+                                                            </button>
+                                                            <span className="text-xs font-mono text-emerald-500 w-8 text-center">{tempInstallments}x</span>
+                                                            <button
+                                                                onClick={() => setTempInstallments(Math.min(18, tempInstallments + 1))}
+                                                                className="w-6 h-6 flex items-center justify-center rounded-sm border border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
+                                                            >
+                                                                +
+                                                            </button>
+                                                        </div>
                                                     </div>
 
                                                     <div className="p-1.5 grid grid-cols-2 gap-1.5">
@@ -478,7 +723,9 @@ export default function MagicTransactionForm({
                                                             <div className="relative z-10 flex flex-col gap-0.5">
                                                                 <span className="text-[9px] font-mono text-[#5c2222] group-hover:text-[#7f2e2e] transition-colors">Opção 02</span>
                                                                 <span className="font-serif italic text-base md:text-lg text-[#8b4343] group-hover:text-[#c24141]">Crédito</span>
-                                                                <span className="text-[8px] text-zinc-600 uppercase tracking-wide">Compromisso Futuro</span>
+                                                                <span className="text-[8px] text-zinc-600 uppercase tracking-wide">
+                                                                    {tempInstallments > 1 ? `Compromisso em ${tempInstallments}x` : 'Compromisso Futuro'}
+                                                                </span>
                                                             </div>
                                                             {/* Decorative Corner */}
                                                             <div className="absolute top-0 right-0 p-0.5">

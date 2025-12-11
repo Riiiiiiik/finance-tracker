@@ -20,11 +20,29 @@ export type Transaction = {
     date: string;
     happiness_score?: number;
     account_id?: string;
-    status?: 'pending' | 'posted' | 'paid';
+    status?: 'pending' | 'completed' | 'paid' | 'cancelled';
+    recurrence_id?: string;
     invoice_month?: string;
     installments_count?: number;
     installment_number?: number;
     group_id?: string;
+    pocket_id?: string; // Link to a budget pocket
+};
+
+export type Recurrence = {
+    id: string;
+    user_id: string;
+    name: string;
+    amount: number;
+    type: 'income' | 'expense';
+    category: string;
+    frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+    due_day?: number;
+    start_date: string;
+    end_date?: string;
+    last_generated?: string;
+    active: boolean;
+    created_at: string;
 };
 
 export type WishlistItem = {

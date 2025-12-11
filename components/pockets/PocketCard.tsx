@@ -41,22 +41,22 @@ export default function PocketCard({ pocket, onAddMoney, onEdit, onDelete }: Poc
                         </div>
                         <div>
                             <h3 className="font-semibold text-lg leading-tight">{pocket.name}</h3>
-                            <p className="text-xs text-muted-foreground">Meta: R$ {pocket.goal_amount.toFixed(2)}</p>
+                            <p className="text-xs text-muted-foreground">Limite: R$ {pocket.goal_amount.toFixed(2)}</p>
                         </div>
                     </div>
                 </div>
 
                 <div className="text-right absolute top-5 right-5 group-hover:opacity-0 transition-opacity">
                     <p className="text-2xl font-bold">R$ {pocket.current_balance.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">{percent.toFixed(1)}%</p>
+                    <p className="text-xs text-muted-foreground">Disponível</p>
                 </div>
-                {/* Balance shows on left when actions appear? No, let's keep it simple. 
-                    Actually, the actions overlay the balance if I'm not careful.
-                    Let's adjust the layout slightly.
-                */}
+
                 <div className="flex justify-between items-end mb-2 mt-4">
-                    <p className="text-2xl font-bold">R$ {pocket.current_balance.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">{percent.toFixed(1)}%</p>
+                    <div>
+                        <p className="text-2xl font-bold">R$ {pocket.current_balance.toFixed(2)}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Disponível</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{percent.toFixed(0)}% restante</p>
                 </div>
 
 
@@ -71,7 +71,7 @@ export default function PocketCard({ pocket, onAddMoney, onEdit, onDelete }: Poc
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
                         <Target className="w-3 h-3" />
-                        <span>Falta R$ {needed.toFixed(2)}</span>
+                        <span>Gasto: R$ {(pocket.goal_amount - pocket.current_balance).toFixed(2)}</span>
                     </div>
                     {pocket.target_date && (
                         <div className="flex items-center gap-1">

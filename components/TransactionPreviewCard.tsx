@@ -30,7 +30,8 @@ interface TransactionPreviewCardProps {
     category: string;
     date?: string;
     installments?: number;
-    onUpdate: (data: { amount?: string; type?: 'income' | 'expense'; date?: string; category?: string; installments?: number }) => void;
+    hideInstallments?: boolean; // New prop
+    onUpdate: (data: { amount?: string; description?: string; type?: 'income' | 'expense'; date?: string; category?: string; installments?: number }) => void;
     children?: React.ReactNode;
 }
 
@@ -57,17 +58,20 @@ export default function TransactionPreviewCard({
     category,
     date,
     installments = 1,
+    hideInstallments = false, // Default to false
     onUpdate,
     children
 }: TransactionPreviewCardProps) {
     // Estados de Edição
     const [isEditingAmount, setIsEditingAmount] = useState(false);
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
     const [isEditingDate, setIsEditingDate] = useState(false);
     const [isEditingCategory, setIsEditingCategory] = useState(false);
     const [isEditingInstallments, setIsEditingInstallments] = useState(false);
 
     // Estados Temporários
     const [tempAmount, setTempAmount] = useState(amount);
+    const [tempDescription, setTempDescription] = useState(description);
     const [tempType, setTempType] = useState(type);
     const [tempDate, setTempDate] = useState(date || new Date().toISOString().split('T')[0]);
     const [searchCategory, setSearchCategory] = useState('');
@@ -75,6 +79,7 @@ export default function TransactionPreviewCard({
 
     // Refs
     const amountInputRef = useRef<HTMLInputElement>(null);
+    const descriptionInputRef = useRef<HTMLInputElement>(null);
     const dateInputRef = useRef<HTMLInputElement>(null);
     const categoryInputRef = useRef<HTMLInputElement>(null);
     const installmentsInputRef = useRef<HTMLInputElement>(null);
@@ -98,6 +103,14 @@ export default function TransactionPreviewCard({
         }
     }, [isEditingAmount]);
 
+    // Focar no input quando abrir edição de descrição
+    useEffect(() => {
+        if (isEditingDescription && descriptionInputRef.current) {
+            descriptionInputRef.current.focus();
+            descriptionInputRef.current.select();
+        }
+    }, [isEditingDescription]);
+
     // Focar no input quando abrir edição de data
     useEffect(() => {
         if (isEditingDate && dateInputRef.current) {
@@ -116,13 +129,14 @@ export default function TransactionPreviewCard({
     useEffect(() => {
         if (isEditingInstallments && installmentsInputRef.current) {
             installmentsInputRef.current.focus();
-            installmentsInputRef.current.select();
+            // Select element doesn't have .select(), so we remove that call
         }
     }, [isEditingInstallments]);
 
     // Sincronizar estados temporários com props
     useEffect(() => {
         setTempAmount(amount);
+        setTempDescription(description);
         setTempType(type);
         setTempDate(date || new Date().toISOString().split('T')[0]);
         setTempInstallments(installments);
@@ -133,6 +147,13 @@ export default function TransactionPreviewCard({
         if (!tempAmount || isNaN(parseFloat(tempAmount))) return;
         onUpdate({ amount: tempAmount, type: tempType });
         setIsEditingAmount(false);
+    };
+
+    // Salvar Descrição
+    const handleSaveDescription = () => {
+        if (!tempDescription.trim()) return;
+        onUpdate({ description: tempDescription });
+        setIsEditingDescription(false);
     };
 
     // Salvar Data
@@ -283,9 +304,24 @@ export default function TransactionPreviewCard({
                     {/* Alvo / Descrição */}
                     <div className="flex items-baseline gap-2 text-xs md:text-sm font-mono text-zinc-400">
                         <span className="text-zinc-600 select-none">{'>'} ALVO:</span>
-                        <span className="text-zinc-300 font-bold truncate">
-                            {description || 'N/A'}
-                        </span>
+                        {!isEditingDescription ? (
+                            <button
+                                onClick={() => setIsEditingDescription(true)}
+                                className="text-zinc-300 font-bold truncate hover:text-zinc-100 transition-colors text-left"
+                            >
+                                {description || 'N/A'}
+                            </button>
+                        ) : (
+                            <input
+                                ref={descriptionInputRef}
+                                type="text"
+                                value={tempDescription}
+                                onChange={(e) => setTempDescription(e.target.value)}
+                                onBlur={handleSaveDescription}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSaveDescription()}
+                                className="bg-transparent outline-none text-zinc-100 font-bold border-b border-zinc-700 focus:border-emerald-500 w-full"
+                            />
+                        )}
                     </div>
 
                     {/* Linha de Dados: Data | Categoria | Parcelas */}
@@ -350,11 +386,56 @@ export default function TransactionPreviewCard({
                             </AnimatePresence>
                         </div>
 
-                        {type === 'expense' && installments > 1 && (
+                        {type === 'expense' && !hideInstallments && (
                             <>
                                 <span className="text-zinc-800">|</span>
-                                <span className="text-zinc-700 select-none">{'>'} PARC:</span>
-                                <span className="text-zinc-400">{installments}x</span>
+                                <button
+                                    onClick={() => setIsEditingInstallments(true)}
+                                    className="hover:text-zinc-300 transition-colors text-left flex items-center gap-1"
+                                >
+                                    <span className="text-zinc-700 select-none">{'>'} PARC:</span>
+                                    {isEditingInstallments ? (
+                                        <div className="flex items-center gap-1 bg-[#09090b] rounded-sm border-b border-zinc-700">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const newVal = Math.max(1, tempInstallments - 1);
+                                                    setTempInstallments(newVal);
+                                                    onUpdate({ installments: newVal });
+                                                }}
+                                                className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-zinc-200 active:scale-95 transition-all text-[10px]"
+                                            >
+                                                -
+                                            </button>
+
+                                            <input
+                                                ref={installmentsInputRef}
+                                                type="text"
+                                                inputMode="none"
+                                                pattern="[0-9]*"
+                                                value={tempInstallments}
+                                                readOnly
+                                                className="bg-transparent outline-none w-6 text-center text-zinc-200 text-xs font-mono cursor-default select-none"
+                                            />
+
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const newVal = Math.min(18, tempInstallments + 1);
+                                                    setTempInstallments(newVal);
+                                                    onUpdate({ installments: newVal });
+                                                }}
+                                                className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-zinc-200 active:scale-95 transition-all text-[10px]"
+                                            >
+                                                +
+                                            </button>
+
+                                            <span className="text-[8px] text-zinc-600 mr-1">x</span>
+                                        </div>
+                                    ) : (
+                                        <span className="text-zinc-400">{installments > 1 ? `${installments}x` : '1x'}</span>
+                                    )}
+                                </button>
                             </>
                         )}
                     </div>
