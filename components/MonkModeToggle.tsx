@@ -27,7 +27,7 @@ export default function MonkModeToggle() {
             onClick={toggleMonk}
             className={`
                 fixed top-4 right-4 z-50 
-                flex items-center gap-3 px-4 py-2 
+                flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 
                 border rounded-full transition-all duration-500 group
                 ${isMonk
                     ? 'bg-emerald-500/10 border-emerald-500/50 text-white shadow-[0_0_20px_rgba(16,185,129,0.2)]'
@@ -50,9 +50,9 @@ export default function MonkModeToggle() {
                 )}
             </div>
 
-            {/* TEXT LABEL */}
+            {/* TEXT LABEL - HIDDEN ON MOBILE */}
             <span className={`
-                text-[10px] font-mono font-bold tracking-[0.2em] uppercase transition-all duration-300
+                hidden md:inline text-[10px] font-mono font-bold tracking-[0.2em] uppercase transition-all duration-300
                 ${isMonk ? '[text-shadow:0_0_10px_rgba(16,185,129,0.5)]' : ''}
             `}>
                 {isMonk ? '>_ MODO: ATIVO' : '>_ MODO: ESPERA'}
