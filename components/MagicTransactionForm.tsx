@@ -284,221 +284,263 @@ export default function MagicTransactionForm({
         }
     };
 
+    const [isOpen, setIsOpen] = useState(false);
+
+    // Auto-open if OCR action
+    useEffect(() => {
+        if (searchParams && searchParams.get('action') === 'scan') {
+            setIsOpen(true);
+        }
+    }, [searchParams]);
+
+    // Close when clicking outside (using the overlay)
+    const handleClose = () => {
+        setIsOpen(false);
+        setIsFocused(false);
+    }
+
     const hasData = parsedData && parsedData.amount;
-    const showOverlay = isFocused || smartInput.length > 0 || showMethodSelector;
+    const showOverlay = isOpen;
 
     return (
         <>
-            {/* Focus Overlay */}
+            {/* ASSISTIVE TOUCH BUTTON (Floating) - Visible only when CLOSED */}
             <AnimatePresence>
-                {showOverlay && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-background/80 backdrop-blur-md z-40 transition-all duration-500"
+                {!isOpen && (
+                    <motion.button
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        whileHover={{ scale: 1.1, opacity: 1 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={() => {
-                            if (!showMethodSelector) setIsFocused(false);
+                            setIsOpen(true);
+                            // Auto-focus logic can go here if needed, but better let user tap input to avoid jumping keyboard
                         }}
-                    />
+                        className="fixed bottom-24 right-6 z-[60] w-14 h-14 rounded-full bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 shadow-2xl flex items-center justify-center text-emerald-500 hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all group"
+                    >
+                        <Sparkles className="w-6 h-6 animate-pulse group-hover:animate-none" />
+                        <div className="absolute inset-0 rounded-full bg-emerald-400/20 blur-xl opacity-0 group-hover:opacity-50 transition-opacity" />
+                    </motion.button>
                 )}
             </AnimatePresence>
 
-            <div className={`relative transition-all duration-500 ${showOverlay ? 'z-[50] md:z-[70] md:scale-105' : 'z-10'}`}>
-                {/* Hero Input Block - REFACTORED FOR MINIMALISM */}
-                <div className="mb-2">
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="relative"
-                    >
-                        <div className="relative group">
-                            {/* Icon inside input */}
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                <Sparkles className={`h-4 w-4 text-emerald-500/80 transition-opacity ${smartInput ? 'opacity-100' : 'opacity-50'}`} />
+            {/* FULL INTERFACE - Visible only when OPEN */}
+            <AnimatePresence>
+                {isOpen && (
+                    <>
+                        {/* Overlay Backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-background/90 backdrop-blur-lg z-50 transition-all duration-500"
+                            onClick={handleClose}
+                        />
+
+                        {/* Centered Input Container */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+                            className="fixed inset-x-4 top-24 md:top-32 md:max-w-xl md:mx-auto z-[60]"
+                        >
+                            {/* Close Button */}
+                            <button
+                                onClick={handleClose}
+                                className="absolute -top-12 right-0 p-2 text-white/50 hover:text-white transition-colors"
+                            >
+                                <span className="sr-only">Fechar</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+
+                            {/* Hero Input Block - REFACTORED FOR MINIMALISM */}
+                            <div className="mb-2">
+                                <div className="relative group">
+                                    {/* Icon inside input */}
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                        <Sparkles className={`h-4 w-4 text-emerald-500/80 transition-opacity ${smartInput ? 'opacity-100' : 'opacity-50'}`} />
+                                    </div>
+
+                                    <input
+                                        type="text"
+                                        autoFocus
+                                        enterKeyHint="done"
+                                        inputMode="text"
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        value={smartInput}
+                                        onChange={(e) => setSmartInput(e.target.value)}
+                                        onFocus={() => setIsFocused(true)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !isSubmitting) {
+                                                e.preventDefault();
+                                                if (hasData) {
+                                                    handleConfirm();
+                                                } else {
+                                                    handleParse();
+                                                }
+                                                // No mobile blur check needed here as layout is fixed
+                                            }
+                                        }}
+                                        placeholder="Digite o comando..."
+                                        className={`
+                                            w-full pl-11 pr-4 py-4 text-base md:text-lg font-mono tracking-wide rounded-2xl
+                                            bg-black/50 border border-white/10 text-white shadow-2xl
+                                            focus:bg-black/70 focus:border-emerald-500/50 focus:shadow-[0_0_30px_rgba(16,185,129,0.15)]
+                                            placeholder:text-white/20 outline-none transition-all duration-300
+                                        `}
+                                        disabled={isSubmitting}
+                                    />
+
+                                    {/* Processing Indicator */}
+                                    <AnimatePresence>
+                                        {isProcessing && (
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                className="absolute inset-y-0 right-0 pr-4 flex items-center gap-2"
+                                            >
+                                                <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
                             </div>
 
-                            <input
-                                type="text"
-                                enterKeyHint="done"
-                                inputMode="text"
-                                autoComplete="off"
-                                autoCorrect="off"
-                                value={smartInput}
-                                onChange={(e) => setSmartInput(e.target.value)}
-                                onFocus={() => setIsFocused(true)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !isSubmitting) {
-                                        e.preventDefault();
-                                        if (hasData) {
-                                            handleConfirm();
-                                        } else {
-                                            handleParse();
-                                        }
-                                        if (window.innerWidth < 768) {
-                                            (e.target as HTMLElement).blur();
-                                        }
-                                    }
-                                }}
-                                placeholder="Aguardando comando..."
-                                className={`
-                                    w-full pl-11 pr-4 py-3 text-sm font-mono tracking-wide rounded-xl
-                                    bg-white/[0.03] border border-white/10 text-white
-                                    focus:bg-white/[0.05] focus:border-emerald-500/30 focus:shadow-[0_0_20px_rgba(16,185,129,0.1)]
-                                    placeholder:text-white/20 outline-none transition-all duration-300
-                                `}
-                                disabled={isSubmitting}
-                            />
-
-                            {/* Processing Indicator */}
+                            {/* Feedback Message */}
                             <AnimatePresence>
-                                {isProcessing && (
+                                {feedback && (
                                     <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="absolute inset-y-0 right-0 pr-4 flex items-center gap-2"
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className={`mb-3 p-2.5 rounded-xl flex items-center gap-2 text-xs md:text-sm font-medium ${feedback.type === 'success'
+                                            ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                            : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                                            }`}
                                     >
-                                        <Loader2 className="w-4 h-4 text-emerald-500 animate-spin" />
+                                        {feedback.type === 'success' ? <Check className="w-3 h-3 md:w-4 md:h-4" /> : <AlertCircle className="w-3 h-3 md:w-4 md:h-4" />}
+                                        {feedback.message}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                        </div>
-                    </motion.div>
-                </div>
 
-                {/* Feedback Message */}
-                <AnimatePresence>
-                    {feedback && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className={`mb-3 p-2.5 rounded-xl flex items-center gap-2 text-xs md:text-sm font-medium ${feedback.type === 'success'
-                                ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                                : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                                }`}
-                        >
-                            {feedback.type === 'success' ? <Check className="w-3 h-3 md:w-4 md:h-4" /> : <AlertCircle className="w-3 h-3 md:w-4 md:h-4" />}
-                            {feedback.message}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Preview Card */}
-                <AnimatePresence>
-                    {hasData && (
-                        <div className="mb-3">
-                            <TransactionPreviewCard
-                                amount={parsedData.amount}
-                                description={parsedData.description}
-                                type={parsedData.type}
-                                category={parsedData.category}
-                                date={parsedData.date || new Date().toISOString().split('T')[0]}
-                                installments={parsedData.installments}
-                                onUpdate={(updates) => {
-                                    setParsedData(prev => prev ? { ...prev, ...updates } : null);
-                                }}
-                            >
-                                {/* INLINE METHOD SELECTOR or CONFIRM BUTTON */}
-                                {showMethodSelector ? (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="bg-[#09090b] rounded-sm border border-[#27272a] overflow-hidden mt-2"
-                                    >
-                                        <div className="p-2 border-b border-[#27272a] text-center">
-                                            <h4 className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase">Método de Alocação</h4>
-                                            <p className="text-[9px] text-zinc-600 font-serif italic">&quot;A escolha define o compromisso.&quot;</p>
-                                        </div>
-
-                                        <div className="p-1.5 grid grid-cols-2 gap-1.5">
-                                            <button
-                                                onClick={() => finalizeTransaction(pendingAccount, 'debit')}
-                                                className="group relative p-2.5 rounded-sm border border-emerald-900/30 hover:border-emerald-500/50 hover:bg-emerald-900/10 transition-all text-left overflow-hidden"
-                                            >
-                                                <div className="relative z-10 flex flex-col gap-0.5">
-                                                    <span className="text-[9px] font-mono text-emerald-700 group-hover:text-emerald-500 transition-colors">Opção 01</span>
-                                                    <span className="font-serif italic text-base md:text-lg text-emerald-600 group-hover:text-emerald-400">Débito</span>
-                                                    <span className="text-[8px] text-zinc-600 uppercase tracking-wide">Liquidação Imediata</span>
-                                                </div>
-                                                {/* Decorative Corner */}
-                                                <div className="absolute top-0 right-0 p-0.5">
-                                                    <div className="w-1 h-1 bg-emerald-900/40 rounded-full" />
-                                                </div>
-                                            </button>
-
-                                            <button
-                                                onClick={() => finalizeTransaction(pendingAccount, 'credit')}
-                                                className="group relative p-2.5 rounded-sm border border-[#451a1a] hover:border-[#7f2e2e] hover:bg-[#2a0f0f] transition-all text-left overflow-hidden"
-                                            >
-                                                <div className="relative z-10 flex flex-col gap-0.5">
-                                                    <span className="text-[9px] font-mono text-[#5c2222] group-hover:text-[#7f2e2e] transition-colors">Opção 02</span>
-                                                    <span className="font-serif italic text-base md:text-lg text-[#8b4343] group-hover:text-[#c24141]">Crédito</span>
-                                                    <span className="text-[8px] text-zinc-600 uppercase tracking-wide">Compromisso Futuro</span>
-                                                </div>
-                                                {/* Decorative Corner */}
-                                                <div className="absolute top-0 right-0 p-0.5">
-                                                    <div className="w-1 h-1 bg-[#451a1a] rounded-full" />
-                                                </div>
-                                            </button>
-                                        </div>
-
-                                        <button
-                                            onClick={() => setShowMethodSelector(false)}
-                                            className="w-full text-[9px] font-mono text-zinc-600 hover:text-zinc-400 py-1.5 border-t border-[#27272a] hover:bg-[#27272a] transition-colors uppercase tracking-widest"
+                            {/* Preview Card */}
+                            <AnimatePresence>
+                                {hasData && (
+                                    <div className="mb-3">
+                                        <TransactionPreviewCard
+                                            amount={parsedData.amount}
+                                            description={parsedData.description}
+                                            type={parsedData.type}
+                                            category={parsedData.category}
+                                            date={parsedData.date || new Date().toISOString().split('T')[0]}
+                                            installments={parsedData.installments}
+                                            onUpdate={(updates) => {
+                                                setParsedData(prev => prev ? { ...prev, ...updates } : null);
+                                            }}
                                         >
-                                            [ Cancelar ]
-                                        </button>
-                                    </motion.div>
-                                ) : (
-                                    <>
-                                        {/* STOIC REFLECTION HINT */}
-                                        {parsedData.type === 'expense' ? (
-                                            <p className="text-[10px] text-zinc-600 text-center mb-1.5 italic font-serif opacity-60">
-                                                Isso é essencial?
-                                            </p>
-                                        ) : (
-                                            <p className="text-[10px] text-zinc-600 text-center mb-1.5 italic font-serif opacity-60">
-                                                Recurso com propósito.
-                                            </p>
-                                        )}
+                                            {/* INLINE METHOD SELECTOR or CONFIRM BUTTON */}
+                                            {showMethodSelector ? (
+                                                <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className="bg-[#09090b] rounded-sm border border-[#27272a] overflow-hidden mt-2"
+                                                >
+                                                    <div className="p-2 border-b border-[#27272a] text-center">
+                                                        <h4 className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase">Método de Alocação</h4>
+                                                        <p className="text-[9px] text-zinc-600 font-serif italic">&quot;A escolha define o compromisso.&quot;</p>
+                                                    </div>
 
-                                        <motion.button
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            whileHover={{ scale: 1.01 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={handleConfirm}
-                                            disabled={isSubmitting}
-                                            className={`
+                                                    <div className="p-1.5 grid grid-cols-2 gap-1.5">
+                                                        <button
+                                                            onClick={() => finalizeTransaction(pendingAccount, 'debit')}
+                                                            className="group relative p-2.5 rounded-sm border border-emerald-900/30 hover:border-emerald-500/50 hover:bg-emerald-900/10 transition-all text-left overflow-hidden"
+                                                        >
+                                                            <div className="relative z-10 flex flex-col gap-0.5">
+                                                                <span className="text-[9px] font-mono text-emerald-700 group-hover:text-emerald-500 transition-colors">Opção 01</span>
+                                                                <span className="font-serif italic text-base md:text-lg text-emerald-600 group-hover:text-emerald-400">Débito</span>
+                                                                <span className="text-[8px] text-zinc-600 uppercase tracking-wide">Liquidação Imediata</span>
+                                                            </div>
+                                                            {/* Decorative Corner */}
+                                                            <div className="absolute top-0 right-0 p-0.5">
+                                                                <div className="w-1 h-1 bg-emerald-900/40 rounded-full" />
+                                                            </div>
+                                                        </button>
+
+                                                        <button
+                                                            onClick={() => finalizeTransaction(pendingAccount, 'credit')}
+                                                            className="group relative p-2.5 rounded-sm border border-[#451a1a] hover:border-[#7f2e2e] hover:bg-[#2a0f0f] transition-all text-left overflow-hidden"
+                                                        >
+                                                            <div className="relative z-10 flex flex-col gap-0.5">
+                                                                <span className="text-[9px] font-mono text-[#5c2222] group-hover:text-[#7f2e2e] transition-colors">Opção 02</span>
+                                                                <span className="font-serif italic text-base md:text-lg text-[#8b4343] group-hover:text-[#c24141]">Crédito</span>
+                                                                <span className="text-[8px] text-zinc-600 uppercase tracking-wide">Compromisso Futuro</span>
+                                                            </div>
+                                                            {/* Decorative Corner */}
+                                                            <div className="absolute top-0 right-0 p-0.5">
+                                                                <div className="w-1 h-1 bg-[#451a1a] rounded-full" />
+                                                            </div>
+                                                        </button>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => setShowMethodSelector(false)}
+                                                        className="w-full text-[9px] font-mono text-zinc-600 hover:text-zinc-400 py-1.5 border-t border-[#27272a] hover:bg-[#27272a] transition-colors uppercase tracking-widest"
+                                                    >
+                                                        [ Cancelar ]
+                                                    </button>
+                                                </motion.div>
+                                            ) : (
+                                                <>
+                                                    {/* STOIC REFLECTION HINT */}
+                                                    {parsedData.type === 'expense' ? (
+                                                        <p className="text-[10px] text-zinc-600 text-center mb-1.5 italic font-serif opacity-60">
+                                                            Isso é essencial?
+                                                        </p>
+                                                    ) : (
+                                                        <p className="text-[10px] text-zinc-600 text-center mb-1.5 italic font-serif opacity-60">
+                                                            Recurso com propósito.
+                                                        </p>
+                                                    )}
+
+                                                    <motion.button
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        whileHover={{ scale: 1.01 }}
+                                                        whileTap={{ scale: 0.98 }}
+                                                        onClick={handleConfirm}
+                                                        disabled={isSubmitting}
+                                                        className={`
                                             w-full py-2.5 rounded-sm font-mono text-sm tracking-widest border transition-all duration-300
                                             ${parsedData.type === 'income'
-                                                    ? 'border-emerald-900/50 text-emerald-600 hover:bg-emerald-900/10 hover:border-emerald-500/30'
-                                                    : 'border-[#5c2222] text-[#c24141] hover:bg-[#2a0f0f] hover:border-[#7f2e2e]'
-                                                }
+                                                                ? 'border-emerald-900/50 text-emerald-600 hover:bg-emerald-900/10 hover:border-emerald-500/30'
+                                                                : 'border-[#5c2222] text-[#c24141] hover:bg-[#2a0f0f] hover:border-[#7f2e2e]'
+                                                            }
                                             ${isSubmitting ? 'opacity-50 cursor-wait' : ''}
                                         `}
-                                        >
-                                            {isSubmitting ? (
-                                                <span className="flex items-center justify-center gap-2">
-                                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                                    PROCESSANDO...
-                                                </span>
-                                            ) : (
-                                                <span>
-                                                    [ {parsedData.type === 'income' ? 'VALIDAR RECEBIMENTO' : 'VALIDAR ALOCAÇÃO'} ]
-                                                </span>
+                                                    >
+                                                        {isSubmitting ? (
+                                                            <span className="flex items-center justify-center gap-2">
+                                                                <Loader2 className="w-3 h-3 animate-spin" />
+                                                                PROCESSANDO...
+                                                            </span>
+                                                        ) : (
+                                                            <span>
+                                                                [ {parsedData.type === 'income' ? 'VALIDAR RECEBIMENTO' : 'VALIDAR ALOCAÇÃO'} ]
+                                                            </span>
+                                                        )}
+                                                    </motion.button>
+                                                </>
                                             )}
-                                        </motion.button>
-                                    </>
+                                        </TransactionPreviewCard>
+                                    </div>
                                 )}
-                            </TransactionPreviewCard>
+                            </AnimatePresence>
                         </div>
-                    )}
-                </AnimatePresence>
-            </div>
-        </>
-    );
+                    </>
+                );
 }

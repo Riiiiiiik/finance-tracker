@@ -205,6 +205,44 @@ export default function DashboardPage() {
                     return acc;
                 }, 0);
                 setDailyAllowance(Math.max(0, total / 30));
+
+                // ----------------------------------------------------
+                // AUDITOR LOGIC: Calculate Nearest Invoice Date
+                // ----------------------------------------------------
+                const creditAccounts = data.filter(a => a.type === 'credit' || a.closing_day);
+                if (creditAccounts.length > 0) {
+                    const today = new Date();
+                    const currentDay = today.getDate();
+                    const currentMonth = today.getMonth(); // 0-indexed
+                    const currentYear = today.getFullYear();
+
+                    let nearestDate: Date | null = null;
+
+                    creditAccounts.forEach(acc => {
+                        const closingDay = acc.closing_day || 31;
+                        let targetDate = new Date(currentYear, currentMonth, closingDay);
+
+                        // If closing day already passed this month, moves to next
+                        if (currentDay > closingDay) {
+                            targetDate.setMonth(currentMonth + 1);
+                        }
+
+                        // Check if this is nearer than what we found
+                        if (!nearestDate || targetDate < nearestDate) {
+                            nearestDate = targetDate;
+                        }
+                    });
+
+                    if (nearestDate) {
+                        const day = String(nearestDate.getDate()).padStart(2, '0');
+                        const month = String(nearestDate.getMonth() + 1).padStart(2, '0');
+                        setNextInvoiceDate(`${day}/${month}`);
+                    } else {
+                        setNextInvoiceDate('--/--');
+                    }
+                } else {
+                    setNextInvoiceDate('Sem Faturas');
+                }
             }
 
             // Se não tiver conta selecionada e houver contas, seleciona 'all'
