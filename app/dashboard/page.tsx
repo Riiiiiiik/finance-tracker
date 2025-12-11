@@ -315,28 +315,10 @@ export default function DashboardPage() {
 
             <main className="px-4 space-y-6">
 
-
-
-                {/* SECTION 1: MONK.VAULT (The Highlight) */}
+                {/* SECTION 1: MONK.AI (HERO - COMMAND CENTER) */}
                 {userId && (
-                    <section className="animate-in slide-in-from-bottom-5 duration-700">
-                        <AccountCarousel
-                            userId={userId}
-                            accounts={accounts}
-                            selectedAccountId={selectedAccountId}
-                            onAccountSelect={(id) => {
-                                setSelectedAccountId(id);
-                                loadTransactions(userId, id);
-                            }}
-                            onUpdate={() => loadAccounts(userId)}
-                            onPayInvoice={() => setShowPayInvoiceModal(true)}
-                        />
-                    </section>
-                )}
-
-                {/* SECTION 2: MONK.AI (The Core) */}
-                {userId && (
-                    <section className="animate-in slide-in-from-bottom-5 duration-700 delay-100">
+                    <section className="relative z-20 pt-2">
+                        {/* AI Input como centro das atenções */}
                         <MagicTransactionForm
                             userId={userId}
                             selectedAccountId={selectedAccountId}
@@ -353,11 +335,31 @@ export default function DashboardPage() {
                     </section>
                 )}
 
+                {/* SECTION 2: VAULT CONTEXT (WIDGET STYLE) */}
+                {userId && (
+                    <section className="relative z-10 animate-in slide-in-from-bottom-5 duration-700 delay-100">
+                        <AccountCarousel
+                            userId={userId}
+                            accounts={accounts}
+                            selectedAccountId={selectedAccountId}
+                            onAccountSelect={(id) => {
+                                setSelectedAccountId(id);
+                                loadTransactions(userId, id);
+                            }}
+                            onUpdate={() => loadAccounts(userId)}
+                            onPayInvoice={() => setShowPayInvoiceModal(true)}
+                        />
+                    </section>
+                )}
 
-
-                {/* SECTION 3: THE OPERATIONS GRID (Modules) */}
+                {/* SECTION 3: OPERATIONS MUDULES */}
                 {userId && (
                     <section className="animate-in slide-in-from-bottom-5 duration-700 delay-200">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="h-[1px] flex-1 bg-white/10"></div>
+                            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 font-mono">Módulos</span>
+                            <div className="h-[1px] flex-1 bg-white/10"></div>
+                        </div>
                         <MonkGrid
                             dailyAllowance={dailyAllowance}
                             riskCount={0}
@@ -374,24 +376,24 @@ export default function DashboardPage() {
                 </div>
 
                 {/* SHARED: Transactions */}
-                <section className="animate-in slide-in-from-bottom-5 duration-700 delay-300 mt-8 pt-4 border-t border-border/20">
+                <section className="animate-in slide-in-from-bottom-5 duration-700 delay-300 pt-4">
                     <div className="flex items-center justify-between mb-4 px-1">
-                        <h3 className="font-medium text-xs flex items-center gap-2 text-muted-foreground uppercase tracking-widest">
-                            Últimas Operações
+                        <h3 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                            Registro Recente
                         </h3>
                         {transactions.length > 0 && (
-                            <Link href="/transactions" className="text-xs text-primary hover:text-emerald-400 transition-colors">
-                                Ver tudo
+                            <Link href="/transactions" className="text-[10px] uppercase tracking-wider text-emerald-500 hover:text-emerald-400 transition-colors">
+                                Expanded View
                             </Link>
                         )}
                     </div>
 
                     {transactions.length === 0 ? (
-                        <div className="text-center py-8 border border-dashed border-border/30 rounded-xl bg-secondary/5">
-                            <p className="text-muted-foreground text-xs">Nenhuma movimentação no registro.</p>
+                        <div className="text-center py-12 border border-dashed border-white/5 rounded-xl bg-white/[0.02]">
+                            <p className="text-muted-foreground text-xs font-mono">Nenhum dado registrado.</p>
                         </div>
                     ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {transactions.map((t) => (
                                 <TransactionItem
                                     key={t.id}

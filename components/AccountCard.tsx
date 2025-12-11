@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Account } from '@/lib/supabase';
 import { Pencil, Check, X, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { BankLogo } from './BankLogo';
 
 interface AccountCardProps {
     account: Account;
@@ -137,7 +138,10 @@ export default function AccountCard({ account, onUpdate, availableBalance, invoi
             ) : (
                 <>
                     <div className="flex justify-between items-start relative z-10">
-                        <span className="text-white/90 font-medium text-sm">{account.name}</span>
+                        <div className="flex items-center gap-2">
+                            <BankLogo bankName={account.name} className="w-5 h-5 opacity-80" />
+                            <span className="text-white/90 font-medium text-sm">{account.name}</span>
+                        </div>
                         {account.id !== 'all' && (
                             <button
                                 onClick={() => setIsEditing(true)}

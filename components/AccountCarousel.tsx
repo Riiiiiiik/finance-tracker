@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Account } from '@/lib/supabase';
 import AccountCard from './AccountCard';
 import { Plus, X, Check } from 'lucide-react';
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import MonkIcon, { monkColors } from './MonkIcon';
 import NewAccountModal from './NewAccountModal';
+import { BankLogo } from './BankLogo';
 
 interface AccountCarouselProps {
     userId: string;
@@ -30,6 +31,16 @@ export default function AccountCarousel({
 }: AccountCarouselProps) {
     const [showAddModal, setShowAddModal] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+
+    // Auto-revert to 'all' if selected account is deleted
+    useEffect(() => {
+        if (selectedAccountId && selectedAccountId !== 'all') {
+            const exists = accounts.find(a => a.id === selectedAccountId);
+            if (!exists) {
+                onAccountSelect('all');
+            }
+        }
+    }, [accounts, selectedAccountId, onAccountSelect]);
 
     const handleSaveAccount = async (newAccount: any) => {
         try {
@@ -107,19 +118,17 @@ export default function AccountCarousel({
             </AnimatePresence>
 
             <div className={`relative transition-all duration-500 ease-spring ${isExpanded ? 'z-50' : ''}`}>
-                <div className="flex items-start justify-center relative">
+                <div className="flex items-start relative w-full">
 
-                    {/* Quick Select Sidebar - Absolute Positioned to avoid layout shift */}
+
+
+                    {/* Quick Select Sidebar - Visible ONLY when collapsed (One or the other) */}
                     <AnimatePresence>
-                        {isExpanded && (
-                            <motion.div
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                className="absolute left-0 top-0 -translate-x-full flex flex-col gap-3 pt-2 z-50 pr-4"
-                                style={{ transform: 'translateX(-100%)' }}
-                            >
-                                {displayAccounts.map((account) => (
+                        {/* Quick Select Sidebar - Always Visible */}
+                        <div className="flex flex-col gap-3 z-50 mr-2 shrink-0 relative">
+                            {displayAccounts.map((account) => {
+                                const isSelected = selectedAccountId === account.id;
+                                return (
                                     <button
                                         key={`quick-${account.id}`}
                                         onClick={(e) => {
@@ -127,33 +136,33 @@ export default function AccountCarousel({
                                             onAccountSelect(account.id);
                                             setIsExpanded(false);
                                         }}
-                                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg border-2 border-white/10 hover:scale-110 transition-transform relative group"
-                                        style={{ backgroundColor: account.color }}
+                                        className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-all relative group overflow-hidden shrink-0 ${isSelected ? 'scale-110 ring-2 ring-white/20' : 'hover:scale-105 opacity-80 hover:opacity-100'}`}
+                                        style={{ backgroundColor: account.id === 'all' ? '#18181b' : account.color }}
                                         title={account.name}
                                     >
-                                        {account.name.substring(0, 2).toUpperCase()}
+                                        <BankLogo bankName={account.name} className="w-full h-full p-2" unboxed={true} />
 
                                         {/* Tooltip for account name */}
-                                        <span className="absolute left-full ml-2 px-2 py-1 bg-black/80 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                        <span className="absolute left-full ml-2 px-3 py-1.5 bg-zinc-900 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-[60] border border-white/10 shadow-xl">
                                             {account.name}
                                         </span>
                                     </button>
-                                ))}
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowAddModal(true);
-                                    }}
-                                    className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 text-white hover:bg-white/20 border-2 border-white/10 transition-all"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                </button>
-                            </motion.div>
-                        )}
+                                );
+                            })}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowAddModal(true);
+                                }}
+                                className="w-12 h-12 rounded-xl flex items-center justify-center bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 border-2 border-dashed border-zinc-700 hover:border-zinc-500 transition-all shrink-0 backdrop-blur-sm"
+                            >
+                                <Plus className="w-5 h-5" />
+                            </button>
+                        </div>
                     </AnimatePresence>
 
                     {/* The Stack/List - Now with full opacity */}
-                    <div className="flex flex-col items-center w-full">
+                    <div className="flex flex-col items-center relative flex-1 min-w-0">
                         {/* Header Text (Optional) */}
                         <AnimatePresence>
                             {isExpanded && (
@@ -168,7 +177,7 @@ export default function AccountCarousel({
                             )}
                         </AnimatePresence>
 
-                        <div className="relative w-full max-w-[340px]" style={{ height: isExpanded ? 'auto' : '240px' }}>
+                        <div className="relative w-full" style={{ height: isExpanded ? 'auto' : '240px' }}>
                             {displayAccounts.map((account, index) => {
                                 const isSelected = selectedAccountId === account.id;
 

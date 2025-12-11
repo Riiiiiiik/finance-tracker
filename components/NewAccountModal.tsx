@@ -3,6 +3,7 @@
 import { X, CreditCard, Landmark, Wallet, Bitcoin, Calendar, DollarSign, ShieldCheck, Check } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BankLogo } from './BankLogo';
 
 interface NewAccountModalProps {
     isOpen: boolean;
@@ -27,6 +28,32 @@ export default function NewAccountModal({ isOpen, onClose, onSave }: NewAccountM
     const [selectedColor, setSelectedColor] = useState('#10B981');
     const [loading, setLoading] = useState(false);
 
+    // Banco de Dados Local de Bancos (Keywords -> Colors)
+    const BANK_PRESETS: Record<string, string> = {
+        'nubank': '#820AD1',
+        'itau': '#FF6200', 'itaú': '#FF6200',
+        'bradesco': '#CC092F',
+        'santander': '#EC0000',
+        'inter': '#FF7A00', 'banco inter': '#FF7A00',
+        'c6': '#222222', 'c6bank': '#222222',
+        'btg': '#003058', 'btg pactual': '#003058',
+        'xp': '#000000',
+        'neon': '#00FFFF',
+        'next': '#00FF5F',
+        'safra': '#161F3D',
+        'original': '#00B53F',
+        'sicoob': '#003641',
+        'sicredi': '#386629',
+        'bb': '#F8D117', 'banco do brasil': '#F8D117',
+        'caixa': '#005CA9',
+        'picpay': '#11C76F',
+        'mercadopago': '#009EE3', 'mercado pago': '#009EE3',
+        'wise': '#9FE870',
+        'nomad': '#FCD535',
+        'revolut': '#356AE7',
+        'avenue': '#000000'
+    };
+
     // Reset form on open
     useEffect(() => {
         if (isOpen) {
@@ -40,6 +67,20 @@ export default function NewAccountModal({ isOpen, onClose, onSave }: NewAccountM
             setLoading(false);
         }
     }, [isOpen]);
+
+    // Smart Detection (Regex)
+    useEffect(() => {
+        if (!name) return;
+
+        const lowerName = name.toLowerCase();
+
+        // Find matching bank key
+        const match = Object.keys(BANK_PRESETS).find(key => lowerName.includes(key));
+
+        if (match) {
+            setSelectedColor(BANK_PRESETS[match]);
+        }
+    }, [name]);
 
     const handleSave = async () => {
         if (!name) return;
@@ -132,13 +173,18 @@ export default function NewAccountModal({ isOpen, onClose, onSave }: NewAccountM
                         {/* 2. IDENTIFICAÇÃO */}
                         <div className="space-y-1.5">
                             <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Identificador (Nome)</label>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                placeholder="Ex: Nubank Principal, Cofre..."
-                                className="w-full bg-[#161616] border border-[#333] text-white rounded-lg p-3 focus:border-[#10B981] focus:outline-none transition-colors placeholder:text-gray-700 text-sm font-medium"
-                            />
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Ex: Nubank Principal, Cofre..."
+                                    className="w-full bg-[#161616] border border-[#333] text-white rounded-lg p-3 pr-12 focus:border-[#10B981] focus:outline-none transition-colors placeholder:text-gray-700 text-sm font-medium"
+                                />
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                    <BankLogo bankName={name} className="w-6 h-6" />
+                                </div>
+                            </div>
                         </div>
 
                         {/* 3. CAMPOS DINÂMICOS (Só aparecem se for Crédito) */}
@@ -159,7 +205,7 @@ export default function NewAccountModal({ isOpen, onClose, onSave }: NewAccountM
                                             value={limit}
                                             onChange={(e) => setLimit(e.target.value)}
                                             placeholder="0,00"
-                                            className="w-full bg-[#161616] border border-[#333] text-white rounded-lg p-3 pl-9 focus:border-[#10B981] focus:outline-none font-mono"
+                                            className="w-full bg-[#161616] border border-[#333] text-white rounded-lg p-3 pl-9 focus:border-[#10B981] focus:outline-none font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         />
                                     </div>
                                 </div>
@@ -176,7 +222,7 @@ export default function NewAccountModal({ isOpen, onClose, onSave }: NewAccountM
                                                 onChange={(e) => setClosingDay(e.target.value)}
                                                 placeholder="Dia"
                                                 max={31}
-                                                className="w-full bg-[#161616] border border-[#333] text-white rounded-lg p-3 pl-9 focus:border-[#10B981] outline-none"
+                                                className="w-full bg-[#161616] border border-[#333] text-white rounded-lg p-3 pl-9 focus:border-[#10B981] outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
                                         </div>
                                     </div>
@@ -190,7 +236,7 @@ export default function NewAccountModal({ isOpen, onClose, onSave }: NewAccountM
                                                 onChange={(e) => setDueDay(e.target.value)}
                                                 placeholder="Dia"
                                                 max={31}
-                                                className="w-full bg-[#161616] border border-[#333] text-white rounded-lg p-3 pl-9 focus:border-[#10B981] outline-none"
+                                                className="w-full bg-[#161616] border border-[#333] text-white rounded-lg p-3 pl-9 focus:border-[#10B981] outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
                                         </div>
                                     </div>

@@ -7,8 +7,6 @@ import { Eye, Terminal, Monitor } from 'lucide-react';
 export default function MonkModeToggle() {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
-    // Estado local otimista para resposta instantânea ao clique
-    const [optimisticMonk, setOptimisticMonk] = useState<boolean | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -18,22 +16,10 @@ export default function MonkModeToggle() {
         return null;
     }
 
-    const isMonkTheme = theme === 'monk';
-
-
-    const isMonk = optimisticMonk !== null ? optimisticMonk : isMonkTheme;
+    const isMonk = theme === 'monk';
 
     const toggleMonk = () => {
-        // Feedback tátil/visual imediato
-        const newState = !isMonk;
-        setOptimisticMonk(newState);
-
-        // Aplica o tema real com um leve delay se necessário para animação, ou direto
-        // setTimeout(() => setTheme(newState ? 'monk' : 'dark'), 50); 
-        setTheme(newState ? 'monk' : 'dark');
-
-        // Sincroniza estado final após transição (opcional, mas garante consistência)
-        setTimeout(() => setOptimisticMonk(null), 500);
+        setTheme(isMonk ? 'dark' : 'monk');
     };
 
     return (
@@ -41,18 +27,35 @@ export default function MonkModeToggle() {
             onClick={toggleMonk}
             className={`
                 fixed top-4 right-4 z-50 
-                flex items-center gap-2 px-3 py-1.5 
-                border rounded-full transition-all duration-300
+                flex items-center gap-3 px-4 py-2 
+                border rounded-full transition-all duration-500 group
                 ${isMonk
-                    ? 'bg-black border-[#00FF00] text-[#00FF00] shadow-[0_0_10px_#00FF00]'
-                    : 'bg-black/20 border-white/10 text-white/60 hover:text-white hover:bg-black/40 backdrop-blur-md'
+                    ? 'bg-emerald-500/10 border-emerald-500/50 text-white shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                    : 'bg-black/20 border-white/5 text-zinc-500 hover:text-zinc-300 hover:border-white/10'
                 }
             `}
-            title={isMonk ? "Deactivate Monk Mode" : "Activate Monk Mode"}
+            title={isMonk ? "Desativar Monk Mode" : "Ativar Monk Mode"}
         >
-            {isMonk ? <Terminal size={14} /> : <Eye size={14} />}
-            <span className="text-xs font-mono uppercase font-bold tracking-wider">
-                {isMonk ? 'MODO: ATIVO' : 'MODO: PADRÃO'}
+            {/* ICON INDICATOR */}
+            <div className="relative flex items-center justify-center">
+                {isMonk ? (
+                    <>
+                        <span className="relative flex h-2.5 w-2.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_10px_#10b981]"></span>
+                        </span>
+                    </>
+                ) : (
+                    <div className="h-2.5 w-2.5 rounded-full border border-zinc-600 group-hover:border-zinc-400 transition-colors" />
+                )}
+            </div>
+
+            {/* TEXT LABEL */}
+            <span className={`
+                text-[10px] font-mono font-bold tracking-[0.2em] uppercase transition-all duration-300
+                ${isMonk ? '[text-shadow:0_0_10px_rgba(16,185,129,0.5)]' : ''}
+            `}>
+                {isMonk ? '>_ MODO: ATIVO' : '>_ MODO: ESPERA'}
             </span>
         </button>
     );

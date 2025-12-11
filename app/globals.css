@@ -24,40 +24,81 @@
 }
 
 .monk {
-    --background: 120 100% 2%;
-    /* Almost Black #000800 */
-    --foreground: 120 100% 50%;
-    /* Matrix Green #00FF00 */
-    --card: 120 50% 3%;
-    --card-foreground: 120 100% 50%;
-    --primary: 120 100% 50%;
+    --background: 120 20% 4%;
+    /* Darker, less saturated green-black */
+    --foreground: 0 0% 90%;
+    /* Softer white text */
+
+    --card: 120 20% 5%;
+    /* Dark card background */
+    --card-foreground: 0 0% 90%;
+
+    --primary: 142 70% 50%;
+    /* Sophisticated Emerald */
     --primary-foreground: 0 0% 0%;
-    --secondary: 120 30% 10%;
-    --secondary-foreground: 120 100% 50%;
-    --muted: 120 20% 10%;
-    --muted-foreground: 120 60% 40%;
-    --accent: 120 100% 50%;
-    --accent-foreground: 0 0% 0%;
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 120 100% 50%;
-    --border: 120 100% 20%;
-    --input: 120 100% 20%;
-    --ring: 120 100% 50%;
-    --radius: 0;
 
-    /* Monk Specific Overrides */
-    --font-sans: 'Courier New', 'Fira Code', monospace;
-    font-family: 'Courier New', 'Fira Code', monospace;
+    --secondary: 120 10% 10%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 120 5% 15%;
+    --muted-foreground: 120 5% 60%;
+
+    --accent: 142 70% 50%;
+    --accent-foreground: 142 70% 10%;
+
+    --destructive: 0 80% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 120 10% 15%;
+    /* Subtle border */
+    --input: 120 10% 15%;
+    --ring: 142 70% 50%;
+
+    --radius: 0.5rem;
+    /* Slightly rounded, not completely square (more modern) */
+
+    /* Custom Variables for "Arcane" look used in components */
+    --neon-glow: 0 0 15px rgba(16, 185, 129, 0.3);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+    --glass-bg: rgba(10, 10, 12, 0.7);
+
+    /* Fonts */
+    --font-sans: 'Inter', system-ui, sans-serif;
+    /* Clean Sans for UI */
+    --font-mono: 'JetBrains Mono', monospace;
+    /* Mono for data/numbers */
 }
 
-.monk .glass-effect {
-    background: rgba(0, 20, 0, 0.9);
-    border: 1px solid var(--primary);
-    box-shadow: none;
+/* Base body style reset for consistency */
+body {
+    background: #050505;
+    color: #e5e5e5;
 }
 
-.monk * {
-    border-radius: 0 !important;
+/* Sophisticated Glass Panel Utility */
+.monk .glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: var(--glass-border);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Subtle Glow Text */
+.monk .text-glow {
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+/* Command Line Input Style */
+.monk .input-command {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: var(--font-mono);
+}
+
+.monk .input-command:focus {
+    border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
 }
 
 * {

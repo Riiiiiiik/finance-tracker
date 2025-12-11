@@ -53,12 +53,11 @@ export default function EmailGuard() {
                     // Verifica status com dados REAIS do servidor OU Bypass Local (Instantâneo)
                     const localBypass = typeof window !== 'undefined' && localStorage.getItem('monk_verified_client') === 'true';
                     const profileVerified = profile.email_verified === true;
+                    // Também verificamos se o auth.users diz que está confirmado (caso o profile.email_verified ainda não tenha atualizado)
                     const authVerified = !!user.email_confirmed_at;
                     const metaVerified = user.user_metadata?.monk_verified === true;
 
                     const isVerified = localBypass || profileVerified || authVerified || metaVerified;
-
-
 
                     if (isExpired && !isVerified) {
                         console.warn('GUARD: Acesso bloqueado - Verificação pendente expirada (Server Check).');

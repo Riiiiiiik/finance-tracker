@@ -304,30 +304,23 @@ export default function MagicTransactionForm({
                 )}
             </AnimatePresence>
 
-            <div className={`relative transition-all duration-500 ${showOverlay ? 'z-50 scale-105' : 'z-0'}`}>
-                {/* Hero Input Block */}
-                <div className="mb-6">
+            <div className={`relative transition-all duration-500 ${showOverlay ? 'z-[70] scale-105' : 'z-10'}`}>
+                {/* Hero Input Block - REFACTORED FOR MINIMALISM */}
+                <div className="mb-2">
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="relative"
                     >
-
-                        {/* Label */}
-                        <label className={`flex items-center gap-2 mb-3 text-sm font-bold tracking-wide ${monkColors.ai}`}>
-                            <MonkIcon type="ai" className="w-5 h-5 animate-pulse" />
-                            <span>MONK.AI</span>
-                        </label>
-
-                        {/* Hero Input */}
                         <div className="relative group">
+                            {/* Icon inside input */}
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                <MonkIcon type="ai" className={`h-5 w-5 transition-colors ${smartInput ? 'opacity-100' : 'opacity-70'}`} />
+                                <Sparkles className={`h-4 w-4 text-emerald-500/80 transition-opacity ${smartInput ? 'opacity-100' : 'opacity-50'}`} />
                             </div>
 
                             <input
-                                type="search" // iOS: Tenta esconder a barra de acessório
-                                enterKeyHint="done" // iOS: Muda botão de retorno para Done
+                                type="text"
+                                enterKeyHint="done"
                                 inputMode="text"
                                 autoComplete="off"
                                 autoCorrect="off"
@@ -336,27 +329,23 @@ export default function MagicTransactionForm({
                                 onFocus={() => setIsFocused(true)}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !isSubmitting) {
-                                        e.preventDefault(); // Previne submit de form se houver
+                                        e.preventDefault();
                                         if (hasData) {
                                             handleConfirm();
                                         } else {
                                             handleParse();
                                         }
-                                        // Tentar fechar teclado mobile
                                         if (window.innerWidth < 768) {
                                             (e.target as HTMLElement).blur();
                                         }
                                     }
                                 }}
-                                placeholder="✨ Monk.AI: 'Uber 25 transporte'..."
+                                placeholder="Aguardando comando..."
                                 className={`
-                                    w-full pl-12 pr-4 py-3 md:py-4 text-lg font-medium rounded-2xl 
-                                    bg-card border-2 outline-none transition-all duration-300 
-                                    placeholder:text-muted-foreground/70 shadow-lg 
-                                    ${showOverlay
-                                        ? 'border-purple-500 shadow-purple-500/20 shadow-2xl scale-[1.02]'
-                                        : 'border-border hover:shadow-xl focus:border-purple-500/50'
-                                    }
+                                    w-full pl-11 pr-4 py-3 text-sm font-mono tracking-wide rounded-xl
+                                    bg-white/[0.03] border border-white/10 text-white
+                                    focus:bg-white/[0.05] focus:border-emerald-500/30 focus:shadow-[0_0_20px_rgba(16,185,129,0.1)]
+                                    placeholder:text-white/20 outline-none transition-all duration-300
                                 `}
                                 disabled={isSubmitting}
                             />
@@ -365,26 +354,16 @@ export default function MagicTransactionForm({
                             <AnimatePresence>
                                 {isProcessing && (
                                     <motion.div
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.8 }}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
                                         className="absolute inset-y-0 right-0 pr-4 flex items-center gap-2"
                                     >
-                                        <span className="text-xs text-purple-400 font-medium">Processando...</span>
-                                        <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                                        <Loader2 className="w-4 h-4 text-emerald-500 animate-spin" />
                                     </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
-
-                        {/* Hint Text */}
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: smartInput ? 0 : 1 }}
-                            className="mt-2 text-xs text-muted-foreground text-center"
-                        >
-                            Eu organizo tudo para você. Apenas digite. 🧠
-                        </motion.p>
                     </motion.div>
                 </div>
 
@@ -395,12 +374,12 @@ export default function MagicTransactionForm({
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className={`mb-4 p-3 rounded-xl flex items-center gap-2 text-sm font-medium ${feedback.type === 'success'
+                            className={`mb-3 p-2.5 rounded-xl flex items-center gap-2 text-xs md:text-sm font-medium ${feedback.type === 'success'
                                 ? 'bg-green-500/10 text-green-500 border border-green-500/20'
                                 : 'bg-red-500/10 text-red-500 border border-red-500/20'
                                 }`}
                         >
-                            {feedback.type === 'success' ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                            {feedback.type === 'success' ? <Check className="w-3 h-3 md:w-4 md:h-4" /> : <AlertCircle className="w-3 h-3 md:w-4 md:h-4" />}
                             {feedback.message}
                         </motion.div>
                     )}
@@ -409,7 +388,7 @@ export default function MagicTransactionForm({
                 {/* Preview Card */}
                 <AnimatePresence>
                     {hasData && (
-                        <div className="mb-6">
+                        <div className="mb-3">
                             <TransactionPreviewCard
                                 amount={parsedData.amount}
                                 description={parsedData.description}
@@ -427,69 +406,93 @@ export default function MagicTransactionForm({
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
                                         exit={{ opacity: 0, height: 0 }}
-                                        className="bg-background/20 rounded-xl border border-white/5 overflow-hidden"
+                                        className="bg-[#09090b] rounded-sm border border-[#27272a] overflow-hidden mt-2"
                                     >
-                                        <div className="p-3 bg-black/20 text-center">
-                                            <h4 className="text-sm font-bold text-white">Como deseja pagar?</h4>
-                                            <p className="text-[10px] text-muted-foreground">Esta conta é híbrida.</p>
+                                        <div className="p-2 border-b border-[#27272a] text-center">
+                                            <h4 className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase">Método de Alocação</h4>
+                                            <p className="text-[9px] text-zinc-600 font-serif italic">"A escolha define o compromisso."</p>
                                         </div>
 
-                                        <div className="p-3 grid grid-cols-2 gap-3">
+                                        <div className="p-1.5 grid grid-cols-2 gap-1.5">
                                             <button
                                                 onClick={() => finalizeTransaction(pendingAccount, 'debit')}
-                                                className="p-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 transition-colors flex flex-col items-center gap-1 group"
+                                                className="group relative p-2.5 rounded-sm border border-emerald-900/30 hover:border-emerald-500/50 hover:bg-emerald-900/10 transition-all text-left overflow-hidden"
                                             >
-                                                <span className="text-xl group-hover:scale-110 transition-transform">💸</span>
-                                                <span className="font-bold text-sm">Débito</span>
-                                                <span className="text-[10px] opacity-70">Sai na hora</span>
+                                                <div className="relative z-10 flex flex-col gap-0.5">
+                                                    <span className="text-[9px] font-mono text-emerald-700 group-hover:text-emerald-500 transition-colors">Opção 01</span>
+                                                    <span className="font-serif italic text-base md:text-lg text-emerald-600 group-hover:text-emerald-400">Débito</span>
+                                                    <span className="text-[8px] text-zinc-600 uppercase tracking-wide">Liquidação Imediata</span>
+                                                </div>
+                                                {/* Decorative Corner */}
+                                                <div className="absolute top-0 right-0 p-0.5">
+                                                    <div className="w-1 h-1 bg-emerald-900/40 rounded-full" />
+                                                </div>
                                             </button>
 
                                             <button
                                                 onClick={() => finalizeTransaction(pendingAccount, 'credit')}
-                                                className="p-3 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-500 transition-colors flex flex-col items-center gap-1 group"
+                                                className="group relative p-2.5 rounded-sm border border-[#451a1a] hover:border-[#7f2e2e] hover:bg-[#2a0f0f] transition-all text-left overflow-hidden"
                                             >
-                                                <span className="text-xl group-hover:scale-110 transition-transform">💳</span>
-                                                <span className="font-bold text-sm">Crédito</span>
-                                                <span className="text-[10px] opacity-70">Na fatura</span>
+                                                <div className="relative z-10 flex flex-col gap-0.5">
+                                                    <span className="text-[9px] font-mono text-[#5c2222] group-hover:text-[#7f2e2e] transition-colors">Opção 02</span>
+                                                    <span className="font-serif italic text-base md:text-lg text-[#8b4343] group-hover:text-[#c24141]">Crédito</span>
+                                                    <span className="text-[8px] text-zinc-600 uppercase tracking-wide">Compromisso Futuro</span>
+                                                </div>
+                                                {/* Decorative Corner */}
+                                                <div className="absolute top-0 right-0 p-0.5">
+                                                    <div className="w-1 h-1 bg-[#451a1a] rounded-full" />
+                                                </div>
                                             </button>
                                         </div>
 
                                         <button
                                             onClick={() => setShowMethodSelector(false)}
-                                            className="w-full text-[10px] text-muted-foreground hover:text-white py-2 bg-black/20 hover:bg-black/40 transition-colors"
+                                            className="w-full text-[9px] font-mono text-zinc-600 hover:text-zinc-400 py-1.5 border-t border-[#27272a] hover:bg-[#27272a] transition-colors uppercase tracking-widest"
                                         >
-                                            Cancelar Transação
+                                            [ Cancelar ]
                                         </button>
                                     </motion.div>
                                 ) : (
-                                    <motion.button
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={handleConfirm}
-                                        disabled={isSubmitting}
-                                        className={`
-                                            w-full mt-2 py-3 rounded-xl font-bold text-base shadow-lg flex items-center justify-center gap-2 transition-all
-                                            ${parsedData.type === 'income'
-                                                ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-green-500/20'
-                                                : 'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-red-500/20'
-                                            }
-                                            ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}
-                                        `}
-                                    >
-                                        {isSubmitting ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                                Salvando...
-                                            </>
+                                    <>
+                                        {/* STOIC REFLECTION HINT */}
+                                        {parsedData.type === 'expense' ? (
+                                            <p className="text-[10px] text-zinc-600 text-center mb-1.5 italic font-serif opacity-60">
+                                                Isso é essencial?
+                                            </p>
                                         ) : (
-                                            <>
-                                                <Check className="w-4 h-4" />
-                                                Confirmar
-                                            </>
+                                            <p className="text-[10px] text-zinc-600 text-center mb-1.5 italic font-serif opacity-60">
+                                                Recurso com propósito.
+                                            </p>
                                         )}
-                                    </motion.button>
+
+                                        <motion.button
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            whileHover={{ scale: 1.01 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={handleConfirm}
+                                            disabled={isSubmitting}
+                                            className={`
+                                            w-full py-2.5 rounded-sm font-mono text-sm tracking-widest border transition-all duration-300
+                                            ${parsedData.type === 'income'
+                                                    ? 'border-emerald-900/50 text-emerald-600 hover:bg-emerald-900/10 hover:border-emerald-500/30'
+                                                    : 'border-[#5c2222] text-[#c24141] hover:bg-[#2a0f0f] hover:border-[#7f2e2e]'
+                                                }
+                                            ${isSubmitting ? 'opacity-50 cursor-wait' : ''}
+                                        `}
+                                        >
+                                            {isSubmitting ? (
+                                                <span className="flex items-center justify-center gap-2">
+                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                    PROCESSANDO...
+                                                </span>
+                                            ) : (
+                                                <span>
+                                                    [ {parsedData.type === 'income' ? 'VALIDAR RECEBIMENTO' : 'VALIDAR ALOCAÇÃO'} ]
+                                                </span>
+                                            )}
+                                        </motion.button>
+                                    </>
                                 )}
                             </TransactionPreviewCard>
                         </div>

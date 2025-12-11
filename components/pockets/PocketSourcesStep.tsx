@@ -2,6 +2,7 @@
 
 import { Wallet, Zap, Check, Building2, CreditCard } from 'lucide-react';
 import { useState } from 'react';
+import { BankLogo } from '@/components/BankLogo';
 
 export default function PocketSourcesStep() {
     const [selectedSources, setSelectedSources] = useState<string[]>([]);
@@ -76,14 +77,12 @@ export default function PocketSourcesStep() {
                                 </div>
                             )}
 
-                            {/* Logo do Banco (Placeholder) */}
-                            <div
-                                className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold shadow-sm transition-all
-                    ${isSelected ? 'bg-black/10 text-black' : 'text-white'}
-                `}
-                                style={{ backgroundColor: !isSelected ? source.color : undefined }}
-                            >
-                                {source.id === 'manual' ? <Wallet size={20} /> : source.id === 'ticket' ? <CreditCard size={20} /> : source.name[0]}
+                            {/* Logo do Banco (BankLogo Component) */}
+                            <div className={`transition-all duration-300 ${isSelected ? 'scale-110' : 'grayscale opacity-70 group-hover:opacity-100'}`}>
+                                <BankLogo
+                                    bankName={source.name}
+                                    className="w-10 h-10 md:w-12 md:h-12"
+                                />
                             </div>
 
                             <span className="text-xs font-bold uppercase tracking-wide">
