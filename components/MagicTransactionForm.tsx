@@ -410,7 +410,7 @@ export default function MagicTransactionForm({
                                     >
                                         <div className="p-2 border-b border-[#27272a] text-center">
                                             <h4 className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase">Método de Alocação</h4>
-                                            <p className="text-[9px] text-zinc-600 font-serif italic">"A escolha define o compromisso."</p>
+                                            <p className="text-[9px] text-zinc-600 font-serif italic">&quot;A escolha define o compromisso.&quot;</p>
                                         </div>
 
                                         <div className="p-1.5 grid grid-cols-2 gap-1.5">

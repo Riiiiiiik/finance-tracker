@@ -317,7 +317,7 @@ export default function DashboardPage() {
 
                 {/* SECTION 1: MONK.AI (HERO - COMMAND CENTER) */}
                 {userId && (
-                    <section className="relative z-20 pt-2">
+                    <section className="relative pt-2">
                         {/* AI Input como centro das atenções */}
                         <MagicTransactionForm
                             userId={userId}
@@ -337,7 +337,7 @@ export default function DashboardPage() {
 
                 {/* SECTION 2: VAULT CONTEXT (WIDGET STYLE) */}
                 {userId && (
-                    <section className="relative z-10 animate-in slide-in-from-bottom-5 duration-700 delay-100">
+                    <section className="relative animate-in slide-in-from-bottom-5 duration-700 delay-100">
                         <AccountCarousel
                             userId={userId}
                             accounts={accounts}
