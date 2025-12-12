@@ -15,6 +15,7 @@ import FutureInvoices from '@/components/FutureInvoices';
 import { usePrivacy } from '@/lib/privacy-context';
 import MonkIcon, { monkColors } from '@/components/MonkIcon';
 import MonkGrid from '@/components/MonkGrid';
+import { MonkEye } from '@/components/MonkEye';
 
 import MonkLetter from '@/components/MonkLetter';
 
@@ -104,8 +105,9 @@ export default function DashboardPage() {
 
     // Monk Grid Data States
     const [wishlistMain, setWishlistMain] = useState({ name: 'Nova Meta', percent: 0 });
-    const [nextInvoiceDate, setNextInvoiceDate] = useState('10/12');
+    const [availableCredit, setAvailableCredit] = useState(0);
     const [dailyAllowance, setDailyAllowance] = useState(0);
+    const [riskStatus, setRiskStatus] = useState<'SEGURO' | 'MODERADO' | 'CRÍTICO'>('SEGURO');
 
     useEffect(() => {
         checkUser();
@@ -175,43 +177,35 @@ export default function DashboardPage() {
             setAccounts(data || []);
 
             // ----------------------------------------------------
-            // AUDITOR LOGIC: Calculate Nearest Invoice Date
+            // AUDITOR LOGIC: Calculate Total Available Credit & Risk
             // ----------------------------------------------------
             if (data) {
-                const creditAccounts = data.filter(a => a.type === 'credit' || a.closing_day);
+                // 1. Available Credit
+                const creditAccounts = data.filter(a => a.type === 'credit');
+                let totalAvailable = 0;
+
                 if (creditAccounts.length > 0) {
-                    const today = new Date();
-                    const currentDay = today.getDate();
-                    const currentMonth = today.getMonth(); // 0-indexed
-                    const currentYear = today.getFullYear();
-
-                    let nearestDate: Date | null = null;
-
                     creditAccounts.forEach(acc => {
-                        const closingDay = acc.closing_day || 31;
-                        let targetDate = new Date(currentYear, currentMonth, closingDay);
-
-                        // If closing day already passed this month, moves to next
-                        if (currentDay > closingDay) {
-                            targetDate.setMonth(currentMonth + 1);
-                        }
-
-                        // Check if this is nearer than what we found
-                        if (!nearestDate || targetDate < nearestDate) {
-                            nearestDate = targetDate;
-                        }
+                        const limit = acc.limit || 0;
+                        const debt = acc.balance < 0 ? Math.abs(acc.balance) : 0;
+                        totalAvailable += (limit - debt);
                     });
-
-                    if (nearestDate) {
-                        const day = String(nearestDate.getDate()).padStart(2, '0');
-                        const month = String(nearestDate.getMonth() + 1).padStart(2, '0');
-                        setNextInvoiceDate(`${day}/${month}`);
-                    } else {
-                        setNextInvoiceDate('--/--');
-                    }
-                } else {
-                    setNextInvoiceDate('Sem Faturas');
                 }
+                setAvailableCredit(totalAvailable);
+
+                // 2. Risk Calculation (Global Integrity)
+                // Calculate Net Worth (Liquid Assets + Debts)
+                const totalBalance = data.reduce((acc, curr) => {
+                    return acc + curr.balance;
+                }, 0);
+
+                let currentRisk: 'SEGURO' | 'MODERADO' | 'CRÍTICO' = 'SEGURO';
+
+                if (totalBalance < 0) {
+                    currentRisk = 'CRÍTICO';
+                }
+
+                setRiskStatus(currentRisk);
             }
 
             // Se não tiver conta selecionada e houver contas, seleciona 'all'
@@ -373,6 +367,21 @@ export default function DashboardPage() {
         setLoading(false);
     };
 
+    // Helper for Header Message
+    const getSystemStatusMessage = () => {
+        switch (riskStatus) {
+            case 'CRÍTICO':
+                return { text: "ALERTA: INTEGRIDADE COMPROMETIDA.", color: "text-red-500" };
+            case 'MODERADO':
+                return { text: "ATENÇÃO: VIGÍLIA NECESSÁRIA.", color: "text-yellow-500" };
+            case 'SEGURO':
+            default:
+                return { text: "O SANTUÁRIO ESTÁ SEGURO.", color: "text-muted-foreground" };
+        }
+    };
+
+    const statusMsg = getSystemStatusMessage();
+
     if (loading) return <div className="p-8 text-center animate-pulse text-muted-foreground">Iniciando protocolo...</div>;
 
     return (
@@ -383,11 +392,19 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-3">
                     <div>
                         <h1 className="font-bold text-lg tracking-tight">The Order</h1>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
-                            Olá, {userName ? userName.split(' ')[0] : 'Initiate'}. O Santuário está seguro.
+                        <p className={`text-[10px] uppercase tracking-widest font-medium ${statusMsg.color}`}>
+                            Olá, {userName ? userName.split(' ')[0] : 'Initiate'}. {statusMsg.text}
                         </p>
                     </div>
                 </div>
+
+                <button
+                    onClick={togglePrivacyMode}
+                    className={`p-2 mr-2 transition-colors border border-transparent rounded-lg privacy-toggle ${isPrivacyMode ? 'active' : ''}`}
+                    title={isPrivacyMode ? "Desativar Vigilância" : "Ativar Modo Vigilante"}
+                >
+                    <MonkEye className="w-6 h-6" />
+                </button>
 
                 <Link href="/profile" className="relative w-9 h-9 rounded-full overflow-hidden border border-border/50 hover:border-emerald-500/50 transition-colors">
                     {avatarUrl ? (
@@ -452,9 +469,9 @@ export default function DashboardPage() {
                         </div>
                         <MonkGrid
                             dailyAllowance={dailyAllowance}
-                            riskCount={0}
+                            riskCount={riskStatus !== 'SEGURO' ? 1 : 0}
                             wishlistMainItem={wishlistMain}
-                            nextInvoiceDate={nextInvoiceDate}
+                            availableCredit={availableCredit}
                         />
                     </section>
                 )}

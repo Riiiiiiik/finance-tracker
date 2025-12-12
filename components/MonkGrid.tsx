@@ -6,14 +6,14 @@ interface MonkGridProps {
     dailyAllowance?: number;
     riskCount?: number;
     wishlistMainItem?: { name: string; percent: number };
-    nextInvoiceDate?: string;
+    availableCredit?: number;
 }
 
 export default function MonkGrid({
     dailyAllowance = 0,
     riskCount = 0,
     wishlistMainItem = { name: 'Meta Principal', percent: 0 },
-    nextInvoiceDate = '--/--'
+    availableCredit = 0
 }: MonkGridProps) {
     const { isPrivacyMode } = usePrivacy();
 
@@ -93,7 +93,7 @@ export default function MonkGrid({
                     </Link>
 
                     {/* AUDITOR */}
-                    <div className="col-span-1">
+                    <Link href="/auditor" className="col-span-1">
                         <div className="bg-white/[0.03] backdrop-blur-sm p-4 rounded-2xl border border-white/5 hover:border-indigo-400/20 transition-all group relative overflow-hidden h-full">
                             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                             <div className="flex items-center gap-2 mb-3 relative z-10">
@@ -102,12 +102,12 @@ export default function MonkGrid({
                                 </div>
                                 <span className="font-mono text-[10px] font-bold tracking-wider text-indigo-400">AUDITOR</span>
                             </div>
-                            <p className="text-sm font-bold text-white/90 font-mono">
-                                {nextInvoiceDate}
+                            <p className={`text-sm font-bold text-white/90 font-mono ${isPrivacyMode ? 'blur-sm' : ''}`}>
+                                R$ {availableCredit.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                             </p>
-                            <p className="text-[9px] text-muted-foreground mt-1">Fechamento</p>
+                            <p className="text-[9px] text-muted-foreground mt-1">Crédito Livre</p>
                         </div>
-                    </div>
+                    </Link>
 
                 </div>
             </div>

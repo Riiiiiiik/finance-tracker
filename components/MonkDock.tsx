@@ -40,7 +40,7 @@ export default function MonkDock() {
         <>
             <MonkVision isOpen={showVision} onClose={() => setShowVision(false)} />
 
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm px-4">
+            <div id="monk-dock-container" className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm px-4">
                 {/* O DOCK FLUTUANTE */}
                 <nav className="bg-[#121212]/80 backdrop-blur-md border border-[#333] rounded-full p-2 shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex justify-between items-center relative transition-all duration-300">
 

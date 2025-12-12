@@ -224,22 +224,35 @@ export default function MagicTransactionForm({
                     scheduledDay = transactionDateObj.getDate();
                 }
 
-                // Parse limit
-                const limitInt = recurrenceLimit ? parseInt(recurrenceLimit) : null;
+                // Calculate end_date based on limit
+                let calculatedEndDate = null;
+                if (recurrenceLimit) {
+                    const limitInt = parseInt(recurrenceLimit);
+                    const startDate = new Date(parsedData.date || new Date());
+
+                    // Simple calculation for end date
+                    const endDate = new Date(startDate);
+                    if (recurrenceFreq === 'monthly') {
+                        endDate.setMonth(startDate.getMonth() + limitInt);
+                    } else if (recurrenceFreq === 'weekly') {
+                        endDate.setDate(startDate.getDate() + (limitInt * 7));
+                    }
+                    calculatedEndDate = endDate.toISOString().split('T')[0];
+                }
 
                 const { data: recurrenceData, error: recurrenceError } = await supabase
                     .from('recurrences')
                     .insert({
                         user_id: userId,
                         name: parsedData.description,
-                        amount: amount, // Valor base da recorrência
+                        amount: amount,
                         type: parsedData.type,
                         category: parsedData.category,
                         frequency: recurrenceFreq,
                         due_day: scheduledDay,
-                        total_occurrences: limitInt,
                         start_date: parsedData.date || new Date().toISOString().split('T')[0],
-                        last_generated: parsedData.date || new Date().toISOString().split('T')[0], // Já marcamos como gerada hoje
+                        last_generated: parsedData.date || new Date().toISOString().split('T')[0],
+                        end_date: calculatedEndDate,
                         active: true
                     })
                     .select('id')
@@ -379,7 +392,8 @@ export default function MagicTransactionForm({
 
         } catch (error) {
             console.error('Erro ao salvar:', error);
-            setFeedback({ type: 'error', message: 'Erro ao salvar transação.' });
+            const errorMessage = (error as any)?.message || JSON.stringify(error);
+            setFeedback({ type: 'error', message: `Erro: ${errorMessage}` });
         } finally {
             setIsSubmitting(false);
             setPendingAccount(null);
