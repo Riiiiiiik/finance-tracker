@@ -102,7 +102,7 @@ Sua tarefa para hoje é auditar suas assinaturas recorrentes. Identifique uma qu
                         exit={{ opacity: 0, y: -20 }}
                         className="fixed top-0 w-full bg-[#09090B]/80 backdrop-blur-md border-b border-white/5 z-50 p-4"
                     >
-                        <div className="max-w-xl mx-auto flex items-center justify-between">
+                        <div className="max-w-xl mx-auto flex items-center justify-between pr-14 md:pr-0">
                             <Link href="/community" className="p-2 -ml-2 hover:bg-white/5 rounded-full transition-colors text-gray-400 hover:text-white">
                                 <ArrowLeft size={20} />
                             </Link>
@@ -123,7 +123,7 @@ Sua tarefa para hoje é auditar suas assinaturas recorrentes. Identifique uma qu
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setZenMode(false)}
-                        className="fixed top-6 right-6 z-50 p-3 bg-white/5 rounded-full text-gray-500 hover:text-white hover:bg-white/10 transition-all"
+                        className="fixed top-6 left-6 z-50 p-3 bg-white/5 rounded-full text-gray-500 hover:text-white hover:bg-white/10 transition-all"
                     >
                         <Minimize2 size={20} />
                     </motion.button>
