@@ -71,46 +71,31 @@ export default function ReloadPrompt() {
         <AnimatePresence>
             {needRefresh && (
                 <motion.div
-                    initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                    initial={{ opacity: 0, y: 50, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 50, scale: 0.9 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="fixed bottom-20 left-0 right-0 z-[9999] flex justify-center px-3"
+                    exit={{ opacity: 0, y: 50, scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    className="fixed bottom-6 right-6 z-[9999] flex justify-center px-4"
                 >
-                    <div className="relative bg-[#0A0A0A] border-2 border-[#10B981]/30 rounded-2xl p-4 shadow-[0_0_50px_rgba(16,185,129,0.3)] overflow-hidden w-full max-w-sm">
-                        {/* Glow effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#10B981]/5 via-transparent to-[#10B981]/5 animate-pulse"></div>
-
-                        {/* Decorative line */}
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#10B981] to-transparent"></div>
-
-                        <div className="relative z-10 flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
-                            {/* Icon + Content */}
-                            <div className="flex items-center gap-3 flex-1 w-full">
-                                <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-[#10B981]/10 border border-[#10B981]/30 rounded-xl flex items-center justify-center">
-                                    <Zap size={20} className="text-[#10B981] animate-pulse" />
-                                </div>
-
-                                <div className="flex-1">
-                                    <h3 className="text-white font-bold text-xs sm:text-sm uppercase tracking-wider mb-0.5 flex items-center gap-2">
-                                        Protocolo de Atualização
-                                        <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-pulse"></span>
-                                    </h3>
-                                    <p className="text-gray-400 text-[10px] sm:text-xs">
-                                        Sistema requer sincronização
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Button */}
-                            <button
-                                onClick={updateServiceWorker}
-                                className="group w-full sm:w-auto flex-shrink-0 px-5 py-2.5 bg-[#10B981] hover:bg-[#0EA572] text-black font-bold rounded-lg text-xs uppercase tracking-wide transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] hover:scale-105 active:scale-95"
-                            >
-                                <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-500" />
-                                Sincronizar
-                            </button>
+                    <div className="bg-[#111] border border-gray-800 rounded-lg p-4 shadow-xl flex items-center gap-4 max-w-md backdrop-blur-sm">
+                        <div className="flex-shrink-0 bg-blue-500/10 text-blue-500 p-2 rounded-full">
+                            <Zap size={20} />
                         </div>
+                        <div className="flex-1">
+                            <h3 className="text-white font-medium text-sm">
+                                Nova atualização disponível
+                            </h3>
+                            <p className="text-gray-400 text-xs mt-0.5">
+                                Clique para carregar a versão mais recente.
+                            </p>
+                        </div>
+                        <button
+                            onClick={updateServiceWorker}
+                            className="flex items-center gap-2 bg-white text-black hover:bg-gray-200 px-3 py-1.5 rounded text-xs font-semibold transition-colors"
+                        >
+                            <RefreshCw size={12} />
+                            Atualizar
+                        </button>
                     </div>
                 </motion.div>
             )}
