@@ -16,6 +16,11 @@ export default function MonkModeToggle() {
         return null;
     }
 
+    // Hide on Newsletter page to avoid overlap with Zen Mode controls
+    if (typeof window !== 'undefined' && window.location.pathname.includes('/community/newsletter')) {
+        return null;
+    }
+
     const isMonk = theme === 'monk';
 
     const toggleMonk = () => {
