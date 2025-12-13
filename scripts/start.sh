@@ -6,13 +6,22 @@ while true; do
   SECONDS_TO_WAIT=$(python3 -c "
 from datetime import datetime, timedelta
 import pytz
-tz = pytz.timezone('America/Sao_Paulo')
-now = datetime.now(tz)
-target = now.replace(hour=7, minute=30, second=0, microsecond=0)
-if target <= now:
-    target += timedelta(days=1)
-print(int((target - now).total_seconds()))
+try:
+    tz = pytz.timezone('America/Sao_Paulo')
+    now = datetime.now(tz)
+    target = now.replace(hour=7, minute=30, second=0, microsecond=0)
+    if target <= now:
+        target += timedelta(days=1)
+    print(int((target - now).total_seconds()))
+except:
+    print('')
 ")
+
+  # Verificação de segurança: Se o cálculo falhar, dorme 1 hora para evitar loops infinitos (custo de API)
+  if [ -z "$SECONDS_TO_WAIT" ] || [ "$SECONDS_TO_WAIT" -lt 60 ]; then
+     echo "⚠️ Erro no cálculo do tempo ou tempo muito curto. Usando fallback de 1 hora."
+     SECONDS_TO_WAIT=3600
+  fi
 
   echo "🕒 Próxima execução em ${SECONDS_TO_WAIT} segundos (aprox $(($SECONDS_TO_WAIT / 3600)) horas)..."
   
@@ -23,6 +32,6 @@ print(int((target - now).total_seconds()))
   python3 scripts/daily_newsletter_bot.py
   
   echo "✅ Bot finalizado. Aguardando próximo ciclo..."
-  # Pequena pausa de segurança para evitar loop imediato em caso de erro de cálculo
+  # Pequena pausa de segurança
   sleep 60
 done

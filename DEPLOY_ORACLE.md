@@ -129,6 +129,10 @@ PERPLEXITY_API_KEY=...
 # Comunicação Interna (Web + Bot)
 # Como estão na mesma rede docker, o bot acessa o web pelo nome do serviço 'web'
 SITE_API_URL=http://web:3000/api/news/ingest
+
+# Segurança & Admin
+CRON_SECRET=sua_chave_secreta_aqui
+SUPABASE_SERVICE_ROLE_KEY=sua_service_role_key_do_supabase
 ```
 
 ### 5. Subir os Containers
