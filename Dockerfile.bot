@@ -22,4 +22,4 @@ COPY scripts/ ./scripts/
 # Let's create a runner script on the fly or embedded here.
 
 # CMD ["/app/start.sh"]
-CMD ["python3", "-u", "scripts/scheduler.py"]
+CMD python3 -u scripts/scheduler.py
