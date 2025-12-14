@@ -33,15 +33,21 @@ def save_last_run_date(date_str):
 
 def run_bot():
     print("\n--- [Scheduler] Triggering Daily Bot ---", flush=True)
-    exit_code = os.system("python3 scripts/daily_newsletter_bot.py")
     
-    if exit_code == 0:
+    # 1. Run Newsletter Bot
+    exit_code_news = os.system("python3 scripts/daily_newsletter_bot.py")
+    
+    # 2. Run Risk Analysis (Sequential to save RAM)
+    print("\n--- [Scheduler] Triggering Risk Analysis ---", flush=True)
+    exit_code_risk = os.system("python3 scripts/analise_risco.py")
+
+    if exit_code_news == 0:
         print("--- [Scheduler] Bot finished successfully ---", flush=True)
         # Only save date if successful
         now_str = get_now_br().strftime('%Y-%m-%d')
         save_last_run_date(now_str)
     else:
-        print(f"--- [Scheduler] Bot failed with code {exit_code} ---", flush=True)
+        print(f"--- [Scheduler] Bot failed with code {exit_code_news} ---", flush=True)
 
 def main():
     print("Starting Smart Scheduler (Python)...", flush=True)
