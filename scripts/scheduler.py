@@ -38,8 +38,13 @@ def run_bot():
     exit_code_news = os.system("python3 scripts/daily_newsletter_bot.py")
     
     # 2. Run Risk Analysis (Sequential to save RAM)
-    print("\n--- [Scheduler] Triggering Risk Analysis ---", flush=True)
-    exit_code_risk = os.system("python3 scripts/analise_risco.py")
+    # Changed to WEEKLY execution (Every Monday)
+    now = get_now_br()
+    if now.weekday() == 0: # 0 = Monday
+        print("\n--- [Scheduler] Monday Detected: Triggering Weekly Risk Analysis ---", flush=True)
+        exit_code_risk = os.system("python3 scripts/analise_risco.py")
+    else:
+        print("\n--- [Scheduler] Daily Run: Skipping Risk Analysis (Not Monday) ---", flush=True)
 
     if exit_code_news == 0:
         print("--- [Scheduler] Bot finished successfully ---", flush=True)
