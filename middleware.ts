@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-    const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+    const nonce = btoa(crypto.randomUUID());
 
     // Configuração de CSP Estrita (Nonces)
     // - script-src: permite scripts próprios (com nonce) e domínios confiáveis (Vercel, Supabase, etc)
