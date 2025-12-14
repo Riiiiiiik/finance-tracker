@@ -21,7 +21,5 @@ COPY scripts/ ./scripts/
 # or use a tailored scheduler script.
 # Let's create a runner script on the fly or embedded here.
 
-COPY scripts/start.sh /app/start.sh
-RUN chmod +x /app/start.sh
-
-CMD ["/app/start.sh"]
+# CMD ["/app/start.sh"]
+CMD ["python3", "-u", "scripts/scheduler.py"]
