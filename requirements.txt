@@ -5,3 +5,4 @@ newspaper3k
 
 pytz
 lxml_html_clean
+google-generativeai
