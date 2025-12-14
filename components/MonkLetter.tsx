@@ -7,24 +7,50 @@ import { motion } from 'framer-motion';
 
 import { supabase } from '@/lib/supabase';
 
+import SentryToast from './SentryToast';
+
 export default function MonkLetter() {
     const [likes, setLikes] = useState(342);
     const [isLiked, setIsLiked] = useState(false);
     const [article, setArticle] = useState<any>(null);
+    const [notification, setNotification] = useState<string | null>(null);
+
+    const fetchLatestNews = async () => {
+        const { data } = await supabase
+            .from('news_articles')
+            .select('title, summary, created_at')
+            .eq('is_published', true)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (data) setArticle(data);
+    };
 
     useEffect(() => {
-        const fetchLatestNews = async () => {
-            const { data } = await supabase
-                .from('news_articles')
-                .select('title, summary, created_at')
-                .eq('is_published', true)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single();
-
-            if (data) setArticle(data);
-        };
         fetchLatestNews();
+
+        // Realtime Subscription
+        const channel = supabase
+            .channel('news_updates')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'news_articles'
+                },
+                (payload) => {
+                    console.log('Nova Monk Letter recebida:', payload);
+                    setNotification("Nova Monk's Letter disponível! Atualizando...");
+                    fetchLatestNews();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     const handleLike = () => {
@@ -92,6 +118,11 @@ export default function MonkLetter() {
             <p className="text-center text-[10px] text-gray-600 mt-3 font-medium tracking-wide">
                 Todo dia as 07:30h a melhor curadoria selecionado por cada Monk.
             </p>
+
+            <SentryToast
+                message={notification}
+                onClose={() => setNotification(null)}
+            />
         </div>
     );
 }

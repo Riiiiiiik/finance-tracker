@@ -46,17 +46,30 @@ export default function SentryToast({ message, onClose, confirmState }: SentryTo
                     transition={{ type: 'spring', damping: 20, stiffness: 300 }}
                     className="fixed top-6 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none"
                 >
-                    <div className="bg-[#121212] border border-red-900/50 shadow-[0_0_30px_rgba(220,38,38,0.2)] rounded-2xl p-4 w-full max-w-sm pointer-events-auto flex gap-4 backdrop-blur-xl">
+                    <div className={`bg-[#121212] border shadow-[0_0_30px_rgba(0,0,0,0.2)] rounded-2xl p-4 w-full max-w-sm pointer-events-auto flex gap-4 backdrop-blur-xl ${message?.includes("Monk's Letter")
+                        ? 'border-purple-900/50 shadow-purple-900/20'
+                        : 'border-red-900/50 shadow-red-900/20'
+                        }`}>
                         {/* Icon Box */}
-                        <div className="bg-red-500/10 p-3 rounded-xl border border-red-500/20 flex items-center justify-center shrink-0 h-fit">
-                            <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
+                        <div className={`p-3 rounded-xl border flex items-center justify-center shrink-0 h-fit ${message?.includes("Monk's Letter") || confirmState?.options.variant === 'info'
+                            ? 'bg-purple-500/10 border-purple-500/20'
+                            : 'bg-red-500/10 border-red-500/20'
+                            }`}>
+                            {message?.includes("Monk's Letter") || confirmState?.options.variant === 'info' ? (
+                                <ShieldAlert className="w-6 h-6 text-purple-500 animate-pulse" />
+                            ) : (
+                                <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
+                            )}
                         </div>
 
                         {/* Content */}
                         <div className="flex-1 pt-0.5">
                             <div className="flex justify-between items-start">
-                                <h3 className="text-red-500 font-bold text-sm tracking-wide uppercase flex items-center gap-2">
-                                    Monk.Sentry
+                                <h3 className={`font-bold text-sm tracking-wide uppercase flex items-center gap-2 ${message?.includes("Monk's Letter") || confirmState?.options.variant === 'info'
+                                    ? 'text-purple-500'
+                                    : 'text-red-500'
+                                    }`}>
+                                    {message?.includes("Monk's Letter") ? "Monk.Messenger" : "Monk.Sentry"}
                                 </h3>
                                 <button
                                     onClick={onClose}
@@ -70,8 +83,11 @@ export default function SentryToast({ message, onClose, confirmState }: SentryTo
                                 {message}
                             </p>
 
-                            <div className="mt-2 text-[10px] text-red-500/60 font-mono uppercase tracking-widest">
-                                Protocolo de Segurança Ativado
+                            <div className={`mt-2 text-[10px] font-mono uppercase tracking-widest ${message?.includes("Monk's Letter") || confirmState?.options.variant === 'info'
+                                ? 'text-purple-500/60'
+                                : 'text-red-500/60'
+                                }`}>
+                                {message?.includes("Monk's Letter") ? "Newsletter Protocol" : "Protocolo de Segurança Ativado"}
                             </div>
                         </div>
                     </div>
