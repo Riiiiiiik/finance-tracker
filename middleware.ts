@@ -14,6 +14,7 @@ export async function middleware(request: NextRequest) {
         style-src 'self' 'unsafe-inline';
         img-src 'self' blob: data: https://*;
         font-src 'self' data:;
+        connect-src 'self' https://*.supabase.co https://vitals.vercel-insights.com https://*.vercel-scripts.com;
         object-src 'none';
         base-uri 'self';
         form-action 'self';
