@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Heart, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -10,8 +10,6 @@ import { supabase } from '@/lib/supabase';
 import SentryToast from './SentryToast';
 
 export default function MonkLetter() {
-    const [likes, setLikes] = useState(342);
-    const [isLiked, setIsLiked] = useState(false);
     const [article, setArticle] = useState<any>(null);
     const [notification, setNotification] = useState<string | null>(null);
 
@@ -53,11 +51,6 @@ export default function MonkLetter() {
         };
     }, []);
 
-    const handleLike = () => {
-        setIsLiked(!isLiked);
-        setLikes(prev => isLiked ? prev - 1 : prev + 1);
-    };
-
     return (
         <div className="w-full px-1 py-4">
             {/* The Card */}
@@ -90,23 +83,7 @@ export default function MonkLetter() {
                 </div>
 
                 {/* Footer Controls */}
-                <div className="flex items-center justify-between border-t border-white/5 pt-4">
-                    <button
-                        onClick={handleLike}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 ${isLiked
-                            ? 'bg-purple-500/20 border-purple-500/50'
-                            : 'bg-[#111] border-white/10 hover:border-purple-500/30'
-                            }`}
-                    >
-                        <Heart
-                            size={14}
-                            className={`transition-colors ${isLiked ? 'fill-purple-500 text-purple-500' : 'text-gray-400'}`}
-                        />
-                        <span className={`text-xs font-medium tabular-nums ${isLiked ? 'text-purple-200' : 'text-gray-400'}`}>
-                            {likes}
-                        </span>
-                    </button>
-
+                <div className="flex items-center justify-end border-t border-white/5 pt-4">
                     <Link href="/community/newsletter" className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors group">
                         Ler Completo
                         <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
