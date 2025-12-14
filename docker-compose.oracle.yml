@@ -6,6 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile.bot
     image: newsletter-bot
+    command: python3 -u scripts/scheduler.py
     restart: always
     env_file:
       - .env
