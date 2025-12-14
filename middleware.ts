@@ -2,11 +2,37 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+    const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+
+    // Configuração de CSP Estrita (Nonces)
+    // - script-src: permite scripts próprios (com nonce) e domínios confiáveis (Vercel, Supabase, etc)
+    // - style-src: mantemos unsafe-inline para CSS-in-JS (comum em React/Next)
+    // - img-src: permite imagens locais e externas
+    const cspHeader = `
+        default-src 'self';
+        script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: http: 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ""};
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' blob: data: https://*;
+        font-src 'self' data:;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+        frame-ancestors 'none';
+        block-all-mixed-content;
+        upgrade-insecure-requests;
+    `.replace(/\s{2,}/g, ' ').trim();
+
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-nonce', nonce);
+    requestHeaders.set('Content-Security-Policy', cspHeader);
+
     let response = NextResponse.next({
         request: {
-            headers: request.headers,
+            headers: requestHeaders,
         },
-    })
+    });
+
+    response.headers.set('Content-Security-Policy', cspHeader);
 
     // Criar cliente Supabase para Middleware (gerencia cookies)
     const supabase = createServerClient(
