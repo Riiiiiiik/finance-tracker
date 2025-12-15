@@ -27,7 +27,7 @@ if not api_key:
 if api_key:
     genai.configure(api_key=api_key)
     # Configuração do Modelo (Gemini 1.5 Flash é rápido e barato/grátis)
-    model = genai.GenerativeModel('gemini-1.5-flash',
+    model = genai.GenerativeModel('gemini-2.0-flash-exp',
                                   generation_config={"response_mime_type": "application/json"})
 
 # ---------------------------------------------------------
@@ -51,14 +51,46 @@ def buscar_transacoes_usuario(user_id):
         "reserva_emergencia_estimada": 0.00
     }
 
+import requests
+
+# ---------------------------------------------------------
+# 2. Envio para a API do Site (Via HTTP Seguro)
+# ---------------------------------------------------------
 def salvar_risco_no_banco(user_id, resultado_json):
     """
-    Aqui você faria o UPDATE ou INSERT no seu banco real.
+    Envia o JSON gerado para a API do Next.js via HTTP POST.
     """
-    print(f"--- SALVANDO NO DB PARA USER {user_id} ---")
-    print(f"Matriz Liquidez: {resultado_json.get('matriz_liquidez', {}).get('nivel_risco')}")
-    print(f"Matriz Estrutural: {resultado_json.get('matriz_estrutural', {}).get('nivel_risco')}")
-    print("JSON Completo:", json.dumps(resultado_json, indent=2))
+    print(f"--- PROCESSANDO DADOS PARA USER {user_id} ---")
+    
+    api_url = os.environ.get("SITE_API_URL", "http://localhost:3000/api/risk/ingest")
+    # Para produção, o usuário deve definir SITE_API_URL no .env do Oracle
+    # Ex: https://finance-tracker-chi.vercel.app/api/risk/ingest
+    
+    api_secret = os.environ.get("CRON_SECRET", "monk_secret_123")
+    
+    payload = {
+        "user_id": None, # API vai atribuir ao primeiro usuário se nulo
+        "report": resultado_json
+    }
+    
+    try:
+        print(f"📡 Enviando para: {api_url}...")
+        response = requests.post(
+            api_url, 
+            json=payload,
+            headers={"x-api-key": api_secret},
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            print("✅ Sucesso! Relatório salvo no banco de dados.")
+            print(f"   Response: {response.json()}")
+        else:
+            print(f"❌ Erro na API: {response.status_code} - {response.text}")
+            
+    except Exception as e:
+        print(f"❌ Falha de Conexão: {e}")
+
     print("------------------------------------------")
 
 # ---------------------------------------------------------

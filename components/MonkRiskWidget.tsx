@@ -9,20 +9,42 @@ interface MonkRiskWidgetProps {
 }
 
 export default function MonkRiskWidget({ riskLevel, onNavigate, isLoading = false }: MonkRiskWidgetProps) {
-    // Estado local para simular "Forja" se estiver carregando ou se o risco for indefinido
-    const showForge = isLoading || !riskLevel;
+    const [isExpanded, setIsExpanded] = React.useState(false);
+    const [riskData, setRiskData] = React.useState<any>(null);
+    const [isLoadingData, setIsLoadingData] = React.useState(false);
 
-    if (showForge) {
-        return (
-            <div className="w-full rounded-xl border border-[#333] bg-[#050505] relative overflow-hidden h-[300px]">
-                <MonkForge
-                    moduleName="SINTONIZANDO ORÁCULO..."
-                    description="A Ordem está acessando os registros akáshicos financeiros."
-                    fullScreen={false}
-                />
-            </div>
-        );
-    }
+    const handleConsult = async () => {
+        if (isExpanded) {
+            setIsExpanded(false);
+            return;
+        }
+
+        setIsExpanded(true);
+        if (!riskData) {
+            setIsLoadingData(true);
+            try {
+                // Import supabase client dynamically or expect it from context/props if safe
+                // Assuming client-side supabase access (RLS protected)
+                const { createClientComponentClient } = require('@supabase/auth-helpers-nextjs');
+                const supabase = createClientComponentClient();
+
+                const { data, error } = await supabase
+                    .from('risk_profiles')
+                    .select('report_json')
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (data) {
+                    setRiskData(data.report_json);
+                }
+            } catch (e) {
+                console.error("Error fetching risk profile", e);
+            } finally {
+                setIsLoadingData(false);
+            }
+        }
+    };
 
     const isCritical = riskLevel === 'CRÍTICO';
     const isModerate = riskLevel === 'MODERADO';
@@ -111,19 +133,58 @@ export default function MonkRiskWidget({ riskLevel, onNavigate, isLoading = fals
                     </div>
                 </div>
 
-                {/* Message Log */}
-                <div className="border-l-2 border-[#333] pl-4 mb-6">
-                    <p className="font-mono text-xs md:text-sm text-gray-400 leading-relaxed">
-                        {message}
-                    </p>
-                    <p className="font-mono text-[10px] text-gray-600 mt-2">
-                        {'> Última calibração: AGORA'}
-                    </p>
-                </div>
+                {/* Content Area - Collapsible */}
+                {isExpanded ? (
+                    <div className="mb-6 animate-in slide-in-from-bottom-2 duration-500">
+                        {isLoadingData ? (
+                            <div className="p-4 border border-dashed border-[#333] rounded text-center">
+                                <span className={`text-xs font-mono animate-pulse ${colorClass}`}>DECIFRANDO CÓDICE...</span>
+                            </div>
+                        ) : riskData ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Matriz de Liquidez */}
+                                <div className="bg-black/40 border border-[#333] p-3 rounded">
+                                    <h4 className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Liquidez</h4>
+                                    <div className="text-sm text-gray-300 font-serif mb-1">
+                                        Risco: <span className={riskData.matriz_liquidez.nivel_risco === 'Alto' ? 'text-red-500' : 'text-green-500'}>{riskData.matriz_liquidez.nivel_risco}</span>
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 leading-relaxed">
+                                        {riskData.matriz_liquidez.analise_curta}
+                                    </p>
+                                </div>
+                                {/* Matriz Estrutural */}
+                                <div className="bg-black/40 border border-[#333] p-3 rounded">
+                                    <h4 className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Estrutura</h4>
+                                    <div className="text-sm text-gray-300 font-serif mb-1">
+                                        Tendência: <span className="text-yellow-500">{riskData.matriz_estrutural.tendencia_patrimonial}</span>
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 leading-relaxed">
+                                        {riskData.matriz_estrutural.analise_curta}
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="p-4 border border-dashed border-[#333] rounded text-center text-gray-500 text-xs">
+                                NENHUM DADO NOS REGISTROS
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    /* Default Message Log */
+                    <div className="border-l-2 border-[#333] pl-4 mb-6">
+                        <p className="font-mono text-xs md:text-sm text-gray-400 leading-relaxed">
+                            {message}
+                        </p>
+                        <p className="font-mono text-[10px] text-gray-600 mt-2">
+                            {'> Última calibração: AGORA'}
+                        </p>
+                    </div>
+                )}
+
 
                 {/* Action Button */}
                 <button
-                    onClick={onNavigate}
+                    onClick={handleConsult}
                     className={`
                         w-full py-3 rounded border border-[#333] 
                         hover:border-[#D4AF37] hover:text-[#D4AF37]
@@ -133,8 +194,8 @@ export default function MonkRiskWidget({ riskLevel, onNavigate, isLoading = fals
                         group-hover:shadow-[0_0_20px_rgba(212,175,55,0.1)]
                     `}
                 >
-                    <span>[ CONSULTAR O CÓDICE ]</span>
-                    <ChevronUp size={14} className="group-hover:-translate-y-1 transition-transform duration-300" />
+                    <span>{isExpanded ? '[ FECHAR CÓDICE ]' : '[ CONSULTAR O CÓDICE ]'}</span>
+                    <ChevronUp size={14} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : 'group-hover:-translate-y-1'}`} />
                 </button>
             </div>
         </div>
