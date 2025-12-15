@@ -50,12 +50,36 @@ export default function MonkCodicePage() {
 
     if (!riskData) {
         return (
-            <MonkForge
-                fullScreen={true}
-                moduleName="CÓDICE MONK"
-                description="Nenhum relatório de risco encontrado nos arquivos da Ordem. Aguarde a próxima calibração."
-                onClose={() => router.back()}
-            />
+            <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center relative overflow-hidden text-gray-400 font-sans selection:bg-[#D4AF37]/30">
+                {/* Background Effects */}
+                <div className="fixed inset-0 pointer-events-none">
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#D4AF37]/5 rounded-full blur-[100px]"></div>
+                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03]"></div>
+                </div>
+
+                <div className="z-10 flex flex-col items-center gap-6 max-w-md text-center p-8 border border-white/5 rounded-2xl bg-white/5 backdrop-blur-sm">
+                    <div className="w-16 h-16 rounded-full bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] mb-2 animate-pulse">
+                        <Database size={32} />
+                    </div>
+
+                    <h2 className="text-2xl font-serif text-white tracking-wide">
+                        Aguardando Sincronização
+                    </h2>
+
+                    <p className="text-sm leading-relaxed text-gray-400">
+                        O Oráculo ainda não processou os dados desta semana. A análise algorítmica será executada automaticamente na <strong className="text-[#D4AF37]">próxima segunda-feira</strong>.
+                    </p>
+
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-2"></div>
+
+                    <button
+                        onClick={() => router.back()}
+                        className="text-xs uppercase tracking-widest text-gray-500 hover:text-[#D4AF37] transition-colors flex items-center gap-2"
+                    >
+                        <ArrowLeft size={12} /> Voltar ao Templo
+                    </button>
+                </div>
+            </div>
         );
     }
 
