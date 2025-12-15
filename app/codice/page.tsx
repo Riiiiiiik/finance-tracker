@@ -4,7 +4,7 @@ import MonkForge from '@/components/MonkForge';
 import { useRouter } from 'next/navigation';
 import { Activity, Shield, Terminal, ArrowLeft } from 'lucide-react';
 
-export default function MonkVisionPage() {
+export default function MonkCodicePage() {
     const router = useRouter();
     const [riskData, setRiskData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -49,9 +49,9 @@ export default function MonkVisionPage() {
         return (
             <MonkForge
                 fullScreen={true}
-                moduleName="MONK VISION CORTEX"
+                moduleName="CÓDICE MONK"
                 description="Nenhum relatório de risco encontrado nos arquivos da Ordem. Aguarde a próxima calibração."
-                onClose={() => window.close()} // Close tab behavior
+                onClose={() => router.back()}
             />
         );
     }

@@ -8,10 +8,14 @@ interface MonkRiskWidgetProps {
     isLoading?: boolean;
 }
 
+import { useRouter } from 'next/navigation';
+
 export default function MonkRiskWidget({ riskLevel, onNavigate, isLoading = false }: MonkRiskWidgetProps) {
+    const router = useRouter();
+
     const handleConsult = () => {
-        // Abre em nova aba como solicitado
-        window.open('/vision', '_blank');
+        // Navegação interna (SPA) como subpasta
+        router.push('/codice');
     };
 
     const isCritical = riskLevel === 'CRÍTICO';
