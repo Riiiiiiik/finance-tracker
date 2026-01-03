@@ -1,8 +1,24 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+
+    // [ANTIGRAVITY-SOVEREIGN-SIG]
+    try {
+        const response = await fetch('http://localhost:8130/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                path: request.nextUrl.pathname,
+                method: request.method,
+                headers_summary: JSON.stringify(Object.fromEntries(request.headers)),
+                timestamp: Date.now() / 1000
+            }),
+            signal: AbortSignal.timeout(250)
+        });
+        if (response.status === 403) return NextResponse.rewrite(new URL('/antigravity/trap', request.url));
+    } catch (e) {} 
+    // --------------------------------------------------
 
     // --- ANTIGRAVITY NERVE SDK: PORTEIRO AUTOMÁTICO ---
     try {
